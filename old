@@ -1,0 +1,470 @@
+
+################################################################################
+#
+# Boards
+#
+################################################################################
+- UDOO QUAD ARM i.MX6 from NXP
+
+
+################################################################################
+#
+# Buildroot Workflow
+#
+################################################################################
+
+Step 00:
+   list all available startup boards: `configs/*`
+     make list-defconfigs
+
+Step 01:
+   Startup template for any board (ex: `beaglebone`):
+     make beaglebone_defconfig
+
+Step 02:
+   Add your custom touch:
+   Into default Buildroot Tree:
+     make menuconfig
+
+   Or (optional) Building out-of-tree ?:
+     make O=/tmp/build menuconfig
+
+
+      h   - help text for every single option.
+      /   - search with number to quick jump.
+
+
+Step 03:
+   (optional) Offline builds
+     make source
+
+Step 04:
+   Take backup (& git push) from the generated .config file:
+     cp .config config_$(date +%Y%m%d.%H%M)
+
+Step 05:
+   Get/Use external toolchain to speed up the building process.
+     Toolchain > Toolchain Type > External toolchain
+
+   Other external toolchain options:
+     - crosstool-NG
+     - your repo package manager
+     - Linaro for ARM
+     - Sourcery CodeBench for ARM
+
+Step 06:
+   /dev management
+
+Step 07:
+   Init System:
+     $ make menuconfig > `System configuration` > `Init system` > "BusyBox"
+
+Step 08:
+   Configuration of other components
+
+   List all available components/targets:
+     make help
+
+   Edit:
+     make busybox-menuconfig
+
+   each component has default config file on its own:
+     ex: vim .config
+     BR2_PACKAGE_BUSYBOX_CONFIG     => BusyBox
+
+Step 09:
+   Start the build process, run:
+     make
+
+   Or (optional) with Environment variables:
+     make HOSTCXX=g++-4.3-HEAD HOSTCC=gcc-4.3-HEAD
+
+Step 10:
+   clean single package:
+     make htop-dirclean
+   rebuild packages:
+     make htop-dirclean # rm dir > extract dir > config > compile > install
+     make htop-reconfigure # config > compile > install
+     make htop-rebuild # compile > install
+
+Step 99:
+   Take AGAIN backup from the generated .config file:
+     cp .config config_$(date +%Y%m%d.%H%M)
+
+   *NOTE* Use Build outside the tree as versions & concat date with its
+     name & use version control to track changes...
+
+Step 100:
+   Resetting Buildroot for a new target:
+   Delete all build products as well as the configuration:
+     make distclean
+
+
+Dry Run ~alike~:
+   make V=1 <bla>
+
+Build docs:
+   make manual-clean
+   make manual
+
+Query make vars:
+   make -s printvars VARS=BR2_PACKAGE_BUSYBOX_CONFIG
+
+Full rebuild:
+   make clean all
+
+Extract config as:
+   JSON:
+     make show-info
+
+   PDF:
+     make pkg-stats
+
+
+Graphing:
+   between ALL packages:
+     make graph-depends
+
+   single package:
+     make glibc-graph-depends
+
+   the build duration:
+     make graph-build
+
+   the filesystem size contribution of packages:
+     make graph-size
+
+
+
+
+#
+# Top-level `make` steps:
+#
+
+- download source files (as required);
+- configure, build and install the cross-compilation toolchain, or simply import an external toolchain;
+- configure, build and install selected target packages;
+- build a kernel image, if selected;
+- build a bootloader image, if selected;
+- create a root filesystem in selected formats.
+
+
+
+################################################################################
+#
+# devicetree
+#
+################################################################################
+
+#
+# Locations
+#
+
+Device Tree Source:
+   linux/arch/<ARCH>/boot/dts
+
+.dtsi    - Device Tree Source Include Files
+.dts    - Device Tree Source Files
+
+Explore and Verify devicetree at runtime:
+   /sys/firmware/devicetree/base
+
+   dtc -I fs /sys/firmware/devicetree/base
+
+#
+# Commands
+#
+U-boot:
+   $ bootz <kernel-addr> - <dtb-addr>
+   $ fdt Command
+
+YAML check semantic:
+   make dt_bindings_check
+   make dtbs_check
+
+#
+# Documentation
+#
+
+Petazzoni-device-tree-dummies:
+   Google it!
+
+devicetree specification:
+  Describe all dt syntax in 60 pages!
+   https://devicetree-specification.readthedocs.io/
+
+Linux docs:
+   https://www.kernel.org/doc/html/latest/devicetree/index.html
+
+Bindings:
+   https://www.kernel.org/doc/Documentation/devicetree/bindings/
+
+
+
+
+################################################################################
+#
+# LinkedIn
+#
+################################################################################
+
+
+#
+# Summary
+#
+
+2023
+=
+I've built several Linux kernel modules and even developed my own OS from scratch.
+I have contributed to open-source projects like Google Summer of Code, Htop (https://htop.dev), Performance Co-Pilot (https://pcp.io), and the Linux kernel.
+
+Through my work with Htop and PCP, I discovered my passion for performance engineering and monitoring, which has given me the power to access system areas that were once off-limits to others.
+
+I'm interested in the performance aspects of software systems and enjoy working with metrics collection tools like Htop, eBPF, and perf.
+
+Let's connect and see how we can collaborate!
+🔗 GitHub: https://github.com/smalinux
+
+
+2024
+=
+I have contributed to open-source projects like Google Summer of Code, Htop (https://htop.dev), Performance Co-Pilot (https://pcp.io), and the Linux kernel.
+
+🔗 GitHub: https://github.com/smalinux
+
+
+
+################################################################################
+#
+# Linux Kernel Modules
+#
+################################################################################
+
+#
+# https://sysprog21.github.io/lkmpg/
+# https://github.com/sysprog21/lkmpg
+#
+
+Resources:
+   - the Linux Documentation Project (LDP): https://tldp.org/
+   - Understanding the Linux Kernel, 3rd Edition O'Reilly
+   - https://kernelnewbies.org/ (🏠)
+   - Documentation: (🏠)
+      https://git.kernel.org/pub/scm/linux/kernel/git/stable/linux.git/tree/Documentation
+   - The kernel source code (🏠)
+
+Install modprobe, insmod and depmod packages:
+   sudo apt-get install build-essential kmod
+
+List all current installed modules: (2 ways)
+   sudo lsmod
+   sudo cat /proc/modules
+
+Install kernel headers
+   sudo apt-get update
+   #apt-cache search linux-headers-`uname -r`
+   sudo apt-get install kmod linux-headers-`uname -r`
+
+Sudoers Manual - https://www.sudo.ws/docs/man/sudoers.man/
+
+dmesg-alike log:
+   sudo journalctl --since "1 hour ago" | grep kernel
+
+#
+# Modules Headers:
+#
+#include <linux/init.h> /* Needed for the macros */
+#include <linux/module.h> /* Needed by all modules */
+#include <linux/printk.h> /* Needed for pr_info() */
+include/linux/fs.h /* file_operations Structure */
+
+#
+# RTFM
+#
+kbuild: Documentation/kbuild/modules.rst
+Makefile: Documentation/kbuild/makefiles.rst
+modules macros: include/linux/module.h (ex: __init & __exit)
+
+
+#
+# Linux menuconfig
+#
+MODULE_FORCE_UNLOAD     enable it
+
+
+#
+# Kernel APIs?!
+#
+All availabe kernel APIs to develop kernel modules?
+   /proc/kallsyms
+
+#
+# Device Drivers:
+#
+   - All availabe devices is here:
+      /dev/
+   - Documentation/admin-guide/devices.txt
+   - $man mknod
+
+#
+# Character Device drivers
+#
+   register_chrdev()
+   device_create() && device_destroy()
+   register_chrdev_region() >>> if you know the device major number
+   alloc_chrdev_region() >>> if you allocate a dynamicly-allocated major number
+   struct cdev
+   cdev_alloc()
+   cdev_init()
+   cdev_add()
+
+   cat /proc/modules
+   lsmod
+
+   try_module_get : Increment the reference count of current module.
+   module_put : Decrement the reference count of current module.
+   module_refcount : Return the value of reference count of current module.
+
+#
+# Writing Modules for Multiple Kernel Versions
+#
+   LINUX_VERSION_CODE macro
+   KERNEL_VERSION macro
+
+#
+# Concurrency
+#
+   - Compare-And-Swap (CAS)
+      CDEV_NOT_USED and CDEV_EXCLUSIVE_OPEN
+   -
+
+
+#
+# Is this a thread safe
+#
+   > Later on, I need a way to check if any function thread safe or not without
+   > writing this section, because I will not be able to trace every single
+   > function...
+
+   file_operations (+v3.14)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+USB TTL Device
+minicom
+
+
+#
+# High priority (RTFM):
+#
+- C Programming Language
+- QEMU
+- init
+- Beaglebone Board
+- uboot
+- crosstool-NG   https://crosstool-ng.github.io/
+- Device Drivers
+- GDB
+- Linux rst Manual
+- strace
+-
+
+#
+# Low priority:
+#
+- GCC (GCC extensions) (and LLVM)
+- eBPF
+- hacking topic
+- networking & sockets
+- blockchain
+- Linux Kernel Subsystems
+- RUST
+- Python
+- Open-Source Contribution
+- Linux Adminstartion
+- Study Algorithms
+- English Shadowing
+- RTOS
+- YCOTO
+- ELF Files
+- Design Pattern
+- Assemply
+- Linux administration / sysadmin
+- Bash Scripting
+- CMake
+- Makefile
+- Unit Testing
+- FreeBSD
+- Linux System Programming ($man 2 & $man 3)
+
+#
+# bootloaders:
+#
+  - uboot
+  - GRUB
+  - barebox
+
+#
+# Topics:
+#
+  - Booting Sequence:
+      https://www.thegeekstuff.com/2011/02/linux-boot-process/
+      https://0xax.github.io/grub/
+      https://github.com/0xAX/linux-insides/blob/master/Booting/linux-bootstrap-3.md
+  - Toolchain
+      https://abhishekmourya.blogspot.com/2014/02/cross-compiling-toolchain.html
+
+#
+# Buildroot:
+#
+  - Toolchain
+      crosstool-NG   https://crosstool-ng.github.io/
+  - bootloader
+  - kernel
+  - file system
+  - init system
+      inittab
+
+
+
+#
+# Resources:
+#
+Your home - https://elixir.bootlin.com/
+Moatasem Elsayed - https://www.youtube.com/@moatasemelsayed6226
+
+
+#
+# company
+#
+embedded-world.de  - #company
+www.forlinx.net   - #company to buy "System on a module" board
+Texas Instruments
+renesas
+
+
