@@ -26,6 +26,24 @@ CONFIG_OF
 
 Google: device tree vs ACPI
 
+Extra:
+   OF subsystem
+   ~/repos/linux/drivers/of/
+
+
+#
+# Platform Devices Framework
+#
+
+# platform core abstraction
+
+platform devices
+platform driver
+platform bus
+
+struct platform_device # <linux/platform_device.h>
+struct platform_driver # <linux/platform_device.h>
+
 
 ###############################################################################
 #
@@ -36,7 +54,7 @@ Google: device tree vs ACPI
 Linux Device Model (LDM)
 
 struct device        # include/linux/device.h
-struct bus_type      # the channel between the device and CPU
+struct bus_type      # include/linux/device/bus.h
 struct device_driver # include/linux/device/driver.h
 
 
@@ -51,6 +69,18 @@ struct device
       include/linux/mod_devicetable.h (spi_device->id_table)
 
 struct device_driver
+
+
+struct bus_type
+   aka bus controller
+   aka root driver
+
+   Physically speaking, a bus is a channel between the processor and one or
+   more devices. From a software point of view, the bus (struct bus_type) is
+   the link between devices (struct device) and drivers (struct device_driver).
+
+   $ tree /sys/bus/
+
 
 
 
