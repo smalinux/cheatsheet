@@ -1,7 +1,58 @@
-
+# device tree
+# device drivers
 # Resources
-
 -------------------------------------------------------------------------------
+
+
+Linux Source Code
+=
+git clone git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git
+https://www.kernel.org/
+
+
+###############################################################################
+#
+# device tree
+#
+###############################################################################
+
+#include <linux/of.h>
+#include <linux/of_device.h>
+
+.config:
+=
+CONFIG_OF
+
+
+
+###############################################################################
+#
+# device drivers
+#
+###############################################################################
+
+Linux Device Model (LDM)
+
+struct device        # include/linux/device.h
+struct bus_type      # the channel between the device and CPU
+struct device_driver # include/linux/device/driver.h
+
+
+
+Tree:
+===
+struct device
+   struct i2c_client (i2c_client->dev)
+   struct spi_device (spi_device->dev)
+   struct usb_device (usb_device->dev)
+   struct platform_device (platform_device->dev)
+
+struct device_driver
+
+
+
+
+
 
 
 
@@ -24,4 +75,29 @@ https://www.facebook.com/groups/1619119604820781/
 #
 # Hackernews
 #
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
