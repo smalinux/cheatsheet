@@ -24,6 +24,8 @@ https://www.kernel.org/
 CONFIG_OF
 
 
+Google: device tree vs ACPI
+
 
 ###############################################################################
 #
@@ -46,8 +48,10 @@ struct device
    struct spi_device (spi_device->dev)
    struct usb_device (usb_device->dev)
    struct platform_device (platform_device->dev)
+      include/linux/mod_devicetable.h (spi_device->id_table)
 
 struct device_driver
+
 
 
 
