@@ -1,5 +1,9 @@
 # device tree
 # device drivers
+# Linux Kernel Memory Allocation
+# IIO framework
+# pin control
+# GPIO systems
 # Resources
 -------------------------------------------------------------------------------
 
@@ -85,6 +89,68 @@ struct bus_type
 
 
 
+###############################################################################
+#
+# Linux Kernel Memory Allocation
+#
+###############################################################################
+
+
+Google Images: CONFIG_PAGE_OFFSET
+
+arch/arm/Kconfig:
+   CONFIG_VMSPLIT_1G
+   CONFIG_VMSPLIT_2G
+   CONFIG_VMSPLIT_3G_OPT
+
+
+struct mm_struct # include/linux/mm_types.h
+
+
+
+###############################################################################
+#
+# IIO framework
+#
+###############################################################################
+
+https://www.kernel.org/doc/html/v4.12/driver-api/iio/index.html
+Google: IIO Framework
+
+
+The IIO model is based on device and channel architecture:
+   • The device represents the chip itself, the top level of the hierarchy.
+   • The channel represents a single acquisition line of the device. A device
+   may have one or more channels. For example, an accelerometer is a device
+   with three channels, one for each axis (x, y, and z).
+
+IIO APIs are spread over several header files, as follows:
+   #include <linux/iio/iio.h>     /* mandatory, the core */
+   #include <linux/iio/sysfs.h>   /* mandatory since sysfs is used */
+   #include <linux/iio/events.h>  /* Optional. Advanced feature, to manage iio events */
+   #include <linux/iio/buffer.h>  /* mandatory for triggered buffers */
+   #include <linux/iio/trigger.h> /* rarely used. Only if the driver implements a trigger */
+
+
+
+###############################################################################
+#
+# pin control
+#
+###############################################################################
+
+
+
+###############################################################################
+#
+# GPIO systems
+#
+###############################################################################
+
+
+
+
+
 
 
 
@@ -105,6 +171,12 @@ https://www.linkedin.com/in/abdallahali/recent-activity/all/
 https://www.youtube.com/@abdallahaliabdallah6394/playlists
 https://www.youtube.com/@ahmedeldeep/playlists
 https://www.facebook.com/groups/1619119604820781/
+
+#
+# EN
+#
+https://www.udemy.com/course/embedded-linux-step-by-step-using-beaglebone/
+https://bootlin.com/blog/bootlin-embedded-linux-course-now-available-on-beagleplay/
 
 #
 # Hackernews
