@@ -184,10 +184,28 @@ https://bootlin.com/blog/bootlin-embedded-linux-course-now-available-on-beaglepl
 
 
 
+###############################################################################
+#
+# vscode
+#
+###############################################################################
+
+extensions:
+   GitLens
+   Git Graph
+      https://marketplace.visualstudio.com/items?itemName=mhutchie.git-graph
+   C/C++ Advanced Lint
+      https://marketplace.visualstudio.com/items?itemName=jbenden.c-cpp-flylint
 
 
 
+###############################################################################
+#
+# Career
+#
+###############################################################################
 
+Google: freelancer embedded systems
 
 
 
