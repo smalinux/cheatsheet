@@ -1,0 +1,93 @@
+
+
+
+$ lsmod
+$ cat /proc/modules
+
+
+
+Headers
+##########################
+#include <linux/init.h>  /* Needed for the macros */
+#include <linux/module.h>  /* Needed by all modules */
+#include <linux/printk.h>  /* Needed for pr_info() */
+#include <linux/kernel.h>
+#include <linux/moduleparam.h>
+#include <linux/stat.h>
+#include <linux/string.h>
+#include <linux/version.h>
+#include <linux/delay.h>
+#include <linux/ioctl.h>
+#include <linux/slab.h>
+#include <linux/fs.h> /* struct file_operations {} */
+
+#include <linux/proc_fs.h> // procfs
+#include <linux/uaccess.h>
+#include <linux/seq_file.h>
+
+#include <linux/sysfs.h>
+#include <linux/kobject.h>
+
+#include <linux/atomic.h>  /* deadlock */
+
+#include <linux/cdev.h>
+
+
+
+
+Kbuild: *this file not part of the official kernel doc* TODO
+##########################
+https://git.kernel.org/pub/scm/linux/kernel/git/stable/linux.git/tree/Documentation/kbuild/modules.rst
+
+details about Makefiles for kernel modules: TODO
+##########################
+https://git.kernel.org/pub/scm/linux/kernel/git/stable/linux.git/tree/Documentation/kbuild/makefiles.rst
+
+Hard coded major numbers:
+##########################
+Documentation/admin-guide/devices.txt
+
+
+Design
+##########################
+- Module params (aka argc/argv)
+- Split your module to multi files
+-
+
+
+Documentation/admin-guide/devices.txt     /* All reserved major numbers */
+
+cat /proc/devices
+cat /proc/modules
+
+
+multi-threaded solutions/options:
+##########################
+- Compare-And-Swap (CAS): CDEV_NOT_USED and CDEV_EXCLUSIVE_OPEN
+
+Macros
+##########################
+LINUX_VERSION_CODE      # Compare between two kernel version
+KERNEL_VERSION
+
+
+#include <linux/proc_fs.h>
+##########################
+struct inode_operations
+
+
+seq_file
+##########################
+https://lwn.net/Articles/22355/
+https://kernelnewbies.org/Documents/SeqFileHowTo
+
+
+ioctl
+##########################
+Documentation/userspace-api/ioctl/ioctl-number.rst
+
+
+sysfs
+##########################
+Documentation/driver-api/driver-model/driver.rst
+https://lwn.net/Articles/51437/
