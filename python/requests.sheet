@@ -1,0 +1,13 @@
+title: requests
+url:   https://requests.readthedocs.io/en/latest/api/
+tags:  python http
+
+## calls
+requests.get(URL, params=D, timeout=S)   # GET with query string from dict D  @fetch <https://requests.readthedocs.io/en/latest/api/#requests.get>
+requests.post(URL, json=D, timeout=S)    # POST D as a JSON body  @send <https://requests.readthedocs.io/en/latest/api/#requests.post>
+requests.Session()                       # reuse connections and cookies across calls  @keepalive <https://requests.readthedocs.io/en/latest/api/#requests.Session>
+
+## response
+r.raise_for_status()                     # raise HTTPError on a 4xx or 5xx status  @error @check
+r.json()                                 # decode the body as JSON  @parse
+r.status_code                            # the HTTP status as an int  @code

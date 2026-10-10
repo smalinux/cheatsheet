@@ -1,0 +1,16 @@
+title: tar
+url:   man:tar(1)
+tags:  archive compress tarball
+
+## create
+tar -czf OUT.tar.gz DIR         # create a gzip archive of DIR  @compress @pack
+tar -cJf OUT.tar.xz DIR         # create an xz archive of DIR (smaller, slower)  @compress
+tar -czf OUT.tar.gz -C DIR .    # archive the contents of DIR without the DIR/ prefix
+
+## extract
+tar -xf FILE.tar.gz             # extract any archive, compression is auto-detected  @unpack @untar
+tar -xf FILE.tar.gz -C DIR      # extract into DIR  @destination
+tar -xf FILE.tar.gz PATH        # extract only PATH from the archive  @single
+
+## inspect
+tar -tf FILE.tar.gz             # list the files in an archive  @ls @contents

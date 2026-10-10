@@ -1,0 +1,33 @@
+title: git
+url:   https://git-scm.com/docs
+tags:  vcs version-control
+
+## branches
+git switch -c NAME              # create a branch and switch to it  @new <https://git-scm.com/docs/git-switch>
+git switch -                    # go back to the previous branch  @checkout
+git branch -d NAME              # delete a merged branch  @remove
+git branch -D NAME              # delete a branch even if not merged  @remove @force
+git branch -m OLD NEW           # rename a branch  @move
+git push origin --delete NAME   # delete a remote branch  @remove
+git branch -vv                  # list branches with their upstream and last commit  @tracking
+
+## undo
+git restore FILE                # throw away my changes in FILE  @discard @revert <https://git-scm.com/docs/git-restore>
+git restore --staged FILE       # unstage FILE, keep the changes  @reset @unadd
+git reset --soft HEAD~1         # undo last commit, keep the changes staged
+git reset --hard HEAD~1         # undo last commit and throw away its changes  @discard
+git commit --amend --no-edit    # add staged changes to the last commit  @fixup
+git revert COMMIT               # make a new commit that undoes COMMIT
+git reflog                      # list where HEAD has been, to recover lost commits  @lost @recover
+
+## history
+git log --oneline --graph --all # show all branches as a compact graph  @tree
+git log -p FILE                 # show every change to FILE with diffs  @history
+git log -S TEXT                 # find commits that added or removed TEXT  @pickaxe @search
+git blame -L 10,20 FILE         # show who last changed lines 10-20 of FILE  @annotate
+git show COMMIT:FILE            # print FILE as it was at COMMIT  @cat @old-version
+
+## stash
+git stash push -m MSG           # save my changes away with a message  @shelve
+git stash pop                   # bring back the last stash and drop it  @apply
+git stash list                  # list saved stashes

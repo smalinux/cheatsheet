@@ -1,0 +1,23 @@
+title: kernel modules
+url:   https://docs.kernel.org/kbuild/modules.html
+tags:  linux lkm driver
+
+## build
+obj-m += NAME.o                 # Kbuild line: build NAME.ko from NAME.c  @makefile
+make -C /lib/modules/$(uname -r)/build M=$PWD modules   # build an out-of-tree module  @compile
+
+## load
+insmod FILE.ko                  # load a module file, no dependency handling  <man:insmod(8)>
+modprobe NAME                   # load a module and its dependencies  @insert <man:modprobe(8)>
+modprobe -r NAME                # unload a module and unused dependencies  @remove @rmmod <man:modprobe(8)>
+lsmod                           # list loaded modules  <man:lsmod(8)>
+modinfo NAME                    # show a module's params, license and deps  <man:modinfo(8)>
+
+## code
+module_init(FN)                 # register the function the kernel calls on insmod  @load
+    #include <linux/module.h>
+    static int __init hello_init(void) { pr_info("hi\n"); return 0; }
+    module_init(hello_init);
+module_exit(FN)                 # register the function the kernel calls on rmmod  @unload
+MODULE_LICENSE("GPL")           # declare the license, needed for GPL-only symbols  @taint
+module_param(NAME, TYPE, PERM)  # expose a variable as a module parameter  @argument

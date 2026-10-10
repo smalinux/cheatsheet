@@ -1,0 +1,17 @@
+title: c++ stl
+url:   https://en.cppreference.com/w/cpp
+tags:  cpp c++ std
+
+## vector
+v.reserve(N)                    # allocate room for N elements, size is unchanged  @capacity <https://en.cppreference.com/w/cpp/container/vector/reserve>
+v.emplace_back(ARGS)            # construct an element in place at the end  @push <https://en.cppreference.com/w/cpp/container/vector/emplace_back>
+std::erase(v, X)                # remove every element equal to X (C++20)  @remove <https://en.cppreference.com/w/cpp/container/vector/erase2>
+
+## map
+m.contains(K)                   # check if key K exists (C++20)  @has @find <https://en.cppreference.com/w/cpp/container/map/contains>
+m.try_emplace(K, ARGS)          # insert only if K is missing, no move on failure  @insert <https://en.cppreference.com/w/cpp/container/map/try_emplace>
+for (auto& [k, v] : m)          # loop over keys and values with structured bindings  @iterate
+
+## algorithm
+std::ranges::sort(v)            # sort a whole container (C++20)  <https://en.cppreference.com/w/cpp/algorithm/ranges/sort>
+std::ranges::find(v, X)         # find the first element equal to X  @search <https://en.cppreference.com/w/cpp/algorithm/ranges/find>

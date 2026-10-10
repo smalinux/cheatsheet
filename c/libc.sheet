@@ -1,0 +1,19 @@
+title: libc
+url:   https://www.gnu.org/software/libc/manual/html_node/
+tags:  c stdlib posix
+
+## memory
+memcmp(A, B, N)                 # compare N bytes, returns 0 if equal  @compare <man:memcmp(3)>
+memcpy(DST, SRC, N)             # copy N bytes, regions must not overlap  @copy <man:memcpy(3)>
+memmove(DST, SRC, N)            # copy N bytes, regions may overlap  @copy @overlap <man:memmove(3)>
+memset(P, BYTE, N)              # fill N bytes with BYTE  @zero @clear <man:memset(3)>
+calloc(N, SIZE)                 # allocate N*SIZE zeroed bytes, checks overflow  @malloc <man:calloc(3)>
+
+## strings
+snprintf(BUF, SIZE, FMT, ...)   # format into BUF, never writes more than SIZE  @sprintf <man:snprintf(3)>
+strtol(S, &END, BASE)           # parse a long, END points after the number  @atoi @parse <man:strtol(3)>
+strerror(errno)                 # get the message text for an error number  @perror <man:strerror(3)>
+
+## files
+open(PATH, O_RDONLY)            # open a file, returns fd or -1 and sets errno  <man:open(2)>
+fopen(PATH, "r")                # open a stdio stream, NULL on error  <man:fopen(3)>
