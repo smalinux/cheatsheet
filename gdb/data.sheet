@@ -1,0 +1,204 @@
+title: gdb examining data
+url:   https://sourceware.org/gdb/current/onlinedocs/gdb.html/Data.html
+tags:  gdb debugger print inspect variable value expression
+
+## print
+print EXPR                         # evaluate an expression in the program's language and print it  @p @inspect <https://sourceware.org/gdb/current/onlinedocs/gdb.html/Expressions.html>
+print                              # print the last value ($) again
+print/x EXPR                       # print an expression in hex  @format
+p VAR                              # print a variable
+p ARR[3]                           # print an array element
+p *PTR                             # print what a pointer points to  @dereference
+p PTR->FIELD                       # print a struct field through a pointer
+p OBJ.method(3)                    # call a C++ method and print the result
+p FUNC(1, 2)                       # call a function and print the result
+p (char)X                          # print a value cast to another type  @cast
+p {int}ADDR                        # print the memory at ADDR as an int  @peek
+p sizeof(struct foo)               # print the size of a type  @sizeof
+p $rip                             # print a register
+p $1 + $2                          # use value history in an expression
+p 'file.c'::VAR                    # print a variable from another file  @scope @static <https://sourceware.org/gdb/current/onlinedocs/gdb.html/Variables.html>
+p FUNC::VAR                        # print a static variable inside a function  @scope @static
+p NS::Class::member                # print a C++ scoped name  @scope
+p &VAR                             # print the address of a variable  @address
+p *ARR@10                          # print 10 elements starting at ARR[0] (artificial array)  @array @range <https://sourceware.org/gdb/current/onlinedocs/gdb.html/Arrays.html>
+p/x ARR[0]@5                       # print 5 array elements in hex  @array
+p ARR[1]@3                         # print 3 elements starting at ARR[1]  @array
+p $_exitcode                       # print the program's exit code
+p -elements 200 -- BIG_ARRAY       # print up to 200 elements this time  @limit
+p -array-indexes on -- ARR         # print array elements with their [index]
+p -null-stop on -- CHARBUF         # stop char arrays at the first NUL
+p -object on -- *BASE_PTR          # print the real derived type of a C++ object  @dynamic-type @polymorphism
+p -vtbl on -- OBJ                  # print C++ virtual tables
+p -static-members off -- OBJ       # print a C++ object without static members
+p -union on -- U                   # print unions inside structs
+p -symbol on -- PTR                # print <symbol+offset> next to pointers
+p -address off -- PTR              # print without addresses
+p -repeats N -- ARR                # set the "<repeats N times>" threshold for this print
+p -max-depth N -- DEEP_STRUCT      # limit how deep nested structs print
+p -memory-tag-violations on -- PTR # show memory tag violations (MTE)
+p -nibbles on -- /t X              # group binary digits by 4
+p -raw-values on -- OBJ            # print without pretty printers  @raw
+p -characters N -- STR             # limit how many string characters print
+output EXPR                        # print a value with no "$N =" and no newline  <https://sourceware.org/gdb/current/onlinedocs/gdb.html/Output.html>
+output/x EXPR                      # print a value in hex with no "$N =" and no newline
+call EXPR                          # evaluate like print but do not show void results
+
+## ambiguous names
+set multiple-symbols all|ask|cancel # choose what happens when a name matches several symbols  @overload <https://sourceware.org/gdb/current/onlinedocs/gdb.html/Ambiguous-Expressions.html>
+p 'foo(int)'                        # quote an overloaded C++ function name  @overload
+p NS::foo<int>(X)                   # call a C++ template function  @template
+
+## output formats
+x                # format letter: print in hexadecimal  @print/x <https://sourceware.org/gdb/current/onlinedocs/gdb.html/Output-Formats.html>
+d                # format letter: print as signed decimal  @print/d
+u                # format letter: print as unsigned decimal  @print/u
+o                # format letter: print in octal  @print/o
+t                # format letter: print in binary (two)  @print/t
+a                # format letter: print as an address with <symbol+offset>  @print/a
+c                # format letter: print as a character  @print/c
+f                # format letter: print as a float  @print/f
+s                # format letter: print as a string  @print/s
+z                # format letter: print hex zero-padded  @print/z
+i                # format letter: print as instructions (x only)  @x/i
+r                # format letter: print raw, bypass pretty printers  @print/r
+b                # size letter: read bytes, 1 byte (x only)  @x/b
+h                # size letter: read halfwords, 2 bytes (x only)  @x/h
+w                # size letter: read words, 4 bytes (x only)  @x/w
+g                # size letter: read giant words, 8 bytes (x only)  @x/g
+p/x 255          # print in hex: 0xff  @format
+p/t 10           # print in binary: 1010  @format
+p/c 65           # print as a char: 65 'A'  @format @ascii
+p/d 'A'          # print a char as a number: 65  @format @ascii
+p/a ADDR         # print an address with its symbol: 0x401136 <main+4>  @format
+p/z 5            # print zero-padded hex: 0x00000005  @format
+p/x -1           # print -1 in hex at the width of int: 0xffffffff
+p/s BUF          # print as a string
+p/r OBJ          # print raw, without a pretty printer
+p $xmm0.v4_float # print a vector register as 4 floats  @simd
+p/x $sp          # print the stack pointer in hex
+
+## examine memory
+x/NFU ADDR    # examine memory: N units, format F, unit size U  @hexdump @dump <https://sourceware.org/gdb/current/onlinedocs/gdb.html/Memory.html>
+x/4xw &VAR    # show 4 words in hex
+x/8xb PTR     # show 8 bytes in hex  @bytes
+x/s STR       # show a C string  @fav
+x/2s STR      # show 2 strings
+x/10i $pc     # show 10 instructions  @disassemble
+x/3xg $sp     # show 3 giant (8-byte) words in hex  @stack
+x/16c BUF     # show 16 chars
+x/2f &DBL     # show 2 floats, size from the type
+x/ax $sp      # show memory as addresses with symbols
+x &VAR        # examine memory with the last format used
+x/-4xw $sp    # show memory before the address (negative count)
+<RET> after x # continue examining after the last address
+$_            # hold the last address examined  @convenience
+$__           # hold the contents of the last address examined  @convenience
+
+## memory tagging
+memory-tag print-logical-tag POINTER    # print the logical tag of a pointer (AArch64 MTE)  @mte <https://sourceware.org/gdb/current/onlinedocs/gdb.html/Memory-Tagging.html>
+memory-tag print-allocation-tag ADDR    # print the allocation tag of memory (MTE)  @mte
+memory-tag with-logical-tag POINTER TAG # print a pointer with a different logical tag  @mte
+memory-tag set-allocation-tag ADDR LENGTH TAGS # set allocation tags of memory  @mte
+memory-tag check POINTER                # check a pointer tag against the allocation tag  @mte
+set print memory-tag-violations on|off  # show memory tag violations when printing  @mte
+
+## auto display
+display EXPR         # print an expression at every stop  @watch @auto <https://sourceware.org/gdb/current/onlinedocs/gdb.html/Auto-Display.html>
+display/FMT EXPR     # print an expression with a format at every stop, e.g. display/x flags
+display/4xw $sp      # show 4 stack words at every stop
+undisplay N...       # remove auto-display expressions  @delete-display
+disable display N... # disable auto-display expressions
+enable display N...  # enable auto-display expressions
+info display         # list auto-display expressions
+display              # redisplay all expressions now
+
+## print settings
+set print address on|off                # show addresses next to pointers and strings  <https://sourceware.org/gdb/current/onlinedocs/gdb.html/Print-Settings.html>
+set print symbol on|off                 # show <symbol> for pointers
+set print symbol-filename on            # show file:line for symbols
+set print array on|off                  # print arrays on several lines
+set print array-indexes on|off          # print [0] = ... indexes in arrays
+set print elements N|unlimited          # set the max array/string elements printed (default 200)  @truncate @limit
+set print characters N|unlimited|elements # set the max string characters printed
+set print repeats N|unlimited           # set the threshold for "<repeats N times>"
+set print null-stop on|off              # stop char arrays at the first NUL
+set print pretty on|off                 # print structs indented  @format
+set print raw-values on|off             # print without pretty printers
+set print sevenbit-strings on|off       # print 8-bit characters as \nnn
+set print union on|off                  # print unions inside structs
+set print object on|off                 # show the real (dynamic) C++ type  @polymorphism
+set print static-members on|off         # print C++ static members
+set print vtbl on|off                   # print C++ virtual tables nicely
+set print demangle on|off               # show demangled C++ names
+set print asm-demangle on|off           # show demangled names in disassembly
+set demangle-style gnu-v3|auto          # choose the demangling style
+set print pascal_static-members on|off  # print Pascal static members
+set print max-depth N|unlimited         # limit how deep nested structs print
+set print max-symbolic-offset N|unlimited # limit offsets shown in <symbol+offset>
+set print type methods on|off           # show methods in ptype
+set print type typedefs on|off          # show typedefs in ptype
+set print type nested-type-limit N|unlimited # limit nested types in ptype
+set print type hex on|off               # show sizes and offsets in hex (ptype/o)
+set print inferior-events on|off        # print messages when inferiors start and exit
+set print nibbles on|off                # group binary digits by 4
+set print symbol-loading off|brief|full # choose how much symbol loading prints
+show print SETTING                      # show one print setting
+show print                              # show all print settings
+
+## pretty printers
+info pretty-printer [OBJECT-REGEX [NAME-REGEX]] # list pretty printers  @stl <https://sourceware.org/gdb/current/onlinedocs/gdb.html/Pretty_002dPrinter-Commands.html>
+disable pretty-printer [OBJECT-REGEX [NAME-REGEX]] # disable pretty printers
+enable pretty-printer [OBJECT-REGEX [NAME-REGEX]] # enable pretty printers
+disable pretty-printer global std::vector # disable the std::vector printer  @stl
+p/r VEC                           # print one value raw, without its pretty printer  @raw
+python print(gdb.pretty_printers) # show the global pretty printer list
+libstdc++ printers                # get std::vector and std::map printers auto-loaded with libstdc++  @stl @cpp
+
+## value history
+p $           # print the last value  <https://sourceware.org/gdb/current/onlinedocs/gdb.html/Value-History.html>
+p $$          # print the value before the last
+p $$N         # print the value N entries back
+p $N          # print history entry N, e.g. $5
+show values   # show the last 10 values
+show values N # show 10 values around entry N
+show values + # show the next 10 values
+
+## convenience variables
+set $FOO = 42                  # make your own convenience variable  @variable <https://sourceware.org/gdb/current/onlinedocs/gdb.html/Convenience-Vars.html>
+set $PTR = LIST_HEAD           # store a pointer to walk a list
+p *$PTR; set $PTR = $PTR->next # walk a linked list, repeat with RET  @linked-list
+p $FOO++                       # increment a convenience variable
+show convenience               # list all convenience variables and functions  @show-conv
+init-if-undefined $X = 0       # set a convenience variable only if it is not set
+set var X = 5                  # set a program variable, "var" avoids clashes with GDB settings
+$_exitcode                     # hold the exit code of the program
+$_exitsignal                   # hold the signal that killed the program
+$_exception                    # hold the current C++ exception (at catch throw/catch)
+$_ada_exception                # hold the address of the Ada exception
+$_siginfo                      # hold extra signal info as a struct
+$_tlb                          # hold the Windows Thread Information Block
+$_gdb_major                    # hold the GDB major version number  @$_gdb_minor
+$_linker_namespace             # hold the glibc dlmopen namespace of the current location
+$_active_linker_namespaces     # hold the active glibc linker namespaces
+$_ret                          # hold the return value (tracepoints)
+$pc                            # hold the program counter, also $sp $fp $ps
+$_wave_id                      # hold the AMD GPU wave id, also $_dispatch_pos $_dispatch_id $_queue_id $_agent_id
+
+## convenience functions
+p $_memeq(BUF1, BUF2, N)              # compare N bytes of memory  @memcmp <https://sourceware.org/gdb/current/onlinedocs/gdb.html/Convenience-Funs.html>
+p $_streq(S1, S2)                     # test if two strings are equal  @strcmp
+p $_strlen(S)                         # get the length of a string
+p $_regex(S, "^ab.*")                 # test if a string matches a regex
+p $_isvoid(EXPR)                      # test if an expression is void
+p $_gdb_setting_str("print elements") # get a setting as a string
+p $_gdb_setting("print elements")     # get a setting as a value
+p $_gdb_maint_setting_str(S)          # get a maint setting as a string, also $_gdb_maint_setting
+p $_as_string(ENUM_VAL)               # get a value as a string
+p $_creal(Z)                          # get the real part of a complex number, also $_cimag
+p $_caller_is("main")                 # test if the caller is main  @backtrace
+p $_caller_is("f", 2)                 # test the function 2 frames up
+p $_caller_matches(REGEX)             # test if the caller matches a regex
+p $_any_caller_is(NAME)               # test if any caller is NAME, also $_any_caller_matches
+break FUNC if $_caller_is("main")     # stop only when called from main  @conditional
+help function                         # list all convenience functions

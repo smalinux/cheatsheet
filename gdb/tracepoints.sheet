@@ -1,0 +1,70 @@
+title: gdb tracepoints
+url:   https://sourceware.org/gdb/current/onlinedocs/gdb.html/Tracepoints.html
+tags:  gdb debugger tracepoint trace collect realtime embedded
+
+## create and delete
+trace LOCATION                 # set a tracepoint, collect data without stopping  @tr @tp <https://sourceware.org/gdb/current/onlinedocs/gdb.html/Create-and-Delete-Tracepoints.html>
+ftrace LOCATION                # set a fast tracepoint, needs the in-process agent
+strace LOCATION                # set a static tracepoint at a UST marker
+strace -m MARKER               # set a static tracepoint by marker id
+trace FOO if X > 3             # set a conditional tracepoint
+condition N EXPR               # add a condition to tracepoint N
+info tracepoints [N]           # list tracepoints  @info-tp
+delete tracepoints [N...]      # delete tracepoints
+disable tracepoints [N...]     # disable tracepoints
+enable tracepoints [N...]      # enable tracepoints
+passcount COUNT [N]            # stop tracing after tracepoint N is hit COUNT times
+save tracepoints FILE          # save tracepoint definitions to a file
+info static-tracepoint-markers # list UST markers
+$tpnum                         # hold the number of the last tracepoint set  @convenience
+
+## trace state variables
+tvariable $NAME [= EXPR]    # create a trace state variable  <https://sourceware.org/gdb/current/onlinedocs/gdb.html/Trace-State-Variables.html>
+info tvariables             # list trace state variables
+delete tvariable [$NAME...] # delete trace state variables
+
+## actions
+actions [N]                 # define what a tracepoint collects, end with "end"  <https://sourceware.org/gdb/current/onlinedocs/gdb.html/Tracepoint-Actions.html>
+    actions 1
+      collect $regs, $locals, $args
+      while-stepping 5
+        collect $pc
+      end
+    end
+collect EXPR, EXPR...       # collect values, e.g. $regs $locals $args $_ret $_sdata *PTR@10
+collect/s STR               # collect a value as a string
+teval EXPR                  # evaluate an expression without collecting, e.g. teval $count++
+while-stepping N            # collect while single-stepping N times  @stepping @ws
+set default-collect EXPR... # collect these values at every tracepoint
+
+## run the experiment
+tstart [NOTES]                    # start tracing  <https://sourceware.org/gdb/current/onlinedocs/gdb.html/Starting-and-Stopping-Trace-Experiments.html>
+tstop [NOTES]                     # stop tracing
+tstatus                           # show the tracing status
+set disconnected-tracing on|off   # keep tracing after GDB disconnects
+set circular-trace-buffer on|off  # overwrite old data when the buffer is full
+set trace-buffer-size N|unlimited # set the trace buffer size
+set trace-user NAME               # record the user name with the trace, also trace-notes and trace-stop-notes
+
+## examine trace data
+tfind start              # select the first trace frame  @tf <https://sourceware.org/gdb/current/onlinedocs/gdb.html/tfind.html>
+tfind none               # leave trace frame mode
+tfind end                # select the last trace frame
+tfind                    # select the next trace frame  @tfind-next
+tfind -                  # select the previous trace frame
+tfind N                  # select trace frame N
+tfind tracepoint N       # select the next frame collected by tracepoint N
+tfind pc ADDR            # select the next frame at an address
+tfind range START, END   # select the next frame inside an address range
+tfind outside START, END # select the next frame outside an address range
+tfind line [FILE:]LINE   # select the next frame at a line
+tdump                    # show all data of the current trace frame
+$trace_frame             # hold the current trace frame number, -1 if none  @convenience
+$tracepoint              # hold the tracepoint number of the current frame  @convenience
+$trace_line              # hold the line of the current trace frame, also $trace_file $trace_func  @convenience
+$_sdata                  # hold static tracepoint data  @convenience
+
+## trace files
+tsave [-r] [-ctf] FILE # save trace data, -r saves on the remote, -ctf in CTF format  <https://sourceware.org/gdb/current/onlinedocs/gdb.html/Trace-Files.html>
+target tfile FILE      # open a saved trace file
+target ctf DIR         # open a CTF trace directory

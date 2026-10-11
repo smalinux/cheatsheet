@@ -1,0 +1,84 @@
+title: gdb files, shared libraries, debug info
+url:   https://sourceware.org/gdb/current/onlinedocs/gdb.html/GDB-Files.html
+tags:  gdb debugger symbols shared-library so debuginfo sysroot
+
+## specify files
+file [FILE]                         # load an executable and its symbols, no arg discards both  @load <https://sourceware.org/gdb/current/onlinedocs/gdb.html/Files.html>
+file -readnow FILE                  # load a file and read all symbols now, also -readnever
+exec-file [FILE]                    # load only the executable
+symbol-file [FILE] [-o OFFSET]      # load only the symbols  @debuginfo
+symbol-file -readnow FILE           # load symbols and read them all now
+core-file [FILE]                    # load a core dump  @core
+add-symbol-file FILE [-readnow|-readnever] [-o OFF] [TEXTADDR] [-s SECTION ADDR]... # add symbols at an address  @kernel-module @jit
+add-symbol-file mod.ko 0xffffffffc0000000 -s .data ADDR # add symbols of a kernel module  @kernel @ko
+remove-symbol-file FILE             # remove symbols added with add-symbol-file, also -a ADDR
+add-symbol-file-from-memory ADDR    # load symbols from an ELF image in memory  @vdso
+section SECTION ADDR                # relocate one section to an address
+info files                          # show all files and sections in use  @info-target
+set trust-readonly-sections on      # read read-only sections from the file, not the target (faster remote)
+set exec-file-mismatch ask|warn|off # choose what happens when the attached exec differs from "file"
+load [FILE] [OFFSET]                # download the program to the target (remote or sim)  @flash
+
+## shared libraries
+info sharedlibrary [REGEX]      # list loaded shared libraries, (*) means no debug info  @info-share @info-dll @so @ldd
+sharedlibrary [REGEX]           # load symbols of shared libraries now  @share
+nosharedlibrary                 # unload all shared library symbols
+set auto-solib-add on|off       # load shared library symbols automatically
+set stop-on-solib-events 0|1    # stop when a library is loaded or unloaded  @dlopen
+set sysroot PATH                # set where target libraries are, for remote and cross debugging  @solib-absolute-prefix @cross
+set sysroot target:             # read libraries from the remote target
+set sysroot remote:             # read libraries from the remote target (old spelling)
+set solib-search-path PATH:PATH # set extra directories to search for shared libraries
+show sysroot                    # show the sysroot
+show solib-search-path          # show the shared library search path
+
+## separate debug info
+set debug-file-directory DIRS          # set where to look for separate debug files  @/usr/lib/debug <https://sourceware.org/gdb/current/onlinedocs/gdb.html/Separate-Debug-Files.html>
+set debug-file-directory /usr/lib/debug:/home/me/dbg # look for debug files in two directories
+show debug-file-directory              # show where debug files are searched
+set build-id-verbose 0|1|2             # choose how much build-id lookup prints
+maint set bfd-sharing on|off           # share open files between objfiles  @cache <https://sourceware.org/gdb/current/onlinedocs/gdb.html/File-Caching.html>
+maint flush bfd-cache                  # close cached files, also maint info bfds
+objcopy --only-keep-debug prog prog.debug # extract debug info to a separate file  @strip <man:objcopy(1)>
+objcopy --strip-debug prog             # remove debug info from a binary  @strip <man:objcopy(1)>
+objcopy --add-gnu-debuglink=prog.debug prog # link a binary to its separate debug file  @debuglink <man:objcopy(1)>
+readelf -n prog | grep Build           # show the build-id of a binary  @build-id <man:readelf(1)>
+/usr/lib/debug/.build-id/XX/YYYY.debug # find debug files by build-id here  @build-id
+.gnu_debugdata                         # hold an xz-compressed symtab in this section (MiniDebugInfo, Fedora style)  @minidebuginfo
+
+## index files
+save gdb-index [-dwarf-5] DIR          # write a .gdb_index or .debug_names file for faster loading  @speed <https://sourceware.org/gdb/current/onlinedocs/gdb.html/Index-Files.html>
+set index-cache enabled on|off         # cache symbol indexes automatically  @speed
+set index-cache directory DIR          # set where cached indexes go
+show index-cache stats                 # show index cache statistics
+maint set dwarf-max-cache-age N        # keep DWARF compilation units cached for N reads
+gdb -batch -ex "save gdb-index ." prog # build an index file from the shell
+objcopy --add-section .gdb_index=prog.gdb-index --set-section-flags .gdb_index=readonly prog # add an index into the binary
+ld --gdb-index                         # build the index at link time (gold linker)
+
+## symbol errors and data files
+set complaints N       # show up to N symbol reading complaints (default 0)  <https://sourceware.org/gdb/current/onlinedocs/gdb.html/Symbol-Errors.html>
+show complaints        # show the complaint limit
+set data-directory DIR # set where GDB's own data lives (python, syscall XML)  <https://sourceware.org/gdb/current/onlinedocs/gdb.html/Data-Files.html>
+show data-directory    # show GDB's data directory
+
+## debuginfod
+export DEBUGINFOD_URLS="https://debuginfod.ubuntu.com" # download debug info and sources automatically (shell)  @fedora @debian <https://sourceware.org/gdb/current/onlinedocs/gdb.html/Debuginfod.html>
+set debuginfod enabled on|off|ask # turn debuginfod downloads on or off
+set debuginfod urls URLS          # set the debuginfod servers
+set debuginfod verbose 0|1        # choose how much debuginfod prints
+show debuginfod enabled           # show if debuginfod is on
+show debuginfod urls              # show the debuginfod servers
+
+## jit code
+__jit_debug_register_code() # call this from a JIT so GDB reads the new code's symbols  @llvm <https://sourceware.org/gdb/current/onlinedocs/gdb.html/JIT-Interface.html>
+    struct jit_code_entry { next_entry, prev_entry, symfile_addr, symfile_size };
+    struct jit_descriptor  { version=1, action_flag (JIT_NOACTION/JIT_REGISTER_FN/JIT_UNREGISTER_FN),
+                             relevant_entry, first_entry };
+    extern struct jit_descriptor __jit_debug_descriptor;
+    void __attribute__((noinline)) __jit_debug_register_code(void) { asm(""); }
+__jit_debug_descriptor      # hold the list of JIT object files that GDB reads
+maint info jit              # list objects registered by JIT code
+jit-reader-load FILE.so     # load a custom reader for JIT debug info
+jit-reader-unload           # unload the custom JIT reader
+set debug jit 1             # print JIT interface debug output

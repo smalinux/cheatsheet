@@ -1,0 +1,142 @@
+title: gdb settings and editing
+url:   https://sourceware.org/gdb/current/onlinedocs/gdb.html/Controlling-GDB.html
+tags:  gdb debugger config prompt history color style readline
+
+## prompt and screen
+set prompt (gdb-app)              # change the prompt, a trailing space matters  <https://sourceware.org/gdb/current/onlinedocs/gdb.html/Prompt.html>
+set prompt \033[1;31m(gdb)\033[0m # use a colored prompt  @color
+show prompt                       # show the prompt
+set extended-prompt TEXT          # use a Python prompt with \f \p{setting} \w substitutions
+show extended-prompt              # show the extended prompt
+set height N|unlimited|0          # set lines per page, 0 means no paging  <https://sourceware.org/gdb/current/onlinedocs/gdb.html/Screen-Size.html>
+set width N|unlimited|0           # set columns per line
+set pagination on|off             # turn the "--Type <RET>--" pauses on or off  @more
+show height                       # show lines per page, also show width
+
+## history
+set editing on|off           # turn readline line editing on or off  <https://sourceware.org/gdb/current/onlinedocs/gdb.html/Editing.html>
+show editing                 # show if line editing is on
+set history filename FILE    # set the history file, default ~/.gdb_history or $GDBHISTFILE  <https://sourceware.org/gdb/current/onlinedocs/gdb.html/Command-History.html>
+set history save on|off      # save history on exit
+set history size N|unlimited # set how many history lines are kept, $GDBHISTSIZE
+set history remove-duplicates N|unlimited # drop duplicate history lines
+set history expansion on|off # turn "!" history expansion on or off
+show history                 # show all history settings
+show commands                # show the last 10 commands
+show commands N              # show 10 commands around N, also show commands +
+
+## styling
+set style enabled on|off               # turn colors on or off  @color <https://sourceware.org/gdb/current/onlinedocs/gdb.html/Output-Styling.html>
+set style sources on|off               # colorize source code (Source Highlight or pygments)
+set style disassembler enabled on|off  # colorize disassembly
+set style tui-current-position on|off  # highlight the current position in TUI
+set style filename foreground COLOR    # set a color: none black red green yellow blue magenta cyan white, 0-255 or #RRGGBB
+set style filename background COLOR    # set the background color of file names
+set style filename intensity normal|bold|dim # set the intensity of file names
+set style function foreground green    # color function names green
+set style variable foreground cyan     # color variable names cyan
+set style address foreground blue      # color addresses blue
+set style title foreground COLOR       # color titles
+set style highlight foreground COLOR   # color matches, e.g. in apropos
+set style metadata foreground COLOR    # color metadata like <optimized out>
+set style version foreground COLOR     # color the version text
+set style tui-border foreground COLOR  # color TUI borders, also tui-active-border
+set style disassembler mnemonic foreground COLOR # color asm mnemonics, also register immediate address symbol comment
+set style line-number foreground COLOR # color line numbers
+set style command foreground COLOR     # color command names
+set style warning-prefix TEXT          # set the warning prefix, also error-prefix
+show style                             # show all styles
+
+## numbers and abi
+set radix 16                      # set input and output number base (8, 10, 16)  @hex <https://sourceware.org/gdb/current/onlinedocs/gdb.html/Numbers.html>
+set input-radix 16                # read numbers in hex without 0x, careful: "10" means 16
+set output-radix 16               # print numbers in hex
+show radix                        # show the number bases, also show input-radix and output-radix
+set coerce-float-to-double on|off # promote float args to double for unprototyped functions  <https://sourceware.org/gdb/current/onlinedocs/gdb.html/ABI.html>
+
+## auto-loading
+set auto-load off                    # turn off all auto-loading  @security <https://sourceware.org/gdb/current/onlinedocs/gdb.html/Auto_002dloading.html>
+set auto-load local-gdbinit on|off   # load ./.gdbinit in the current directory
+set auto-load libthread-db on|off    # load libthread_db automatically
+set auto-load gdb-scripts on|off     # load OBJFILE-gdb.gdb scripts
+set auto-load python-scripts on|off  # load OBJFILE-gdb.py scripts
+set auto-load guile-scripts on|off   # load OBJFILE-gdb.scm scripts
+set auto-load scripts-directory DIRS # set where auto-load scripts are searched, default $debugdir:$datadir/auto-load
+set auto-load safe-path DIRS         # set trusted directories, "/" trusts everything  @security
+add-auto-load-safe-path DIR          # trust one more directory, fixes "auto-loading has been declined"  @declined @security
+add-auto-load-scripts-directory DIR  # add a directory for auto-load scripts
+show auto-load                       # show all auto-load settings
+info auto-load                       # show what was auto-loaded or declined
+info auto-load python-scripts        # show auto-loaded Python scripts, also gdb-scripts guile-scripts
+info auto-load local-gdbinit         # show if ./.gdbinit was loaded, also info auto-load libthread-db
+set debug auto-load on               # show which files auto-load tries
+
+## messages and confirmations
+set confirm on|off                    # ask before dangerous commands  @yes @prompt <https://sourceware.org/gdb/current/onlinedocs/gdb.html/Messages_002fWarnings.html>
+set verbose on|off                    # print messages while loading symbols
+set trace-commands on|off             # echo each command as it runs, with nesting
+set exec-done-display on|off          # print "completed." after async commands
+set suppress-cli-notifications on|off # hide CLI notifications, for front ends
+set interactive-mode on|off|auto      # treat stdin as a terminal or not
+set displaced-stepping on|off|auto    # step over breakpoints out of line
+
+## debug output
+set debug infrun 1              # print run control debug output, good for stepping and thread problems  <https://sourceware.org/gdb/current/onlinedocs/gdb.html/Debugging-Output.html>
+set debug lin-lwp 1             # print Linux thread debug output
+set debug frame 1               # print frame unwinding debug output
+set debug dwarf-read N          # print DWARF reading debug output, also dwarf-die dwarf-line
+set debug expression 1          # print parsed expressions
+set debug symtab-create N       # print symtab creation debug output, also symbol-lookup
+set debug target N              # print target method calls
+set debug threads 1             # print thread debug output
+set debug event-loop off|all|all-except-ui # print event loop debug output
+set debug py-unwind 1           # print Python unwinder debug output, also py-breakpoint py-micmd
+set debug separate-debug-file 1 # print where separate debug files are searched
+set debug timestamp on|off      # add timestamps to debug output
+show debug                      # show all debug settings
+
+## readline keys
+C-a # move to the line start  @readline @emacs <https://sourceware.org/gdb/current/onlinedocs/gdb.html/Command-Line-Editing.html>
+C-e # move to the line end  @readline
+C-f # move forward one char  @readline
+C-b # move back one char  @readline
+M-f # move forward one word  @readline
+M-b # move back one word  @readline
+C-l # clear the screen  @readline
+C-d # delete the char under the cursor, quits on an empty line  @readline
+C-k # kill to the end of the line  @readline @cut
+C-u # kill to the start of the line  @readline @cut
+C-w # kill the word before the cursor  @readline @cut
+M-d # kill the word after the cursor  @readline @cut
+C-y # yank (paste) the last kill  @readline @paste
+M-y # yank the kill before, after C-y  @readline @paste
+C-_ # undo  @readline
+C-t # swap two chars  @readline @transpose
+M-u # uppercase a word, also M-l lowercase and M-c capitalize  @readline
+TAB # complete  @readline
+M-? # list completions  @readline
+M-* # insert all completions  @readline
+C-q # insert the next char literally, also C-v  @readline
+M-r # revert the line  @readline
+C-p # go to the previous command  @readline @up
+C-n # go to the next command  @readline @down
+C-r # search history backward  @readline @reverse-search
+C-s # search history forward  @readline
+M-< # go to the first history line, M-> for the last  @readline
+C-o # run this line and fetch the next history line  @readline
+
+## history expansion
+!!        # repeat the last command, needs "set history expansion on"  @bang
+!N        # repeat history line N, also !-N !string !?string  @bang
+!$        # insert the last word of the previous command, also !^ !* !:N  @bang
+^old^new^ # repeat the last command with old replaced by new  @substitute
+:s/a/b/   # modify a history word, also :h :t :r :e :p :g  @bang
+
+## inputrc
+~/.inputrc # set readline options for GDB only inside $if Gdb  @readline @vi
+    $if Gdb
+        set editing-mode vi
+        "\C-xb": "break main\n"
+    $endif
+    set show-all-if-ambiguous on
+    set completion-ignore-case on

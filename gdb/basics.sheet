@@ -1,0 +1,211 @@
+title: gdb basics
+url:   https://sourceware.org/gdb/current/onlinedocs/gdb.html/
+tags:  gdb debugger debug invocation startup help
+; source: Debugging with GDB, GDB 19.x manual
+
+## quick start
+gcc -g -O0 -o app app.c    # compile with debug info and no optimization  @build
+gdb ./app                  # open a program in GDB  @start <man:gdb(1)>
+gdb -q ./app               # open a program without the copyright banner  @quiet
+gdb --args ./app ARG1 ARG2 # open a program and pass it arguments  @args
+gdb ./app core             # open a core dump with its program  @crash
+gdb -p PID                 # attach to a running process by PID  @attach
+break main                 # stop when main() starts  @b
+run                        # start the program  @r
+next                       # run one line, do not enter functions  @n
+step                       # run one line, enter functions  @s
+print X                    # show the value of X  @p
+backtrace                  # show the call stack  @bt
+continue                   # keep running until the next stop  @c
+quit                       # exit GDB  @q
+
+## invocation: files
+gdb PROGRAM      # load an executable  <https://sourceware.org/gdb/current/onlinedocs/gdb.html/File-Options.html>
+gdb PROGRAM CORE # load an executable and a core dump
+gdb PROGRAM PID  # load an executable and attach to PID
+gdb ./12345      # treat a numeric name as a file, not a PID  @dot-slash
+gdb -s FILE      # read the symbol table from FILE only  @--symbols
+gdb -e FILE      # use FILE as the executable  @--exec
+gdb -se FILE     # read symbols and executable from the same FILE
+gdb -c FILE      # use FILE as the core dump  @--core
+gdb -x FILE      # run GDB commands from FILE  @--command @script @fav
+gdb -ex 'CMD'    # run one GDB command at startup, can be repeated  @--eval-command @oneliner
+gdb -ix FILE     # run commands from FILE before the program is loaded  @-iex @init
+gdb -eix FILE    # run commands from FILE very early, before any output  @-eiex @early-init
+gdb -d DIR       # add DIR to the source search path  @--directory
+gdb -r           # read all symbols at startup, slow start but faster later  @--readnow
+gdb --readnever  # never read debug info, fast attach/dump/detach
+
+## invocation: modes
+gdb -n                        # do not read any init files  @-nx @gdbinit <https://sourceware.org/gdb/current/onlinedocs/gdb.html/Mode-Options.html>
+gdb -nh                       # skip only the home directory init file
+gdb -q                        # start without the banner  @-quiet @-silent
+gdb -batch                    # run -x/-ex commands then exit with status 0 or error  @script @noninteractive
+gdb -batch-silent             # run in batch mode and print nothing to stdout
+gdb -return-child-result      # exit GDB with the debugged program's exit code  @exit-status
+gdb -nw                       # use the command line only, no GUI  @-nowindows
+gdb -w                        # use a GUI if one is available  @-windows
+gdb -cd DIR                   # start GDB with DIR as working directory
+gdb -D DIR                    # set where GDB looks for its own data files  @-data-directory
+gdb -f                        # print file:line in Emacs style  @-fullname
+gdb -annotate LEVEL           # set annotation level 0..3 for old front ends
+gdb --args PROG A B C         # pass everything after PROG as program arguments  @arguments
+gdb --no-escape-args PROG '*' # pass arguments without escaping shell characters
+gdb -b BPS                    # set serial line speed for remote debugging  @-baud
+gdb -l SECONDS                # set the remote timeout
+gdb -t DEV                    # use DEV as the program's terminal  @-tty
+gdb -tui                      # start with the Text User Interface  @tui
+gdb -interpreter=mi           # start in GDB/MI mode for IDEs, also mi3 mi2 mi1  @-i @mi
+gdb -write                    # open exec and core files read-write  @patch
+gdb -statistics               # print time and memory use after each command
+gdb -version                  # print the GDB version and exit
+gdb -configuration            # print how GDB was built and exit
+gdb -binary-output            # use binary stdout/stderr on MS-Windows
+gdb -help                     # list all command line options  @-h
+
+## startup order and init files
+startup order              # list the order GDB reads init files and options in  @gdbinit @init-files <https://sourceware.org/gdb/current/onlinedocs/gdb.html/Startup.html>
+     1. early init: $XDG_CONFIG_HOME/gdb/gdbearlyinit | ~/.config/gdb/gdbearlyinit | ~/.gdbearlyinit
+        (macOS: ~/Library/Preferences/gdb/gdbearlyinit)
+     2. -eiex / -eix options
+     3. interpreter setup
+     4. system.gdbinit and system.gdbinit.d/*.gdb|*.py|*.scm (alphabetical)
+     5. home init: $XDG_CONFIG_HOME/gdb/gdbinit | ~/.config/gdb/gdbinit | ~/.gdbinit
+        (macOS: ~/Library/Preferences/gdb/gdbinit)
+     6. -iex / -ix options
+     7. command line operands (program, core, pid)
+     8. ./.gdbinit (only with "set auto-load local-gdbinit on" and dir != home)
+     9. auto-loaded scripts for the program and shared libs
+    10. -ex / -x options
+    11. command history file
+~/.config/gdb/gdbinit      # put permanent settings here  @~/.gdbinit @config <https://sourceware.org/gdb/current/onlinedocs/gdb.html/Initialization-Files.html>
+    set confirm off
+    set pagination off
+    set print pretty on
+    set history save on
+~/.config/gdb/gdbearlyinit # put startup settings here, only set and source allowed  @early-init
+set startup-quietly on     # start without the banner, like -q (early init file only)  @quiet
+set confirm off            # do not ask "are you sure?"  @gdbinit
+set pagination off         # turn off the "--Type <RET>--" pauses  @gdbinit @more
+set print pretty on        # print structs indented  @gdbinit
+set history save on        # keep command history between sessions  @gdbinit @fav
+set auto-load safe-path /  # allow a local .gdbinit anywhere, careful  @gdbinit @security
+
+## quitting and shell
+quit [EXPR]                      # exit GDB, EXPR is the exit code  @q @exit @Ctrl-d <https://sourceware.org/gdb/current/onlinedocs/gdb.html/Quitting-GDB.html>
+Ctrl-c                           # interrupt the running command or program, does not quit GDB  @stop @break
+detach                           # release an attached process and keep GDB open
+shell CMD                        # run a shell command  @!CMD <https://sourceware.org/gdb/current/onlinedocs/gdb.html/Shell-Commands.html>
+!CMD                             # run a shell command, no space needed after !  @shell
+make ARGS                        # run "shell make ARGS"  @build
+pipe CMD | SHELLCMD              # send a GDB command's output to a shell command  @| @grep
+| CMD | SHELLCMD                 # send a GDB command's output to a shell command, short form  @pipe
+|| SHELLCMD                      # repeat the last command and pipe it to a shell command  @pipe
+pipe -d DELIM CMD DELIM SHELLCMD # pipe with a custom delimiter when CMD contains "|"
+p $_shell("CMD")                 # run a shell command from an expression and get its exit code
+p $_shell_exitcode               # show the exit code of the last shell/make/pipe command
+p $_shell_exitsignal             # show the signal that killed the last shell command
+
+## logging
+set logging enabled on|off   # start or stop copying output to gdb.txt  @tee @save-output @fav <https://sourceware.org/gdb/current/onlinedocs/gdb.html/Logging-Output.html>
+set logging file FILE        # set the log file name, default gdb.txt
+set logging overwrite on|off # overwrite the log file instead of appending
+set logging redirect on|off  # send output only to the log file, not the screen
+set logging debugredirect on # send debug output only to the log file
+show logging                 # show the logging settings
+
+## command syntax
+step 5     # give a command an argument  <https://sourceware.org/gdb/current/onlinedocs/gdb.html/Command-Syntax.html>
+s          # abbreviate a command to any unique prefix  @short @alias
+<RET>      # repeat the last command by pressing Enter on an empty line (not run/attach)  @repeat @enter
+Ctrl-o     # run this line and fetch the next history line  @operate-and-get-next
+\# COMMENT # write a comment, everything after # is ignored  @comment
+
+## settings: set, show, with
+set print elements 10         # change a setting  @configure
+show print elements           # see the value of a setting
+info set                      # show all settings  @show
+print -elements 10 -- ARR     # override a setting for one command  @option
+with print pretty on -- p VAR # change a setting for one command only  @temporary
+w print elements 5            # repeat the last command with a temporary setting  @with
+with language ada -- with print elements 10 -- p X # nest "with" to change several settings
+
+## completion
+info bre<TAB>         # complete a command name  @tab <https://sourceware.org/gdb/current/onlinedocs/gdb.html/Completion.html>
+b make_<TAB><TAB>     # list all completions  @tab
+M-?                   # list completions without pressing TAB twice  @ESC-?
+p 'func<<TAB>         # quote with ' to complete C++ templates and operators
+p VAR.<TAB>           # complete struct fields
+set max-completions N # limit completions, 0 disables, or "unlimited"
+show max-completions  # show the completion limit
+
+## filenames with spaces
+file /path/with\ spaces/prog         # escape spaces with backslash in file commands  @quote
+symbol-file "/path/with spaces/prog" # quote a path with spaces
+add-auto-load-safe-path /path with spaces/ # pass raw text, most commands need no quoting
+
+## command options
+print -pretty -- *PTR  # end options with "--" when the argument may start with "-"  <https://sourceware.org/gdb/current/onlinedocs/gdb.html/Command-Options.html>
+p -o -p 0 -e u -- *PTR # abbreviate options, values on/off/1/0/yes/no/enable/disable
+print -<TAB><TAB>      # list all options of a command
+
+## help
+help               # list the command classes  @h <https://sourceware.org/gdb/current/onlinedocs/gdb.html/Help.html>
+help CLASS         # list commands in a class, e.g. breakpoints, running, data
+help COMMAND       # show help for one command  @usage
+apropos REGEX      # search all commands and their docs  @search @find
+apropos -v REGEX   # search commands and highlight the matches
+complete TEXT      # list the completions for TEXT (used by Emacs)
+info SUBCMD        # show info about the program (args, registers, ...)  @i
+show SUBCMD        # show info about GDB itself (settings)
+show version       # print the GDB version
+show configuration # show how GDB was built
+show copying       # print the GDB license  @warranty
+
+## abbreviations
+b     # abbreviation for break
+tb    # abbreviation for tbreak
+hb    # abbreviation for hbreak
+d     # abbreviation for delete
+dis   # abbreviation for disable
+en    # abbreviation for enable
+r     # abbreviation for run
+k     # abbreviation for kill
+c     # abbreviation for continue  @fg
+n     # abbreviation for next
+ni    # abbreviation for nexti
+si    # abbreviation for stepi
+fin   # abbreviation for finish
+u     # abbreviation for until
+j     # abbreviation for jump
+rc    # abbreviation for reverse-continue
+rs    # abbreviation for reverse-step
+rn    # abbreviation for reverse-next
+bt    # abbreviation for backtrace  @where
+f     # abbreviation for frame
+p     # abbreviation for print
+i     # abbreviation for info
+x     # examine memory
+i r   # abbreviation for info registers
+i b   # abbreviation for info breakpoints
+l     # abbreviation for list
+wa    # abbreviation for watch
+t     # abbreviation for thread
+disas # abbreviation for disassemble
+sha   # abbreviation for sharedlibrary
+q     # abbreviation for quit
+h     # abbreviation for help
+py    # abbreviation for python
+pi    # abbreviation for python-interactive
+gu    # abbreviation for guile
+gr    # abbreviation for guile-repl
+fo    # abbreviation for forward-search
+rev   # abbreviation for reverse-search
+w     # abbreviation for with
+tp    # abbreviation for trace  @tr
+tf    # abbreviation for tfind
+taas  # abbreviation for thread apply all -s
+tfaas # abbreviation for thread apply all -s frame apply all -s
+faas  # abbreviation for frame apply all -s
+fs    # abbreviation for focus
+wh    # abbreviation for winheight

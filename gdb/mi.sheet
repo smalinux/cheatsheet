@@ -1,0 +1,143 @@
+title: gdb/mi machine interface
+url:   https://sourceware.org/gdb/current/onlinedocs/gdb.html/GDB_002fMI.html
+tags:  gdb debugger mi ide frontend protocol vscode eclipse clion
+
+## syntax
+[TOKEN]-command [ARGS]           # send an MI command, e.g. 123-break-insert main  @input <https://sourceware.org/gdb/current/onlinedocs/gdb.html/GDB_002fMI-Input-Syntax.html>
+TOKEN^done[,RESULTS]             # reply when a command succeeds  @output <https://sourceware.org/gdb/current/onlinedocs/gdb.html/GDB_002fMI-Output-Syntax.html>
+^running                         # reply when the program starts running, also ^connected ^exit
+^error,msg="..."                 # reply when a command fails
+*running,thread-id="all"         # report async: the program is running
+*stopped,reason="breakpoint-hit" # report async: the program stopped and why
+=thread-created                  # notify: a thread started, also =thread-exited =library-loaded
+=breakpoint-created              # notify: breakpoint changes, also =breakpoint-modified =breakpoint-deleted
+=thread-group-added              # notify: inferior changes, also =thread-group-started =thread-group-exited
+=record-started                  # notify: other events, also =cmd-param-changed =memory-changed
+~"console stream"                # carry console output text
+@"target stream"                 # carry output from the target program
+&"log stream"                    # carry GDB log and debug output
+(gdb)                            # end each MI output block with this prompt
+stop reasons                     # list: breakpoint-hit watchpoint-trigger read-watchpoint-trigger access-watchpoint-trigger
+    function-finished location-reached watchpoint-scope end-stepping-range exited-signalled
+    exited exited-normally signal-received solib-event fork vfork syscall-entry syscall-return exec no-history
+
+## breakpoints
+-break-insert [-t] [-h] [-f] [-d] [-a] [-c COND] [-i COUNT] [-p THREAD] [LOCATION] # insert a breakpoint  <https://sourceware.org/gdb/current/onlinedocs/gdb.html/GDB_002fMI-Breakpoint-Commands.html>
+-break-insert --source F --line N --function F --label L --qualified # insert a breakpoint at an explicit location
+-break-after N COUNT              # ignore breakpoint N for COUNT hits
+-break-condition [--force] N EXPR # set a breakpoint condition
+-break-commands N "CMD"...        # set a breakpoint's command list
+-break-delete N                   # delete a breakpoint
+-break-disable N                  # disable a breakpoint, also -break-enable N
+-break-info N                     # show one breakpoint
+-break-list                       # list all breakpoints
+-break-passcount TP COUNT         # set a tracepoint pass count
+-break-watch [-a|-r] EXPR         # insert a watchpoint, -a access, -r read
+-dprintf-insert [OPTS] LOCATION FORMAT ARGS # insert a dprintf
+-catch-load [-t] [-d] REGEX       # catch library loads, also -catch-unload
+-catch-throw                      # catch C++ throws, also -catch-catch -catch-rethrow
+-catch-exception                  # catch Ada exceptions, also -catch-assert -catch-handlers
+
+## program context
+-exec-arguments ARGS       # set the program arguments  <https://sourceware.org/gdb/current/onlinedocs/gdb.html/GDB_002fMI-Program-Context.html>
+-environment-cd DIR        # change GDB's working directory, also -environment-pwd
+-environment-directory DIR # add to the source path
+-environment-path DIR      # add to the program's PATH
+-inferior-tty-set TTY      # set the program terminal, also -inferior-tty-show
+
+## threads and inferiors
+-thread-info [ID]               # show threads  <https://sourceware.org/gdb/current/onlinedocs/gdb.html/GDB_002fMI-Thread-Commands.html>
+-thread-list-ids                # list thread ids
+-thread-select ID               # select a thread
+-list-thread-groups [--available] [--recurse 1] [GROUP] # list inferiors (thread groups)
+-add-inferior [--no-connection] # add an inferior, also -remove-inferior ID
+-ada-task-info [ID]             # show Ada tasks
+
+## execution
+-exec-run [--all|--thread-group N] [--start] # run the program  <https://sourceware.org/gdb/current/onlinedocs/gdb.html/GDB_002fMI-Program-Execution.html>
+-exec-continue [--reverse] [--all|--thread-group N] # continue the program
+-exec-next [--reverse]                   # step over a line, also -exec-next-instruction
+-exec-step                               # step into a line, also -exec-step-instruction
+-exec-finish [--reverse]                 # run until the function returns
+-exec-until [LOC]                        # run until a location
+-exec-jump LOC                           # continue at a location
+-exec-return                             # return from the function now
+-exec-interrupt [--all|--thread-group N] # interrupt the program
+-exec-abort                              # kill the program
+
+## stack
+-stack-info-frame                  # show the current frame  <https://sourceware.org/gdb/current/onlinedocs/gdb.html/GDB_002fMI-Stack-Manipulation.html>
+-stack-info-depth [MAX]            # count the frames
+-stack-list-frames [--no-frame-filters] [LOW HIGH] # list frames (backtrace)
+-stack-list-arguments [--no-frame-filters] [--skip-unavailable] PRINT-VALUES [LOW HIGH] # list frame arguments
+-stack-list-locals [--no-frame-filters] [--skip-unavailable] PRINT-VALUES # list local variables
+-stack-list-variables PRINT-VALUES # list arguments and locals together
+-stack-select-frame N              # select a frame
+-enable-frame-filters              # use Python frame filters in MI
+
+## variable objects
+-var-create NAME|"-" FRAME|"*"|"@" EXPR # create a variable object to watch an expression  @varobj <https://sourceware.org/gdb/current/onlinedocs/gdb.html/GDB_002fMI-Variable-Objects.html>
+-var-delete [-c] NAME                   # delete a variable object
+-var-set-format NAME FMT                # set the display format, also -var-show-format
+-var-info-num-children NAME             # count children
+-var-list-children [PRINT-VALUES] NAME [FROM TO] # list children
+-var-info-type NAME                     # show the type, also -var-info-expression -var-info-path-expression
+-var-show-attributes NAME               # show if the object is editable
+-var-evaluate-expression [-f FMT] NAME  # get the value
+-var-assign NAME EXPR                   # change the value
+-var-update [PRINT-VALUES] NAME|*       # list changed variable objects
+-var-set-frozen NAME 0|1                # freeze or unfreeze updates
+-var-set-update-range NAME FROM TO      # limit which children update
+-var-set-visualizer NAME VIS            # set a pretty printer for the object
+-enable-pretty-printing                 # use Python pretty printers for variable objects
+
+## data
+-data-disassemble -s START -e END -- MODE # disassemble a range, MODE 0-5, also -a ADDR or -f FILE -l LINE [-n LINES]  <https://sourceware.org/gdb/current/onlinedocs/gdb.html/GDB_002fMI-Data-Manipulation.html>
+-data-disassemble --opcodes bytes|display|none --source # choose opcode and source output
+-data-evaluate-expression EXPR   # evaluate an expression
+-data-list-changed-registers     # list registers that changed
+-data-list-register-names [N...] # list register names
+-data-list-register-values [--skip-unavailable] FMT [N...] # read register values
+-data-read-memory-bytes [-o OFFSET] ADDR COUNT # read memory
+-data-write-memory-bytes ADDR CONTENTS [COUNT] # write memory
+-data-read-memory                # read memory (deprecated), also -data-write-memory
+
+## tracepoints
+-trace-find MODE ...                # select a trace frame  <https://sourceware.org/gdb/current/onlinedocs/gdb.html/GDB_002fMI-Tracepoint-Commands.html>
+-trace-define-variable NAME [VALUE] # create a trace state variable
+-trace-frame-collected              # show what the trace frame collected
+-trace-list-variables               # list trace state variables
+-trace-save [-r] [-ctf] FILE        # save trace data
+-trace-start                        # start tracing, also -trace-stop -trace-status
+
+## symbols
+-symbol-info-functions [--include-nondebug] [--type R] [--name R] [--max-results N] # list functions  <https://sourceware.org/gdb/current/onlinedocs/gdb.html/GDB_002fMI-Symbol-Query.html>
+-symbol-info-variables        # list variables, also -symbol-info-types -symbol-info-modules
+-symbol-info-module-functions # list functions in Fortran modules, also -symbol-info-module-variables
+-symbol-list-lines FILE       # list the lines that have code
+
+## files
+-file-exec-and-symbols FILE         # load an executable and symbols  <https://sourceware.org/gdb/current/onlinedocs/gdb.html/GDB_002fMI-File-Commands.html>
+-file-exec-file FILE                # load only the executable, also -file-symbol-file FILE
+-file-list-exec-source-file         # show the current source file
+-file-list-exec-source-files [--group-by-objfile] [--dirname|--basename] [--] [REGEX] # list source files
+-file-list-shared-libraries [REGEX] # list shared libraries
+
+## target
+-target-attach PID|FILE      # attach to a process  <https://sourceware.org/gdb/current/onlinedocs/gdb.html/GDB_002fMI-Target-Manipulation.html>
+-target-detach [ID]          # detach, also -target-disconnect
+-target-download             # load the program to the target, also -target-flash-erase
+-target-select TYPE PARAMS   # connect to a target
+-target-file-put HOST TARGET # copy a file to the target, also -target-file-get -target-file-delete
+
+## misc
+-info-gdb-mi-command NAME             # test if an MI command exists  <https://sourceware.org/gdb/current/onlinedocs/gdb.html/GDB_002fMI-Support-Commands.html>
+-list-features                        # list MI features, also -list-target-features
+-gdb-set SETTING VALUE                # change a setting, also -gdb-show
+-gdb-version                          # show the version
+-gdb-exit                             # quit GDB
+-info-os [TYPE]                       # show OS info
+-info-ada-exceptions [REGEX]          # list Ada exceptions
+-interpreter-exec INTERP CMD          # run a command in another interpreter
+-complete "TEXT"                      # list completions
+-fix-multi-location-breakpoint-output # use the fixed breakpoint output format, also -fix-breakpoint-script-output

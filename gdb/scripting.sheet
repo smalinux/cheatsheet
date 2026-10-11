@@ -1,0 +1,124 @@
+title: gdb scripting: cli, python, guile
+url:   https://sourceware.org/gdb/current/onlinedocs/gdb.html/Extending-GDB.html
+tags:  gdb debugger script define hook alias python guile automate
+
+## user commands
+define NAME        # define your own command, end with "end"  @macro @function <https://sourceware.org/gdb/current/onlinedocs/gdb.html/Define.html>
+    define double
+      if $argc == 0
+        printf "usage: double ARG\n"
+      else
+        print $arg0 * 2
+      end
+    end
+define-prefix NAME # make NAME a prefix so you can "define NAME SUB"
+document NAME      # add help text to a user command, end with "end"  @help
+    document double
+      Doubles the argument.
+    end
+help user-defined  # list user commands
+show user [NAME]   # show the definition of a user command
+dont-repeat        # stop a user command from repeating on RET (inside define)
+$argc              # hold the number of arguments of a user command
+$arg0              # hold the first argument of a user command, up to $arg9 (text substitution)
+
+## control flow
+if EXPR       # run commands when EXPR is true, with "else" and "end"
+while EXPR    # repeat commands while EXPR is true, end with "end"  @loop
+loop_break    # leave a while loop  @break
+loop_continue # go to the next while iteration  @continue
+
+## hooks
+define hook-CMD     # run commands before CMD, e.g. hook-echo  <https://sourceware.org/gdb/current/onlinedocs/gdb.html/Hooks.html>
+define hookpost-CMD # run commands after CMD
+define hook-stop    # run commands every time the program stops  @fav
+    define hook-stop
+      x/i $pc
+    end
+define hook-run     # run commands before run, also hook-continue etc.
+
+## command files
+source FILE        # run GDB commands from a file  @script <https://sourceware.org/gdb/current/onlinedocs/gdb.html/Command-Files.html>
+source -v FILE     # run a command file and echo each command
+source -s FILE     # search the source path for the command file
+gdb -x FILE        # run a command file from the shell
+command file rules # treat lines starting with \# as comments, stop the file on the first error
+
+## output
+echo TEXT\n                      # print text, \n for newline  <https://sourceware.org/gdb/current/onlinedocs/gdb.html/Output.html>
+output/FMT EXPR                  # print only the value, no "$N =" and no newline
+printf "FORMAT", ARGS...         # print with C printf, supports %s %d %x %f %c %p %%
+printf "%s at %p\n", NAME, &NAME # print a string and an address
+printf "%5.2f\n", 3.14159        # print a float with width and precision
+printf "%ls\n", WIDESTR          # print a wide string  @wchar
+printf "%lld %llu\n", A, B       # print 64-bit numbers
+eval "FORMAT", ARGS...           # build a command with printf format and run it
+eval "p $%d", 5                  # run "p $5"
+
+## aliases
+alias NEW = OLD                # make a new name for a command, e.g. alias bt5 = backtrace 5  <https://sourceware.org/gdb/current/onlinedocs/gdb.html/Aliases.html>
+alias -a NEW = OLD             # make an abbreviation that is not shown in help
+alias pp = print -pretty --    # make an alias with default arguments
+alias spe = set print elements # make an alias for a setting
+alias -a set print elms = set print elements # make a multi-word alias
+help aliases                   # list aliases
+
+## python commands
+python CODE                              # run one line of Python  @py <https://sourceware.org/gdb/current/onlinedocs/gdb.html/Python-Commands.html>
+python                                   # run a Python block, end with "end"
+    python
+    import gdb
+    print(gdb.parse_and_eval("x"))
+    end
+python-interactive                       # start an interactive Python REPL  @pi @repl
+pi EXPR                                  # evaluate one Python expression
+source script.py                         # run a Python file, chosen by the .py extension
+set script-extension off|soft|strict     # choose how the file extension picks the language
+set python print-stack none|message|full # choose how Python errors print  @traceback
+set python ignore-environment on|off     # ignore PYTHON* environment variables
+set python dont-write-bytecode auto|on|off # stop Python from writing .pyc files
+show python print-stack                  # show how Python errors print
+
+## python auto-load
+OBJFILE-gdb.py                         # auto-load this script next to the objfile, e.g. libfoo.so-gdb.py  @auto-load <https://sourceware.org/gdb/current/onlinedocs/gdb.html/Python-Auto_002dloading.html>
+$datadir/auto-load/PATH/OBJFILE-gdb.py # auto-load this script from the data directory
+$debugdir/PATH/OBJFILE-gdb.py          # auto-load this script from the debug directory
+.debug_gdb_scripts                     # list scripts to auto-load in this ELF section
+    1 = python file, 3 = guile file, 4 = python text, 6 = guile text
+    SECTION_SCRIPT_ID_PYTHON_FILE (1) "file.py"
+    SECTION_SCRIPT_ID_PYTHON_TEXT (4) "name\n<script text>"
+info auto-load python-scripts [REGEX]  # show which Python scripts were loaded
+set auto-load python-scripts off       # turn off Python script auto-loading
+OBJFILE-gdb.gdb                        # auto-load this CLI script next to the objfile (set auto-load gdb-scripts)
+OBJFILE-gdb.scm                        # auto-load this Guile script next to the objfile (set auto-load guile-scripts)
+several languages                      # try Python first for printers and filters when several are loaded
+
+## guile
+guile CODE                              # run one line of Guile Scheme  @gu @scheme <https://sourceware.org/gdb/current/onlinedocs/gdb.html/Guile.html>
+guile                                   # run a Guile block, end with "end"
+    guile
+      (use-modules (gdb))
+      (display (value->integer (parse-and-eval "x")))
+    end
+guile-repl                              # start an interactive Guile REPL  @gr
+source script.scm                       # run a Guile file
+set guile print-stack none|message|full # choose how Guile errors print
+info auto-load guile-scripts            # show which Guile scripts were loaded
+(use-modules (gdb) (gdb printing) (gdb types)) # load the Guile GDB modules
+(execute "bt" #:to-string #t)           # run a CLI command and get its output (Guile)
+(parse-and-eval "x")                    # evaluate an expression to a value (Guile)
+(value->integer V)                      # convert a value, also value->string value-type value-field value-dereference value-cast
+(lookup-type "int")                     # find a type, also type-sizeof type-fields type-pointer type-strip-typedefs
+(selected-frame)                        # get the frame, also frame-name frame-pc frame-read-var frame-older frame-newer
+(make-breakpoint "main" #:type BP_BREAKPOINT) # make a breakpoint, then register-breakpoint!
+(set-breakpoint-stop! BP PROC)          # decide in Scheme if a breakpoint stops, also breakpoint-enabled?
+(make-command "hello" #:command-class COMMAND_USER #:invoke PROC) # make a command, then register-command!
+(make-parameter "my-p" #:command-class COMMAND_DATA #:parameter-type PARAM_BOOLEAN) # make a setting, then register-parameter!
+(make-pretty-printer "foo" PROC)        # make a pretty printer, then append-pretty-printer!
+(current-progspace)                     # get the program space, also objfiles objfile-filename current-objfile
+(lookup-symbol "x")                     # find a symbol, also symbol-name symbol-type block-for-pc
+(arch-disassemble ARCH PC #:count 5)    # disassemble instructions, also arch-name current-arch
+(open-memory #:start ADDR #:size N)     # open inferior memory as a port
+(make-iterator ...)                     # build an iterator, also iterator-map iterator-filter
+(make-color "red")                      # make a color, also color-escape-sequence
+(throw-user-error "msg")                # raise an error without a backtrace, catch with (catch 'gdb:error ...)

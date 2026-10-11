@@ -1,0 +1,269 @@
+title: gdb python api
+url:   https://sourceware.org/gdb/current/onlinedocs/gdb.html/Python-API.html
+tags:  gdb debugger python api script pretty-printer
+
+## basics
+gdb.execute("bt", to_string=True)       # run a CLI command and get its output  <https://sourceware.org/gdb/current/onlinedocs/gdb.html/Basic-Python.html>
+gdb.parse_and_eval("x + 1")             # evaluate an expression to a gdb.Value
+gdb.parameter("print elements")         # read a GDB setting
+gdb.set_parameter("print elements", 10) # change a GDB setting
+gdb.set_convenience_variable("foo", 5)  # set $foo, read it with gdb.convenience_variable("foo")
+gdb.history(0)                          # get a value history entry, 0 is $
+gdb.add_history(VALUE)                  # add a value to the history, also gdb.history_count()
+gdb.write("text\n")                     # print through GDB's pager, also gdb.flush()
+gdb.lookup_type("struct foo")           # find a type, e.g. gdb.lookup_type("int").pointer()
+gdb.lookup_symbol("main")               # find a symbol, also lookup_global_symbol lookup_static_symbol
+gdb.lookup_objfile("libc.so.6")         # find a loaded objfile
+gdb.current_progspace()                 # get the program space, also gdb.progspaces() gdb.objfiles()
+gdb.selected_inferior()                 # get the current inferior, also gdb.inferiors()
+gdb.selected_thread()                   # get the current thread
+gdb.selected_frame()                    # get the selected frame, also gdb.newest_frame()
+gdb.breakpoints()                       # list all breakpoints
+gdb.decode_line("file.c:42")            # turn a location into symtab-and-line objects
+gdb.find_pc_line(PC)                    # get the source line for an address
+gdb.block_for_pc(PC)                    # get the code block for an address
+gdb.current_language()                  # get the current language, also gdb.architecture_names()
+gdb.solib_name(ADDR)                    # get the shared library that contains an address
+gdb.string_to_argv("a 'b c'")           # split command arguments like the shell
+gdb.post_event(CALLABLE)                # run code in GDB's main thread, thread-safe
+gdb.prompt_hook = lambda cur: "> "      # change the prompt from Python
+gdb.STDOUT                              # name the output stream, also gdb.STDERR gdb.STDLOG
+gdb.VERSION                             # get the GDB version, also PYTHONDIR HOST_CONFIG TARGET_CONFIG
+gdb.interrupt()                         # interrupt the program like Ctrl-C
+gdb.notify_mi("name", DATA)             # send a custom MI async notification
+gdb.format_address(ADDR)                # format an address with its symbol
+gdb.execute_mi("-data-evaluate-expression", "x") # run an MI command from Python
+
+## exceptions
+gdb.error         # catch a generic GDB error  @except
+gdb.MemoryError   # catch a memory read or write error  @except
+gdb.GdbError      # raise this in a command to print an error with no traceback  @except
+KeyboardInterrupt # catch Ctrl-C inside Python code  @except
+
+## value
+v = gdb.parse_and_eval("ptr")         # get a gdb.Value  @gdb.Value <https://sourceware.org/gdb/current/onlinedocs/gdb.html/Values-From-Inferior.html>
+v.type                                # get the type, also v.address v.is_optimized_out v.is_lazy v.dynamic_type
+v.dereference()                       # follow a pointer, also referenced_value() reference_value() const_value()
+v.cast(T)                             # cast a value, also dynamic_cast(T) reinterpret_cast(T)
+v["field"]                            # get a struct field, v[0] for an array element
+int(v)                                # convert a value to Python, also float(v) str(v) bool(v)
+v.string(encoding="utf-8", length=10) # read a C string
+v.lazy_string()                       # make a string that is read later
+v.format_string(format='x', pretty_structs=True) # format a value like print does
+v.fetch_lazy()                        # read a lazy value now, also to_array() assign(NEW) bytes
+gdb.Value(5)                          # make a value from a Python object
+gdb.Value(b"\x00\x01", gdb.lookup_type("short")) # make a value from bytes and a type
+
+## type
+t = gdb.lookup_type("struct foo") # get a gdb.Type  @gdb.Type <https://sourceware.org/gdb/current/onlinedocs/gdb.html/Types-In-Python.html>
+t.name                            # get the type name, also tag code sizeof alignof dynamic objfile
+t.is_scalar                       # test the type kind, also is_signed is_array_like is_string_like
+t.fields()                        # list fields: name type bitpos bitsize enumval artificial is_base_class parent_type
+t.keys()                          # list field names, also values() items() t["field"] "field" in t len(t)
+t.strip_typedefs()                # get the real type behind typedefs
+t.target()                        # get the pointed-to or element type
+t.pointer()                       # make a pointer type, also reference() rvalue_reference()
+t.array(N)                        # make an array type, also array(LO, HI) vector(N)
+t.const()                         # make a const type, also volatile() unqualified()
+t.range()                         # get the index range of an array
+t.template_argument(N)            # get a C++ template argument
+gdb.TYPE_CODE_PTR                 # check the type kind, also ARRAY STRUCT UNION ENUM FUNC INT FLT VOID TYPEDEF REF BOOL ...
+gdb.types.get_basic_type(T)       # strip typedefs, const and references  @gdb.types
+gdb.types.has_field(T, "x")       # test if a struct has a field
+gdb.types.make_enum_dict(T)       # turn an enum type into a dict
+gdb.types.deep_items(T)           # walk fields including anonymous structs
+
+## pretty printers
+class FooPrinter                      # write a pretty printer class  @to_string @children <https://sourceware.org/gdb/current/onlinedocs/gdb.html/Writing-a-Pretty_002dPrinter.html>
+    class FooPrinter:
+        def __init__(self, val): self.val = val
+        def to_string(self): return "foo(%d)" % int(self.val["x"])
+        def children(self): yield "x", self.val["x"]     # optional
+        def display_hint(self): return None              # or "string" "array" "map"
+    import gdb.printing
+    pp = gdb.printing.RegexpCollectionPrettyPrinter("mylib")
+    pp.add_printer("foo", "^foo$", FooPrinter)
+    gdb.printing.register_pretty_printer(gdb.current_objfile(), pp)
+display_hint()                        # return "string", "array", "map" or None to change how children show
+num_children()                        # return the child count (optional, for MI), also child(n)
+gdb.printing.RegexpCollectionPrettyPrinter("mylib") # make a group of printers matched by type regex
+gdb.printing.register_pretty_printer(OBJFILE, PP) # register printers, None for global
+gdb.pretty_printers.append(LOOKUP_FN) # register a lookup function, the simple way
+gdb.default_visualizer(VALUE)         # get the printer GDB would use for a value
+
+## type printers
+gdb.types.register_type_printer(OBJFILE, PRINTER) # register a type printer: name, enabled, instantiate()  <https://sourceware.org/gdb/current/onlinedocs/gdb.html/Type-Printing-API.html>
+recognizer.recognize(TYPE)        # return a name string for a type, or None
+gdb.type_printers.append(PRINTER) # register a global type printer
+
+## frame filters and decorators
+class MyFilter                         # write a frame filter: name, priority, enabled, filter(frame_iter)  <https://sourceware.org/gdb/current/onlinedocs/gdb.html/Frame-Filter-API.html>
+from gdb.FrameDecorator import FrameDecorator # decorate frames in a frame filter
+FrameDecorator.function()              # override the function a frame shows, also address() filename() line()
+FrameDecorator.frame_args()            # override the arguments a frame shows, also frame_locals() elided()
+from gdb.FrameIterator import FrameIterator # iterate over frames
+gdb.frame_filters["name"] = MyFilter() # register a global frame filter, also progspace/objfile.frame_filters
+
+## unwinders
+from gdb.unwinder import Unwinder, register_unwinder # import the unwinder API  <https://sourceware.org/gdb/current/onlinedocs/gdb.html/Unwinding-Frames-in-Python.html>
+    class MyUnwinder(Unwinder):
+        def __call__(self, pending_frame):
+            # pending_frame.read_register() .create_unwind_info(frame_id) .pc() .level()
+            unwind_info.add_saved_register("rip", val)
+register_unwinder(LOCUS, UNWINDER, replace=False) # register an unwinder, LOCUS None, objfile or progspace
+gdb.FrameId(SP, PC) # make a frame id for an unwinder
+
+## xmethods
+from gdb.xmethod import XMethod, XMethodMatcher, XMethodWorker, register_xmethod_matcher # replace C++ methods with Python  @cpp <https://sourceware.org/gdb/current/onlinedocs/gdb.html/Xmethod-API.html>
+matcher.match(CLASS_TYPE, METHOD_NAME) # return workers, worker has get_arg_types() get_result_type() __call__()
+
+## inferiors and threads
+inf = gdb.selected_inferior()         # get the current inferior  <https://sourceware.org/gdb/current/onlinedocs/gdb.html/Inferiors-In-Python.html>
+inf.pid                               # get the PID, also num was_attached progspace connection connection_num main_name
+inf.threads()                         # list threads, also architecture() is_valid()
+inf.read_memory(ADDR, LEN)            # read memory as a memoryview
+inf.write_memory(ADDR, BUF)           # write memory
+inf.search_memory(ADDR, LEN, PATTERN) # search memory
+inf.set_env(K, V)                     # set the environment, also clear_env() unset_env(K) environment arguments
+th = gdb.selected_thread()            # get the current thread  <https://sourceware.org/gdb/current/onlinedocs/gdb.html/Threads-In-Python.html>
+th.name                               # get the name, also num global_num ptid inferior details
+th.switch()                           # select a thread, also is_stopped() is_running() is_exited() handle()
+gdb.start_recording(METHOD, FORMAT)   # start recording, also current_recording() stop_recording()
+rec.instruction_history               # list recorded instructions, also function_call_history
+rec.goto(INSN)                        # move the replay position, also begin end replay_position
+
+## events
+gdb.events.stop.connect(HANDLER)    # run a function on every stop, event.inferior_thread  @hook <https://sourceware.org/gdb/current/onlinedocs/gdb.html/Events-In-Python.html>
+gdb.events.stop.disconnect(HANDLER) # stop calling a handler
+BreakpointEvent.breakpoints         # get the breakpoints hit, SignalEvent.stop_signal for signals
+gdb.events.exited                   # run a function when the program exits, event.exit_code
+gdb.events.cont                     # run a function when the program continues
+gdb.events.new_objfile              # run a function when an objfile loads, also free_objfile clear_objfiles
+gdb.events.new_thread               # run a function on thread start, also thread_exited new_inferior inferior_deleted
+gdb.events.inferior_call            # run a function before and after inferior calls
+gdb.events.memory_changed           # run a function when the user writes memory, also register_changed
+gdb.events.breakpoint_created       # run a function on breakpoint changes, also breakpoint_modified breakpoint_deleted
+gdb.events.before_prompt            # run a function before each prompt
+gdb.events.gdb_exiting              # run a function when GDB exits
+gdb.events.connection_removed       # run a function when a connection closes, also executable_changed new_progspace tui_enabled
+
+## commands
+class Hello(gdb.Command)   # write a new CLI command  <https://sourceware.org/gdb/current/onlinedocs/gdb.html/CLI-Commands-In-Python.html>
+    class Hello(gdb.Command):
+        """Say hello.  Usage: hello NAME"""
+        def __init__(self):
+            super().__init__("hello", gdb.COMMAND_USER)
+        def invoke(self, arg, from_tty):
+            argv = gdb.string_to_argv(arg)
+            gdb.write("hello %s\n" % argv[0])
+    Hello()
+gdb.COMMAND_USER           # set the help class of a command, also COMMAND_NONE RUNNING DATA STACK FILES
+gdb.COMMAND_SUPPORT        # set the help class, also STATUS BREAKPOINTS TRACEPOINTS OBSCURE MAINTENANCE TUI
+complete(self, text, word) # return completions: gdb.COMPLETE_SYMBOL, NONE, FILENAME, LOCATION, COMMAND, EXPRESSION or a list
+gdb.Command.__init__(self, "myprefix", gdb.COMMAND_USER, prefix=True) # make a prefix command
+class MyMI(gdb.MICommand)  # write a new MI command, invoke(argv) returns dict/list/str  <https://sourceware.org/gdb/current/onlinedocs/gdb.html/GDB_002fMI-Commands-In-Python.html>
+
+## parameters
+class MyParam(gdb.Parameter) # write a new set/show setting  <https://sourceware.org/gdb/current/onlinedocs/gdb.html/Parameters-In-Python.html>
+    class MyParam(gdb.Parameter):
+        """Doc"""
+        set_doc = "Set the thing"; show_doc = "Show the thing"
+        def __init__(self):
+            super().__init__("my-thing", gdb.COMMAND_DATA, gdb.PARAM_BOOLEAN)
+        def get_set_string(self): return ""
+        def get_show_string(self, svalue): return "value is " + svalue
+    MyParam()   # then: set my-thing on / show my-thing
+gdb.PARAM_BOOLEAN            # set the parameter type, also PARAM_AUTO_BOOLEAN ENUM COLOR
+gdb.PARAM_INTEGER            # set a number parameter, also UINTEGER ZINTEGER ZUINTEGER ZUINTEGER_UNLIMITED
+gdb.PARAM_STRING             # set a text parameter, also STRING_NOESCAPE FILENAME OPTIONAL_FILENAME
+
+## convenience functions
+class Greet(gdb.Function) # write a new $function for expressions  <https://sourceware.org/gdb/current/onlinedocs/gdb.html/Functions-In-Python.html>
+    class Greet(gdb.Function):
+        def __init__(self): super().__init__("greet")
+        def invoke(self, name): return "Hi " + name.string()
+    Greet()   # then: p $greet("bob")
+
+## progspaces and objfiles
+ps = gdb.current_progspace()    # get the program space: filename executable_filename symbol_file objfiles()  <https://sourceware.org/gdb/current/onlinedocs/gdb.html/Progspaces-In-Python.html>
+ps.objfile_for_address(ADDR)    # find the objfile at an address, also solib_name block_for_pc find_pc_line
+o = gdb.lookup_objfile("prog")  # get an objfile: filename username owner build_id progspace is_file  <https://sourceware.org/gdb/current/onlinedocs/gdb.html/Objfiles-In-Python.html>
+o.add_separate_debug_file(FILE) # attach a debug file, also lookup_global_symbol lookup_static_symbol
+gdb.current_objfile()           # get the objfile being auto-loaded (only during auto-load)
+
+## frames
+f = gdb.selected_frame()       # get the selected frame  <https://sourceware.org/gdb/current/onlinedocs/gdb.html/Frames-In-Python.html>
+f.name()                       # get the function name, also pc() type() level() language() architecture() is_valid()
+f.read_var("x")                # read a variable in this frame
+f.read_register("rip")         # read a register in this frame
+f.older()                      # get the caller frame, also newer()
+f.select()                     # make this frame the selected one
+f.block()                      # get the code block, also function() find_sal() static_link()
+f.unwind_stop_reason()         # get why unwinding stopped, use gdb.frame_stop_reason_string(r)
+gdb.NORMAL_FRAME               # check the frame type, also DUMMY INLINE TAILCALL SIGTRAMP ARCH SENTINEL
+gdb.invalidate_cached_frames() # forget cached frames
+
+## blocks, symbols, symtabs
+b = gdb.block_for_pc(PC)       # get a block: start end function superblock global_block static_block, iterate for symbols  <https://sourceware.org/gdb/current/onlinedocs/gdb.html/Blocks-In-Python.html>
+s = gdb.lookup_symbol("x")[0]  # get a symbol: name linkage_name type symtab line addr_class  <https://sourceware.org/gdb/current/onlinedocs/gdb.html/Symbols-In-Python.html>
+s.value(FRAME)                 # read a symbol's value, also is_argument is_constant is_function is_variable needs_frame
+gdb.SYMBOL_LOC_STATIC          # check where a symbol lives, also REGISTER ARG LOCAL TYPEDEF OPTIMIZED_OUT COMPUTED ...
+gdb.SYMBOL_VAR_DOMAIN          # check a symbol domain, also STRUCT LABEL MODULE COMMON_BLOCK
+gdb.lookup_static_symbols("x") # find all static symbols with a name
+sal = gdb.find_pc_line(PC)     # get a symtab-and-line: pc last line symtab  <https://sourceware.org/gdb/current/onlinedocs/gdb.html/Symbol-Tables-In-Python.html>
+st = sal.symtab                # get a symtab: filename objfile producer fullname() global_block() static_block()
+st.linetable()                 # get a line table: line(n) has_line(n) source_lines(), iterate for line and pc
+
+## breakpoints
+gdb.Breakpoint("main")                # create a breakpoint, args type wp_class internal temporary qualified  <https://sourceware.org/gdb/current/onlinedocs/gdb.html/Breakpoints-In-Python.html>
+gdb.Breakpoint(source="f.c", line=10) # create a breakpoint at an explicit location, also function label
+gdb.Breakpoint("x", gdb.BP_WATCHPOINT, gdb.WP_READ) # create a read watchpoint, also WP_WRITE WP_ACCESS
+gdb.BP_BREAKPOINT                     # set the breakpoint type, also BP_HARDWARE_BREAKPOINT BP_CATCHPOINT
+gdb.BP_WATCHPOINT                     # set a watchpoint type, also BP_HARDWARE_WATCHPOINT BP_READ_WATCHPOINT BP_ACCESS_WATCHPOINT
+bp.enabled                            # get or set if a breakpoint is on, also silent temporary pending visible
+bp.condition                          # get or set the condition, also commands ignore_count thread inferior task
+bp.hit_count                          # get how often it was hit, also number type location expression
+bp.locations                          # list gdb.BreakpointLocation: address enabled fullname function source thread_groups owner
+bp.delete()                           # delete a breakpoint, also is_valid()
+class MyBP(gdb.Breakpoint)            # decide in Python if a breakpoint stops  @conditional
+    class MyBP(gdb.Breakpoint):
+        def stop(self):
+            return int(gdb.parse_and_eval("x")) > 5    # True = stop
+gdb.FinishBreakpoint(FRAME, internal=False) # stop when a frame returns, .return_value, stop() out_of_scope()
+
+## lazy strings and colors
+ls = v.lazy_string()             # get a lazy string: address length encoding type value()
+gdb.Color("red")                 # make a color, also gdb.Color(5) gdb.Color((255,0,0))
+c.escape_sequence(IS_FOREGROUND) # get the terminal escape for a color, also is_none index components
+
+## architecture and disassembly
+arch = gdb.selected_frame().architecture() # get the arch, arch.name()  <https://sourceware.org/gdb/current/onlinedocs/gdb.html/Architectures-In-Python.html>
+arch.disassemble(START, end=None, count=None) # disassemble to a list of {addr, asm, length}
+arch.registers(reggroup=None)        # list register descriptors, also register_groups()
+arch.integer_type(SIZE, signed=True) # make an integer type, also void_type()
+from gdb.disassembler import Disassembler, register_disassembler, builtin_disassemble # write a custom disassembler
+
+## connections
+c = inf.connection # get the connection: num type description details is_valid()
+gdb.RemoteTargetConnection.send_packet(b"...") # send a raw packet to the remote  @rsp
+gdb.connections()  # list all connections
+
+## tui windows
+gdb.register_window_type("mywin", MyWin) # add a TUI window written in Python  <https://sourceware.org/gdb/current/onlinedocs/gdb.html/TUI-Windows-In-Python.html>
+    class MyWin:
+        def __init__(self, tw): self.tw = tw; tw.title = "My"
+        def render(self): self.tw.write("hello")
+        # optional: hscroll(n) vscroll(n) click(x, y, button) close()
+    gdb.register_window_type("mywin", MyWin)
+    # then: tui new-layout my mywin 1 cmd 1 ; layout my
+tw.write(STR, full_window=False)         # draw text in a TUI window, also erase() width height title
+
+## missing debug info
+gdb.missing_debug.register_handler(LOCUS, HANDLER) # handle missing debug info, handler(objfile) returns None False True or a path
+gdb.missing_objfile.register_handler(LOCUS, HANDLER) # handle missing objfiles
+info missing-debug-handlers # list handlers, also enable/disable missing-debug-handler LOCUS NAME
+
+## misc modules
+inf.corefile                           # get the core file: filename mapped_files() build_id()
+gdb.prompt.substitute_prompt("\\f \\p{prompt} \\w") # expand prompt escapes, also gdb.prompt.prompt_help()
+gdb.ptwrite.register_filter_factory(F) # filter Intel PT ptwrite data, also gdb.ptwrite.get_filter()

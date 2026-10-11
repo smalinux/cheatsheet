@@ -1,0 +1,193 @@
+title: binary ninja BinaryView
+url:   https://api.binary.ninja/binaryninja.binaryview-module.html
+tags:  binaryninja binja bn bv binaryview python api
+
+; bv = BinaryView. Names in UPPERCASE are placeholders.
+
+## file info
+bv.arch             # get the Architecture, e.g. x86_64  @cpu  <https://api.binary.ninja/binaryninja.binaryview-module.html#binaryninja.binaryview.BinaryView.arch>
+bv.platform         # get the Platform (os + arch), e.g. linux-x86_64  @os  <https://api.binary.ninja/binaryninja.binaryview-module.html#binaryninja.binaryview.BinaryView.platform>
+bv.view_type        # get the file format name: ELF, PE, Mach-O, Raw  @format  <https://api.binary.ninja/binaryninja.binaryview-module.html#binaryninja.binaryview.BinaryView.view_type>
+bv.start            # get the lowest mapped address  @begin @base  <https://api.binary.ninja/binaryninja.binaryview-module.html#binaryninja.binaryview.BinaryView.start>
+bv.end              # get the address one past the highest mapped byte  <https://api.binary.ninja/binaryninja.binaryview-module.html#binaryninja.binaryview.BinaryView.end>
+bv.length           # get the size of the mapped address space  @size  <https://api.binary.ninja/binaryninja.binaryview-module.html#binaryninja.binaryview.BinaryView.length>
+bv.entry_point      # get the entry point address  @start @main  <https://api.binary.ninja/binaryninja.binaryview-module.html#binaryninja.binaryview.BinaryView.entry_point>
+bv.entry_function   # get the Function at the entry point  <https://api.binary.ninja/binaryninja.binaryview-module.html#binaryninja.binaryview.BinaryView.entry_function>
+bv.entry_functions  # list all entry functions (entry, init arrays, TLS callbacks)  @ctor  <https://api.binary.ninja/binaryninja.binaryview-module.html#binaryninja.binaryview.BinaryView.entry_functions>
+bv.image_base       # get the image base address  @base @load-address  <https://api.binary.ninja/binaryninja.binaryview-module.html#binaryninja.binaryview.BinaryView.image_base>
+bv.endianness       # get the byte order  @endian @little @big  <https://api.binary.ninja/binaryninja.binaryview-module.html#binaryninja.binaryview.BinaryView.endianness>
+bv.address_size     # get the pointer size in bytes  @pointer @bits  <https://api.binary.ninja/binaryninja.binaryview-module.html#binaryninja.binaryview.BinaryView.address_size>
+bv.executable       # check if the file is an executable  <https://api.binary.ninja/binaryninja.binaryview-module.html#binaryninja.binaryview.BinaryView.executable>
+bv.relocatable      # check if the file is position independent  @pie @pic  <https://api.binary.ninja/binaryninja.binaryview-module.html#binaryninja.binaryview.BinaryView.relocatable>
+bv.parent_view      # get the view this one reads its bytes from (usually Raw)  @raw  <https://api.binary.ninja/binaryninja.binaryview-module.html#binaryninja.binaryview.BinaryView.parent_view>
+bv.libraries        # list the shared libraries the file needs  @imports @dll @so  <https://api.binary.ninja/binaryninja.binaryview-module.html#binaryninja.binaryview.BinaryView.libraries>
+bv.rebase(ADDR)     # get a new view moved to a new image base  @relocate @base  <https://api.binary.ninja/binaryninja.binaryview-module.html#binaryninja.binaryview.BinaryView.rebase>
+
+## read and write bytes
+bv.read(ADDR, LEN)                  # read LEN bytes at a virtual address  @memory @bytes @dump  <https://api.binary.ninja/binaryninja.binaryview-module.html#binaryninja.binaryview.BinaryView.read>
+bv.read_int(ADDR, SIZE, sign=True)  # read an integer of SIZE bytes in the view's endianness  @number  <https://api.binary.ninja/binaryninja.binaryview-module.html#binaryninja.binaryview.BinaryView.read_int>
+bv.read_pointer(ADDR)               # read a pointer-sized value  @deref  <https://api.binary.ninja/binaryninja.binaryview-module.html#binaryninja.binaryview.BinaryView.read_pointer>
+bv.read_uuid(ADDR)                  # read a 16-byte UUID/GUID  @guid  <https://api.binary.ninja/binaryninja.binaryview-module.html#binaryninja.binaryview.BinaryView.read_uuid>
+bv.write(ADDR, DATA)                # overwrite bytes at an address, returns bytes written  @patch @modify  <https://api.binary.ninja/binaryninja.binaryview-module.html#binaryninja.binaryview.BinaryView.write>
+bv.insert(ADDR, DATA)               # insert bytes and shift the rest  @patch  <https://api.binary.ninja/binaryninja.binaryview-module.html#binaryninja.binaryview.BinaryView.insert>
+bv.remove(ADDR, LEN)                # delete bytes and shift the rest  @patch @cut  <https://api.binary.ninja/binaryninja.binaryview-module.html#binaryninja.binaryview.BinaryView.remove>
+bv.get_modification(ADDR, LEN)      # check which bytes were changed by the user  @patched @diff  <https://api.binary.ninja/binaryninja.binaryview-module.html#binaryninja.binaryview.BinaryView.get_modification>
+br = BinaryReader(bv)               # make a stream reader with a moving offset  @parse @cursor  <https://api.binary.ninja/binaryninja.binaryview-module.html#binaryninja.binaryview.BinaryReader>
+br.seek(ADDR); br.read32()          # move the reader then read 4 bytes as an int, also read8/16/64 and le/be forms  @parse  <https://api.binary.ninja/binaryninja.binaryview-module.html#binaryninja.binaryview.BinaryReader.read32>
+br.read(LEN)                        # read LEN bytes from the reader and move forward  <https://api.binary.ninja/binaryninja.binaryview-module.html#binaryninja.binaryview.BinaryReader.read>
+bw = BinaryWriter(bv)               # make a stream writer with a moving offset  @patch  <https://api.binary.ninja/binaryninja.binaryview-module.html#binaryninja.binaryview.BinaryWriter>
+bw.seek(ADDR); bw.write32(VALUE)    # move the writer then write a 4-byte int, also write8/16/64  @patch  <https://api.binary.ninja/binaryninja.binaryview-module.html#binaryninja.binaryview.BinaryWriter.write32>
+bv.typed_data_accessor(ADDR, TYPE)  # read memory as a typed value (struct fields, arrays)  @struct @parse  <https://api.binary.ninja/binaryninja.binaryview-module.html#binaryninja.binaryview.BinaryView.typed_data_accessor>
+bv.get_entropy(ADDR, LEN)           # get Shannon entropy per block, find packed or encrypted data  @packed @compressed  <https://api.binary.ninja/binaryninja.binaryview-module.html#binaryninja.binaryview.BinaryView.get_entropy>
+
+## address checks
+bv.is_valid_offset(ADDR)              # check if an address is mapped  @mapped  <https://api.binary.ninja/binaryninja.binaryview-module.html#binaryninja.binaryview.BinaryView.is_valid_offset>
+bv.is_offset_readable(ADDR)           # check if an address is readable  @permission  <https://api.binary.ninja/binaryninja.binaryview-module.html#binaryninja.binaryview.BinaryView.is_offset_readable>
+bv.is_offset_writable(ADDR)           # check if an address is writable  @permission  <https://api.binary.ninja/binaryninja.binaryview-module.html#binaryninja.binaryview.BinaryView.is_offset_writable>
+bv.is_offset_executable(ADDR)         # check if an address is executable  @permission @code  <https://api.binary.ninja/binaryninja.binaryview-module.html#binaryninja.binaryview.BinaryView.is_offset_executable>
+bv.is_offset_code_semantics(ADDR)     # check if an address sits in a code section  <https://api.binary.ninja/binaryninja.binaryview-module.html#binaryninja.binaryview.BinaryView.is_offset_code_semantics>
+bv.is_offset_extern_semantics(ADDR)   # check if an address is in the extern/import area  @import  <https://api.binary.ninja/binaryninja.binaryview-module.html#binaryninja.binaryview.BinaryView.is_offset_extern_semantics>
+bv.is_offset_backed_by_file(ADDR)     # check if an address has bytes from the file (not .bss)  @bss  <https://api.binary.ninja/binaryninja.binaryview-module.html#binaryninja.binaryview.BinaryView.is_offset_backed_by_file>
+bv.get_next_valid_offset(ADDR)        # get the next mapped address at or after ADDR  <https://api.binary.ninja/binaryninja.binaryview-module.html#binaryninja.binaryview.BinaryView.get_next_valid_offset>
+bv.get_data_offset_for_address(ADDR)  # turn a virtual address into a file offset  @fileoffset @va @rva  <https://api.binary.ninja/binaryninja.binaryview-module.html#binaryninja.binaryview.BinaryView.get_data_offset_for_address>
+bv.get_address_for_data_offset(OFF)   # turn a file offset into a virtual address  @fileoffset @va  <https://api.binary.ninja/binaryninja.binaryview-module.html#binaryninja.binaryview.BinaryView.get_address_for_data_offset>
+bv.eval("main+0x10")                  # evaluate an address expression with symbols  @parse @expression  <https://api.binary.ninja/binaryninja.binaryview-module.html#binaryninja.binaryview.BinaryView.eval>
+
+## segments and sections
+bv.segments                               # list memory segments (start, end, rwx flags)  @memory @mapping  <https://api.binary.ninja/binaryninja.binaryview-module.html#binaryninja.binaryview.BinaryView.segments>
+bv.get_segment_at(ADDR)                   # get the segment that holds an address  <https://api.binary.ninja/binaryninja.binaryview-module.html#binaryninja.binaryview.BinaryView.get_segment_at>
+seg.readable, seg.writable, seg.executable  # check segment permissions  @rwx @permission  <https://api.binary.ninja/binaryninja.binaryview-module.html#binaryninja.binaryview.Segment>
+bv.sections                               # get a dict of section name to Section (.text, .data...)  <https://api.binary.ninja/binaryninja.binaryview-module.html#binaryninja.binaryview.BinaryView.sections>
+bv.get_section_by_name(".text")           # get one section by name  <https://api.binary.ninja/binaryninja.binaryview-module.html#binaryninja.binaryview.BinaryView.get_section_by_name>
+bv.get_sections_at(ADDR)                  # list sections that hold an address  <https://api.binary.ninja/binaryninja.binaryview-module.html#binaryninja.binaryview.BinaryView.get_sections_at>
+sec.start, sec.end, sec.semantics         # get a section's range and code/data meaning  <https://api.binary.ninja/binaryninja.binaryview-module.html#binaryninja.binaryview.Section>
+bv.add_user_segment(START, LEN, OFF, DLEN, FLAGS)  # map file bytes at a new address range  @map @memory  <https://api.binary.ninja/binaryninja.binaryview-module.html#binaryninja.binaryview.BinaryView.add_user_segment>
+bv.add_user_section(NAME, START, LEN, SEMANTICS)  # add a named section  @create  <https://api.binary.ninja/binaryninja.binaryview-module.html#binaryninja.binaryview.BinaryView.add_user_section>
+bv.memory_map.add_memory_region(NAME, START, DATA)  # map extra bytes (a dump) into memory  @load @dump @overlay  <https://api.binary.ninja/binaryninja.binaryview-module.html#binaryninja.binaryview.MemoryMap.add_memory_region>
+bv.memory_map                             # print the resolved memory map  @layout  <https://api.binary.ninja/binaryninja.binaryview-module.html#binaryninja.binaryview.BinaryView.memory_map>
+bv.relocations_at(ADDR)                   # list relocations at an address  @reloc @fixup  <https://api.binary.ninja/binaryninja.binaryview-module.html#binaryninja.binaryview.BinaryView.relocations_at>
+
+## functions
+bv.functions                            # list all functions  @all @iterate  <https://api.binary.ninja/binaryninja.binaryview-module.html#binaryninja.binaryview.BinaryView.functions>
+bv.get_function_at(ADDR)                # get the function that starts at ADDR, or None  @lookup  <https://api.binary.ninja/binaryninja.binaryview-module.html#binaryninja.binaryview.BinaryView.get_function_at>
+bv.get_functions_at(ADDR)               # list functions that start at ADDR (one per platform)  <https://api.binary.ninja/binaryninja.binaryview-module.html#binaryninja.binaryview.BinaryView.get_functions_at>
+bv.get_functions_containing(ADDR)       # list functions whose code covers ADDR  @owner @inside  <https://api.binary.ninja/binaryninja.binaryview-module.html#binaryninja.binaryview.BinaryView.get_functions_containing>
+bv.get_functions_by_name("main")        # find functions by symbol name  @lookup @search  <https://api.binary.ninja/binaryninja.binaryview-module.html#binaryninja.binaryview.BinaryView.get_functions_by_name>
+bv.create_user_function(ADDR)           # define a new function at ADDR  @make @add @define  <https://api.binary.ninja/binaryninja.binaryview-module.html#binaryninja.binaryview.BinaryView.create_user_function>
+bv.remove_user_function(FUNC)           # undefine a function  @delete @undefine  <https://api.binary.ninja/binaryninja.binaryview-module.html#binaryninja.binaryview.BinaryView.remove_user_function>
+bv.add_entry_point(ADDR)                # add an extra place to start analysis from  @seed  <https://api.binary.ninja/binaryninja.binaryview-module.html#binaryninja.binaryview.BinaryView.add_entry_point>
+bv.get_next_function_start_after(ADDR)  # get the start of the next function after ADDR  @walk  <https://api.binary.ninja/binaryninja.binaryview-module.html#binaryninja.binaryview.BinaryView.get_next_function_start_after>
+bv.get_basic_blocks_at(ADDR)            # list basic blocks that hold ADDR  <https://api.binary.ninja/binaryninja.binaryview-module.html#binaryninja.binaryview.BinaryView.get_basic_blocks_at>
+bv.hlil_functions()                     # iterate HLIL of all functions, faster than f.hlil in a loop  @bulk @decompile  <https://api.binary.ninja/binaryninja.binaryview-module.html#binaryninja.binaryview.BinaryView.hlil_functions>
+bv.mlil_functions()                     # iterate MLIL of all functions with preloading  @bulk  <https://api.binary.ninja/binaryninja.binaryview-module.html#binaryninja.binaryview.BinaryView.mlil_functions>
+bv.mlil_instructions                    # iterate every MLIL instruction in the file, also llil_ and hlil_instructions  <https://api.binary.ninja/binaryninja.binaryview-module.html#binaryninja.binaryview.BinaryView.mlil_instructions>
+
+## symbols
+bv.symbols                                # get a dict of name to list of Symbols  <https://api.binary.ninja/binaryninja.binaryview-module.html#binaryninja.binaryview.BinaryView.symbols>
+bv.get_symbol_at(ADDR)                    # get the symbol at an address  @name @label  <https://api.binary.ninja/binaryninja.binaryview-module.html#binaryninja.binaryview.BinaryView.get_symbol_at>
+bv.get_symbols_by_name(NAME)              # find symbols by name  @lookup  <https://api.binary.ninja/binaryninja.binaryview-module.html#binaryninja.binaryview.BinaryView.get_symbols_by_name>
+bv.get_symbol_by_raw_name(NAME)           # find a symbol by its mangled name  @mangled  <https://api.binary.ninja/binaryninja.binaryview-module.html#binaryninja.binaryview.BinaryView.get_symbol_by_raw_name>
+bv.get_symbols_of_type(SymbolType.ImportedFunctionSymbol)  # list symbols of one kind, e.g. all imports  @imports @iat  <https://api.binary.ninja/binaryninja.binaryview-module.html#binaryninja.binaryview.BinaryView.get_symbols_of_type>
+bv.get_symbols(START, LEN)                # list symbols in an address range  <https://api.binary.ninja/binaryninja.binaryview-module.html#binaryninja.binaryview.BinaryView.get_symbols>
+bv.define_user_symbol(Symbol(SymbolType.FunctionSymbol, ADDR, NAME))  # name an address, rename a function  @rename @label  <https://api.binary.ninja/binaryninja.binaryview-module.html#binaryninja.binaryview.BinaryView.define_user_symbol>
+bv.undefine_user_symbol(SYM)              # remove a user name  @delete @rename  <https://api.binary.ninja/binaryninja.binaryview-module.html#binaryninja.binaryview.BinaryView.undefine_user_symbol>
+with bv.bulk_modify_symbols():            # speed up adding many symbols at once  @performance @batch  <https://api.binary.ninja/binaryninja.binaryview-module.html#binaryninja.binaryview.BinaryView.bulk_modify_symbols>
+
+## data variables
+bv.data_vars                              # get a dict of address to DataVariable  @globals  <https://api.binary.ninja/binaryninja.binaryview-module.html#binaryninja.binaryview.BinaryView.data_vars>
+bv.get_data_var_at(ADDR)                  # get the data variable at an address  @global  <https://api.binary.ninja/binaryninja.binaryview-module.html#binaryninja.binaryview.BinaryView.get_data_var_at>
+bv.define_user_data_var(ADDR, TYPE, NAME)  # type memory at ADDR, TYPE can be C like "char[16]"  @define @global  <https://api.binary.ninja/binaryninja.binaryview-module.html#binaryninja.binaryview.BinaryView.define_user_data_var>
+bv.undefine_user_data_var(ADDR)           # remove a data variable  @delete @undefine  <https://api.binary.ninja/binaryninja.binaryview-module.html#binaryninja.binaryview.BinaryView.undefine_user_data_var>
+var.value                                 # read a data variable as a Python value (int, list, dict for structs)  @read @parse  <https://api.binary.ninja/binaryninja.binaryview-module.html#binaryninja.binaryview.DataVariable.value>
+var.type, var.name, var.address           # get a data variable's type, name and address  <https://api.binary.ninja/binaryninja.binaryview-module.html#binaryninja.binaryview.DataVariable>
+var.code_refs                             # list code that uses a data variable  @xrefs  <https://api.binary.ninja/binaryninja.binaryview-module.html#binaryninja.binaryview.DataVariable.code_refs>
+bv.get_next_data_var_after(ADDR)          # get the next data variable after an address  @walk  <https://api.binary.ninja/binaryninja.binaryview-module.html#binaryninja.binaryview.BinaryView.get_next_data_var_after>
+
+## strings
+bv.strings                                # list all found strings  @text  <https://api.binary.ninja/binaryninja.binaryview-module.html#binaryninja.binaryview.BinaryView.strings>
+bv.get_strings(START, LEN)                # list strings in an address range  <https://api.binary.ninja/binaryninja.binaryview-module.html#binaryninja.binaryview.BinaryView.get_strings>
+bv.get_string_at(ADDR)                    # get the string that covers an address  <https://api.binary.ninja/binaryninja.binaryview-module.html#binaryninja.binaryview.BinaryView.get_string_at>
+bv.get_ascii_string_at(ADDR, min_length=4)  # read an ASCII string at an address even if not found by analysis  @cstring  <https://api.binary.ninja/binaryninja.binaryview-module.html#binaryninja.binaryview.BinaryView.get_ascii_string_at>
+s.value, s.start, s.length, s.type        # get a string's text, address, size and encoding  <https://api.binary.ninja/binaryninja.binaryview-module.html#binaryninja.binaryview.StringReference>
+
+## cross references
+bv.get_code_refs(ADDR)                    # list code that references ADDR  @xrefs @callers @uses  <https://api.binary.ninja/binaryninja.binaryview-module.html#binaryninja.binaryview.BinaryView.get_code_refs>
+bv.get_code_refs_from(ADDR)               # list addresses the instruction at ADDR references  @xrefs @outgoing  <https://api.binary.ninja/binaryninja.binaryview-module.html#binaryninja.binaryview.BinaryView.get_code_refs_from>
+bv.get_data_refs(ADDR)                    # list data addresses that point to ADDR  @xrefs @pointers  <https://api.binary.ninja/binaryninja.binaryview-module.html#binaryninja.binaryview.BinaryView.get_data_refs>
+bv.get_data_refs_from(ADDR)               # list addresses that data at ADDR points to  @xrefs  <https://api.binary.ninja/binaryninja.binaryview-module.html#binaryninja.binaryview.BinaryView.get_data_refs_from>
+bv.get_callers(ADDR)                      # list call sites that call ADDR  @xrefs  <https://api.binary.ninja/binaryninja.binaryview-module.html#binaryninja.binaryview.BinaryView.get_callers>
+bv.get_callees(ADDR)                      # list call targets of the call at ADDR  <https://api.binary.ninja/binaryninja.binaryview-module.html#binaryninja.binaryview.BinaryView.get_callees>
+bv.get_code_refs_for_type(NAME)           # list code that uses a named type  @xrefs @struct  <https://api.binary.ninja/binaryninja.binaryview-module.html#binaryninja.binaryview.BinaryView.get_code_refs_for_type>
+bv.get_code_refs_for_type_field(NAME, OFFSET)  # list code that uses one struct field  @xrefs @member  <https://api.binary.ninja/binaryninja.binaryview-module.html#binaryninja.binaryview.BinaryView.get_code_refs_for_type_field>
+bv.add_user_data_ref(FROM, TO)            # add a data xref by hand  @xrefs @create  <https://api.binary.ninja/binaryninja.binaryview-module.html#binaryninja.binaryview.BinaryView.add_user_data_ref>
+ref.function, ref.address, ref.hlil       # get the function, address and HLIL instruction of an xref  <https://api.binary.ninja/binaryninja.binaryview-module.html#binaryninja.binaryview.ReferenceSource>
+
+## search
+bv.find_next_data(START, b"\x7fELF")      # find the next bytes match, returns an address or None  @bytes @pattern  <https://api.binary.ninja/binaryninja.binaryview-module.html#binaryninja.binaryview.BinaryView.find_next_data>
+bv.find_all_data(START, END, DATA)        # iterate all (address, DataBuffer) matches of bytes  @bytes @pattern  <https://api.binary.ninja/binaryninja.binaryview-module.html#binaryninja.binaryview.BinaryView.find_all_data>
+bv.find_next_text(START, "text")          # find text in the disassembly or IL listing  @grep  <https://api.binary.ninja/binaryninja.binaryview-module.html#binaryninja.binaryview.BinaryView.find_next_text>
+bv.find_all_text(START, END, "text")      # iterate all text matches in the listing  @grep  <https://api.binary.ninja/binaryninja.binaryview-module.html#binaryninja.binaryview.BinaryView.find_all_text>
+bv.find_next_constant(START, 0xdeadbeef)  # find an instruction that uses a constant  @immediate @magic  <https://api.binary.ninja/binaryninja.binaryview-module.html#binaryninja.binaryview.BinaryView.find_next_constant>
+bv.find_all_constant(START, END, VALUE)   # iterate all uses of a constant  @immediate @magic  <https://api.binary.ninja/binaryninja.binaryview-module.html#binaryninja.binaryview.BinaryView.find_all_constant>
+bv.search("48 8b ?? 24")                  # search hex with ?? wildcards, YARA hex or regex  @pattern @yara @regex  <https://api.binary.ninja/binaryninja.binaryview-module.html#binaryninja.binaryview.BinaryView.search>
+bv.search("hello", raw=True, ignore_case=True)  # search a literal string  @text  <https://api.binary.ninja/binaryninja.binaryview-module.html#binaryninja.binaryview.BinaryView.search>
+
+## comments
+bv.set_comment_at(ADDR, "text")  # put a comment at a data address  @note @annotate  <https://api.binary.ninja/binaryninja.binaryview-module.html#binaryninja.binaryview.BinaryView.set_comment_at>
+bv.get_comment_at(ADDR)          # read the comment at an address  <https://api.binary.ninja/binaryninja.binaryview-module.html#binaryninja.binaryview.BinaryView.get_comment_at>
+bv.address_comments              # get a dict of all address comments  @list  <https://api.binary.ninja/binaryninja.binaryview-module.html#binaryninja.binaryview.BinaryView.address_comments>
+
+## tags
+bv.create_tag_type(NAME, "🐛")       # make a new tag type with an emoji icon  @bookmark  <https://api.binary.ninja/binaryninja.binaryview-module.html#binaryninja.binaryview.BinaryView.create_tag_type>
+bv.get_tag_type(NAME)               # get a tag type by name  <https://api.binary.ninja/binaryninja.binaryview-module.html#binaryninja.binaryview.BinaryView.get_tag_type>
+bv.tag_types                        # get a dict of all tag types  <https://api.binary.ninja/binaryninja.binaryview-module.html#binaryninja.binaryview.BinaryView.tag_types>
+bv.add_tag(ADDR, "Bugs", "text")    # tag a data address (the tag type must exist)  @bookmark @mark  <https://api.binary.ninja/binaryninja.binaryview-module.html#binaryninja.binaryview.BinaryView.add_tag>
+bv.get_tags_at(ADDR)                # list tags at a data address  <https://api.binary.ninja/binaryninja.binaryview-module.html#binaryninja.binaryview.BinaryView.get_tags_at>
+bv.tags_all_scopes                  # list every tag in the file (address, function, data)  @bookmarks  <https://api.binary.ninja/binaryninja.binaryview-module.html#binaryninja.binaryview.BinaryView.tags_all_scopes>
+bv.tags_by_type(TAG_TYPE)           # list all tags of one type  <https://api.binary.ninja/binaryninja.binaryview-module.html#binaryninja.binaryview.BinaryView.tags_by_type>
+bv.remove_user_data_tag(ADDR, TAG)  # delete a tag at a data address  @delete  <https://api.binary.ninja/binaryninja.binaryview-module.html#binaryninja.binaryview.BinaryView.remove_user_data_tag>
+
+## analysis control
+bv.update_analysis_and_wait()         # run analysis and block until it finishes  @sync @wait  <https://api.binary.ninja/binaryninja.binaryview-module.html#binaryninja.binaryview.BinaryView.update_analysis_and_wait>
+bv.update_analysis()                  # start analysis and return at once  @async  <https://api.binary.ninja/binaryninja.binaryview-module.html#binaryninja.binaryview.BinaryView.update_analysis>
+bv.abort_analysis()                   # stop analysis  @cancel @stop  <https://api.binary.ninja/binaryninja.binaryview-module.html#binaryninja.binaryview.BinaryView.abort_analysis>
+bv.reanalyze()                        # redo analysis of every function  @refresh  <https://api.binary.ninja/binaryninja.binaryview-module.html#binaryninja.binaryview.BinaryView.reanalyze>
+bv.analysis_progress                  # get the analysis state and progress  @status  <https://api.binary.ninja/binaryninja.binaryview-module.html#binaryninja.binaryview.BinaryView.analysis_progress>
+bv.add_analysis_completion_event(FN)  # call FN once the next analysis run finishes  @callback @done  <https://api.binary.ninja/binaryninja.binaryview-module.html#binaryninja.binaryview.BinaryView.add_analysis_completion_event>
+bv.set_analysis_hold(True)            # pause analysis until you release the hold  @pause  <https://api.binary.ninja/binaryninja.binaryview-module.html#binaryninja.binaryview.BinaryView.set_analysis_hold>
+bv.max_function_size_for_analysis     # get or set the size limit that skips big functions  @toolarge @skip  <https://api.binary.ninja/binaryninja.binaryview-module.html#binaryninja.binaryview.BinaryView.max_function_size_for_analysis>
+
+## patching
+bv.convert_to_nop(ADDR)                # replace the instruction at ADDR with NOPs  @patch @nop  <https://api.binary.ninja/binaryninja.binaryview-module.html#binaryninja.binaryview.BinaryView.convert_to_nop>
+bv.always_branch(ADDR)                 # turn a conditional branch into a jump  @patch @jmp  <https://api.binary.ninja/binaryninja.binaryview-module.html#binaryninja.binaryview.BinaryView.always_branch>
+bv.never_branch(ADDR)                  # make a conditional branch never taken  @patch  <https://api.binary.ninja/binaryninja.binaryview-module.html#binaryninja.binaryview.BinaryView.never_branch>
+bv.invert_branch(ADDR)                 # flip a conditional branch (jz to jnz)  @patch @flip  <https://api.binary.ninja/binaryninja.binaryview-module.html#binaryninja.binaryview.BinaryView.invert_branch>
+bv.skip_and_return_value(ADDR, VALUE)  # replace a call with "return VALUE" in the register  @patch @stub  <https://api.binary.ninja/binaryninja.binaryview-module.html#binaryninja.binaryview.BinaryView.skip_and_return_value>
+bv.arch.assemble("nop")                # assemble text to bytes, then bv.write them  @patch @asm @keystone  <https://api.binary.ninja/binaryninja.architecture-module.html#binaryninja.architecture.Architecture.assemble>
+bv.get_instruction_length(ADDR)        # get the size of the instruction at ADDR  <https://api.binary.ninja/binaryninja.binaryview-module.html#binaryninja.binaryview.BinaryView.get_instruction_length>
+
+## disassembly text
+bv.get_disassembly(ADDR)  # get the disassembly text of one instruction  @asm @print  <https://api.binary.ninja/binaryninja.binaryview-module.html#binaryninja.binaryview.BinaryView.get_disassembly>
+bv.instructions           # iterate (tokens, address) for every instruction in every function  @asm @all  <https://api.binary.ninja/binaryninja.binaryview-module.html#binaryninja.binaryview.BinaryView.instructions>
+bv.linear_disassembly     # iterate the lines of the linear view  @listing @export  <https://api.binary.ninja/binaryninja.binaryview-module.html#binaryninja.binaryview.BinaryView.linear_disassembly>
+
+## metadata (saved in the .bndb)
+bv.store_metadata(KEY, VALUE)  # save a Python value (int, str, bytes, list, dict) in the database  @persist @save  <https://api.binary.ninja/binaryninja.binaryview-module.html#binaryninja.binaryview.BinaryView.store_metadata>
+bv.query_metadata(KEY)         # read saved metadata, raises KeyError if absent  @persist @load  <https://api.binary.ninja/binaryninja.binaryview-module.html#binaryninja.binaryview.BinaryView.query_metadata>
+bv.get_metadata(KEY, DEFAULT)  # read saved metadata or a default  <https://api.binary.ninja/binaryninja.binaryview-module.html#binaryninja.binaryview.BinaryView.get_metadata>
+bv.remove_metadata(KEY)        # delete saved metadata  @delete  <https://api.binary.ninja/binaryninja.binaryview-module.html#binaryninja.binaryview.BinaryView.remove_metadata>
+bv.session_data[KEY] = VALUE   # keep plugin data for this session only (not saved)  @cache @temp  <https://api.binary.ninja/binaryninja.binaryview-module.html#binaryninja.binaryview.BinaryView.session_data>
+
+## events
+bv.register_notification(OBJ)             # get callbacks when the view changes  @hook @listen  <https://api.binary.ninja/binaryninja.binaryview-module.html#binaryninja.binaryview.BinaryView.register_notification>
+    class N(BinaryDataNotification):
+        def function_added(self, view, func): print("new", func)
+        def symbol_updated(self, view, sym): print("renamed", sym)
+    bv.register_notification(N())
+bv.unregister_notification(OBJ)           # stop change callbacks  @unhook  <https://api.binary.ninja/binaryninja.binaryview-module.html#binaryninja.binaryview.BinaryView.unregister_notification>
+BinaryViewType.add_binaryview_initial_analysis_completion_event(FN)  # call FN(bv) after first analysis of each file  @plugin @hook  <https://api.binary.ninja/binaryninja.binaryview-module.html#binaryninja.binaryview.BinaryViewType.add_binaryview_initial_analysis_completion_event>
+
+## components (folders in the symbol list)
+bv.create_component(NAME)  # make a component to group functions and data  @folder @group  <https://api.binary.ninja/binaryninja.binaryview-module.html#binaryninja.binaryview.BinaryView.create_component>
+comp.add_function(FUNC)    # put a function in a component  @folder  <https://api.binary.ninja/binaryninja.component-module.html#binaryninja.component.Component.add_function>
+bv.root_component          # get the top component  <https://api.binary.ninja/binaryninja.binaryview-module.html#binaryninja.binaryview.BinaryView.root_component>

@@ -1,0 +1,119 @@
+title: binary ninja types and symbols
+url:   https://api.binary.ninja/binaryninja.types-module.html
+tags:  binaryninja binja bn types struct enum typedef symbol typelibrary typearchive python api
+
+; bv = BinaryView, t = Type. Names in UPPERCASE are placeholders. Widths are in bytes.
+
+## parse c
+t, name = bv.parse_type_string("struct foo *")  # parse one C type in the context of the view's types  @c @declare  <https://api.binary.ninja/binaryninja.binaryview-module.html#binaryninja.binaryview.BinaryView.parse_type_string>
+r = bv.parse_types_from_string(C_SOURCE)  # parse many C declarations; r.types, r.variables, r.functions are dicts  @c @header  <https://api.binary.ninja/binaryninja.binaryview-module.html#binaryninja.binaryview.BinaryView.parse_types_from_string>
+bv.platform.parse_types_from_source(C_SOURCE)  # parse C with the platform's parser and include paths, no view types  @c @header  <https://api.binary.ninja/binaryninja.platform-module.html#binaryninja.platform.Platform.parse_types_from_source>
+bv.platform.parse_types_from_source_file(PATH)  # parse a C header file  @c @header @import  <https://api.binary.ninja/binaryninja.platform-module.html#binaryninja.platform.Platform.parse_types_from_source_file>
+TypeParser.default.parse_types_from_source(SRC, FILE, bv.platform)  # parse with clang, returns (result, errors)  @clang  <https://api.binary.ninja/binaryninja.typeparser-module.html#binaryninja.typeparser.TypeParser.parse_types_from_source>
+str(t)                                    # print a type as C  @render  <https://api.binary.ninja/binaryninja.types-module.html#binaryninja.types.Type>
+t.get_string()                            # print a type as C, with the name slot  <https://api.binary.ninja/binaryninja.types-module.html#binaryninja.types.Type.get_string>
+t.get_lines(bv, NAME)                     # print a type with its full body (struct members)  @render @dump  <https://api.binary.ninja/binaryninja.types-module.html#binaryninja.types.Type.get_lines>
+
+## types in the view
+bv.types                                  # get a dict of name to Type for all named types  @list @typedef  <https://api.binary.ninja/binaryninja.binaryview-module.html#binaryninja.binaryview.BinaryView.types>
+bv.get_type_by_name(NAME)                 # get a named type  @lookup @struct  <https://api.binary.ninja/binaryninja.binaryview-module.html#binaryninja.binaryview.BinaryView.get_type_by_name>
+bv.get_type_by_id(TYPE_ID)                # get a named type by its id  <https://api.binary.ninja/binaryninja.binaryview-module.html#binaryninja.binaryview.BinaryView.get_type_by_id>
+bv.define_user_type(NAME, t)              # add or replace a named type, t can be a C string  @create @typedef @struct  <https://api.binary.ninja/binaryninja.binaryview-module.html#binaryninja.binaryview.BinaryView.define_user_type>
+bv.define_user_types([(NAME, t), ...], None)  # add many named types at once  @bulk  <https://api.binary.ninja/binaryninja.binaryview-module.html#binaryninja.binaryview.BinaryView.define_user_types>
+bv.undefine_user_type(NAME)               # delete a user type  @remove  <https://api.binary.ninja/binaryninja.binaryview-module.html#binaryninja.binaryview.BinaryView.undefine_user_type>
+bv.rename_type(OLD, NEW)                  # rename a type  @move  <https://api.binary.ninja/binaryninja.binaryview-module.html#binaryninja.binaryview.BinaryView.rename_type>
+bv.type_container                         # get one object to query and edit view types  <https://api.binary.ninja/binaryninja.binaryview-module.html#binaryninja.binaryview.BinaryView.type_container>
+bv.dependency_sorted_types                # list types so each comes after those it uses, for exporting a header  @export  <https://api.binary.ninja/binaryninja.binaryview-module.html#binaryninja.binaryview.BinaryView.dependency_sorted_types>
+
+## make types
+Type.void()                               # make void  @primitive  <https://api.binary.ninja/binaryninja.types-module.html#binaryninja.types.Type.void>
+Type.bool()                               # make bool  @primitive  <https://api.binary.ninja/binaryninja.types-module.html#binaryninja.types.Type.bool>
+Type.char()                               # make char  @primitive  <https://api.binary.ninja/binaryninja.types-module.html#binaryninja.types.Type.char>
+Type.int(4, sign=False)                   # make a 4-byte unsigned int (uint32_t)  @integer @primitive  <https://api.binary.ninja/binaryninja.types-module.html#binaryninja.types.Type.int>
+Type.float(8)                             # make an 8-byte float (double)  @double  <https://api.binary.ninja/binaryninja.types-module.html#binaryninja.types.Type.float>
+Type.pointer(bv.arch, t)                  # make a pointer to t  @ptr  <https://api.binary.ninja/binaryninja.types-module.html#binaryninja.types.Type.pointer>
+Type.pointer_of_width(8, t)               # make a pointer of a given size without an arch  @ptr  <https://api.binary.ninja/binaryninja.types-module.html#binaryninja.types.Type.pointer_of_width>
+Type.array(t, COUNT)                      # make an array of t  @buffer  <https://api.binary.ninja/binaryninja.types-module.html#binaryninja.types.Type.array>
+Type.function(RET, [P1, P2])              # make a function type; params are Types or (name, Type)  @prototype @signature  <https://api.binary.ninja/binaryninja.types-module.html#binaryninja.types.Type.function>
+Type.named_type_from_type(NAME, t)        # make a reference to a named type (struct foo), not a copy  @typedef @ref  <https://api.binary.ninja/binaryninja.types-module.html#binaryninja.types.Type.named_type_from_type>
+Type.named_type_from_registered_type(bv, NAME)  # make a reference to a type already in the view  @typedef @ref  <https://api.binary.ninja/binaryninja.types-module.html#binaryninja.types.Type.named_type_from_registered_type>
+t.mutable_copy()                          # get an editable builder from a type  @edit @builder  <https://api.binary.ninja/binaryninja.types-module.html#binaryninja.types.Type.mutable_copy>
+b.immutable_copy()                        # turn a builder back into a Type  @builder  <https://api.binary.ninja/binaryninja.types-module.html#binaryninja.types.TypeBuilder.immutable_copy>
+
+## structures
+s = StructureBuilder.create()             # start a new struct  @create @record  <https://api.binary.ninja/binaryninja.types-module.html#binaryninja.types.StructureBuilder.create>
+s.append(Type.int(4), "len")              # add a member at the end  @field @member  <https://api.binary.ninja/binaryninja.types-module.html#binaryninja.types.StructureBuilder.append>
+s.insert(OFFSET, t, NAME)                 # add a member at an offset, overwrite what is there  @field @member  <https://api.binary.ninja/binaryninja.types-module.html#binaryninja.types.StructureBuilder.insert>
+s.add_member_at_offset(NAME, t, OFFSET)   # add a member at an offset (name first)  @field @member  <https://api.binary.ninja/binaryninja.types-module.html#binaryninja.types.StructureBuilder.add_member_at_offset>
+s.remove(INDEX)                           # delete a member by index  @field  <https://api.binary.ninja/binaryninja.types-module.html#binaryninja.types.StructureBuilder.remove>
+s.replace(INDEX, t, NAME)                 # change a member's type and name  @field @retype  <https://api.binary.ninja/binaryninja.types-module.html#binaryninja.types.StructureBuilder.replace>
+s.width = SIZE                            # set the struct size, padding the end  @size @sizeof  <https://api.binary.ninja/binaryninja.types-module.html#binaryninja.types.StructureBuilder.width>
+s.packed = True                           # turn off alignment padding  @pack @pragma  <https://api.binary.ninja/binaryninja.types-module.html#binaryninja.types.StructureBuilder.packed>
+bv.define_user_type("foo", s)             # save the struct as a named type  @create  <https://api.binary.ninja/binaryninja.binaryview-module.html#binaryninja.binaryview.BinaryView.define_user_type>
+    s = StructureBuilder.create()
+    s.append(Type.int(4), "len"); s.append(Type.pointer(bv.arch, Type.char()), "data")
+    bv.define_user_type("buf_t", s)
+with Type.builder(bv, NAME) as s:         # edit an existing named struct and save it on exit  @modify @edit  <https://api.binary.ninja/binaryninja.types-module.html#binaryninja.types.Type.builder>
+    with Type.builder(bv, "buf_t") as s: s.append(Type.int(8), "cap")
+t.members                                 # list struct members (name, type, offset)  @fields  <https://api.binary.ninja/binaryninja.types-module.html#binaryninja.types.StructureType.members>
+t.member_at_offset(OFFSET)                # get the struct member at an offset  @field  <https://api.binary.ninja/binaryninja.types-module.html#binaryninja.types.StructureType.member_at_offset>
+StructureBuilder.create(type=StructureVariant.UnionStructureType)  # start a union  @union  <https://api.binary.ninja/binaryninja.types-module.html#binaryninja.types.StructureBuilder.create>
+bv.create_structure_from_offset_access(NAME)  # build a struct from how code accesses a type  @auto @infer  <https://api.binary.ninja/binaryninja.binaryview-module.html#binaryninja.binaryview.BinaryView.create_structure_from_offset_access>
+
+## enums
+e = EnumerationBuilder.create([], width=4)  # start a new enum  @create @constants  <https://api.binary.ninja/binaryninja.types-module.html#binaryninja.types.EnumerationBuilder.create>
+e.append("RED", 0)                        # add an enum member with a value  @member  <https://api.binary.ninja/binaryninja.types-module.html#binaryninja.types.EnumerationBuilder.append>
+bv.define_user_type("color", e)           # save the enum as a named type  <https://api.binary.ninja/binaryninja.binaryview-module.html#binaryninja.binaryview.BinaryView.define_user_type>
+t.members                                 # list enum members (name, value)  <https://api.binary.ninja/binaryninja.types-module.html#binaryninja.types.EnumerationType.members>
+
+## inspect a type
+t.type_class                  # get the kind: StructureTypeClass, PointerTypeClass...  @kind  <https://api.binary.ninja/binaryninja.types-module.html#binaryninja.types.Type.type_class>
+isinstance(t, PointerType)    # test the kind by class (StructureType, ArrayType, FunctionType...)  @kind  <https://api.binary.ninja/binaryninja.types-module.html#binaryninja.types.PointerType>
+t.width                       # get the size in bytes  @sizeof  <https://api.binary.ninja/binaryninja.types-module.html#binaryninja.types.Type.width>
+t.alignment                   # get the alignment in bytes  <https://api.binary.ninja/binaryninja.types-module.html#binaryninja.types.Type.alignment>
+t.target                      # get what a pointer points to  @deref  <https://api.binary.ninja/binaryninja.types-module.html#binaryninja.types.PointerType.target>
+t.element_type, t.count       # get an array's element type and length  <https://api.binary.ninja/binaryninja.types-module.html#binaryninja.types.ArrayType>
+t.return_value, t.parameters  # get a function type's return and parameters  @args @signature  <https://api.binary.ninja/binaryninja.types-module.html#binaryninja.types.FunctionType.parameters>
+t.target(bv)                  # resolve a named type reference to the real type  @typedef @resolve  <https://api.binary.ninja/binaryninja.types-module.html#binaryninja.types.NamedTypeReferenceType.target>
+t.const, t.volatile           # check type qualifiers  <https://api.binary.ninja/binaryninja.types-module.html#binaryninja.types.Type.const>
+t.registered_name             # get the name the type is defined under  <https://api.binary.ninja/binaryninja.types-module.html#binaryninja.types.Type.registered_name>
+
+## apply types
+bv.define_user_data_var(ADDR, "foo")  # give memory at ADDR a type  @global @struct  <https://api.binary.ninja/binaryninja.binaryview-module.html#binaryninja.binaryview.BinaryView.define_user_data_var>
+f.type = "int f(int)"                 # set a function prototype from C  <https://api.binary.ninja/binaryninja.function-module.html#binaryninja.function.Function.type>
+var.type = t                          # set a variable's type  <https://api.binary.ninja/binaryninja.variable-module.html#binaryninja.variable.Variable.type>
+bv.get_code_refs_for_type(NAME)       # list code that uses a type  @xrefs  <https://api.binary.ninja/binaryninja.binaryview-module.html#binaryninja.binaryview.BinaryView.get_code_refs_for_type>
+
+## symbols
+Symbol(SymbolType.FunctionSymbol, ADDR, NAME)  # make a function symbol, then bv.define_user_symbol(sym)  @rename @label  <https://api.binary.ninja/binaryninja.types-module.html#binaryninja.types.Symbol>
+Symbol(SymbolType.DataSymbol, ADDR, NAME)  # make a data symbol  @label @global  <https://api.binary.ninja/binaryninja.types-module.html#binaryninja.types.Symbol>
+sym.name, sym.full_name, sym.raw_name     # get the short, full and mangled names  <https://api.binary.ninja/binaryninja.types-module.html#binaryninja.types.CoreSymbol.raw_name>
+sym.type                                  # get the symbol kind (Function, ImportedFunction, Data...)  @import  <https://api.binary.ninja/binaryninja.types-module.html#binaryninja.types.CoreSymbol.type>
+sym.address                               # get the symbol address  <https://api.binary.ninja/binaryninja.types-module.html#binaryninja.types.CoreSymbol.address>
+sym.binding                               # get global, local or weak binding  <https://api.binary.ninja/binaryninja.types-module.html#binaryninja.types.CoreSymbol.binding>
+sym.namespace                             # get the symbol namespace  <https://api.binary.ninja/binaryninja.types-module.html#binaryninja.types.CoreSymbol.namespace>
+
+## type libraries (.bntl)
+bv.platform.type_libraries                # list the type libraries for a platform  @bntl @api  <https://api.binary.ninja/binaryninja.platform-module.html#binaryninja.platform.Platform.type_libraries>
+TypeLibrary.load_from_file(PATH)          # open a .bntl file  @bntl  <https://api.binary.ninja/binaryninja.typelibrary-module.html#binaryninja.typelibrary.TypeLibrary.load_from_file>
+bv.add_type_library(LIB)                  # make a library's types available to the view  @bntl @import  <https://api.binary.ninja/binaryninja.binaryview-module.html#binaryninja.binaryview.BinaryView.add_type_library>
+bv.import_library_type(NAME)              # copy a type and its dependencies from attached libraries  @bntl @import  <https://api.binary.ninja/binaryninja.binaryview-module.html#binaryninja.binaryview.BinaryView.import_library_type>
+bv.import_library_object(NAME)            # get a function prototype from attached libraries  @bntl @import @signature  <https://api.binary.ninja/binaryninja.binaryview-module.html#binaryninja.binaryview.BinaryView.import_library_object>
+lib = TypeLibrary.new(bv.arch, NAME)      # start a new type library  @bntl @create  <https://api.binary.ninja/binaryninja.typelibrary-module.html#binaryninja.typelibrary.TypeLibrary.new>
+bv.export_type_to_library(lib, NAME, t)   # copy a type into a library  @bntl @export  <https://api.binary.ninja/binaryninja.binaryview-module.html#binaryninja.binaryview.BinaryView.export_type_to_library>
+bv.export_object_to_library(lib, NAME, t)  # copy a function prototype into a library  @bntl @export  <https://api.binary.ninja/binaryninja.binaryview-module.html#binaryninja.binaryview.BinaryView.export_object_to_library>
+lib.finalize(); lib.write_to_file(PATH)   # save a type library  @bntl @save  <https://api.binary.ninja/binaryninja.typelibrary-module.html#binaryninja.typelibrary.TypeLibrary.write_to_file>
+
+## type archives (.bnta)
+TypeArchive.create(PATH, bv.platform)     # make a new type archive to share types between files  @bnta @share  <https://api.binary.ninja/binaryninja.typearchive-module.html#binaryninja.typearchive.TypeArchive.create>
+TypeArchive.open(PATH)                    # open a type archive  @bnta  <https://api.binary.ninja/binaryninja.typearchive-module.html#binaryninja.typearchive.TypeArchive.open>
+bv.attach_type_archive(ARCHIVE)           # attach an archive to the view  @bnta  <https://api.binary.ninja/binaryninja.binaryview-module.html#binaryninja.binaryview.BinaryView.attach_type_archive>
+bv.push_types_to_archive(ARCHIVE, [NAME])  # send view types to an archive  @bnta @export  <https://api.binary.ninja/binaryninja.binaryview-module.html#binaryninja.binaryview.BinaryView.push_types_to_archive>
+bv.pull_types_from_archive(ARCHIVE, [NAME])  # bring archive types into the view  @bnta @import  <https://api.binary.ninja/binaryninja.binaryview-module.html#binaryninja.binaryview.BinaryView.pull_types_from_archive>
+archive.add_type(NAME, t)                 # add a type to an archive  @bnta  <https://api.binary.ninja/binaryninja.typearchive-module.html#binaryninja.typearchive.TypeArchive.add_type>
+archive.types                             # get a dict of the archive's types  @bnta  <https://api.binary.ninja/binaryninja.typearchive-module.html#binaryninja.typearchive.TypeArchive.types>
+
+## debug info
+bv.debug_info                             # get the DWARF/PDB info parsed for the view  @dwarf @pdb  <https://api.binary.ninja/binaryninja.binaryview-module.html#binaryninja.binaryview.BinaryView.debug_info>
+DebugInfoParser.get_parsers_for_view(bv)  # list parsers that can read debug info for the view  @dwarf @pdb  <https://api.binary.ninja/binaryninja.debuginfo-module.html#binaryninja.debuginfo.DebugInfoParser>
+bv.apply_debug_info(INFO)                 # apply parsed debug info (types, names) to the view  @dwarf @pdb @symbols  <https://api.binary.ninja/binaryninja.binaryview-module.html#binaryninja.binaryview.BinaryView.apply_debug_info>

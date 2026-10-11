@@ -1,0 +1,121 @@
+title: binary ninja Function and BasicBlock
+url:   https://api.binary.ninja/binaryninja.function-module.html
+tags:  binaryninja binja bn function basicblock variable cfg python api
+
+; f = Function, bb = BasicBlock, v = Variable. Names in UPPERCASE are placeholders.
+
+## function info
+f.name                               # get or set the function name  @rename @symbol  <https://api.binary.ninja/binaryninja.function-module.html#binaryninja.function.Function.name>
+f.start                              # get the entry address  @address @begin  <https://api.binary.ninja/binaryninja.function-module.html#binaryninja.function.Function.start>
+f.lowest_address, f.highest_address  # get the address range the function covers  @end @bounds  <https://api.binary.ninja/binaryninja.function-module.html#binaryninja.function.Function.highest_address>
+f.address_ranges                     # list the address ranges of the function (can be split)  @chunks  <https://api.binary.ninja/binaryninja.function-module.html#binaryninja.function.Function.address_ranges>
+f.total_bytes                        # get the size of the function in bytes  @length  <https://api.binary.ninja/binaryninja.function-module.html#binaryninja.function.Function.total_bytes>
+f.symbol                             # get the Symbol of the function  <https://api.binary.ninja/binaryninja.function-module.html#binaryninja.function.Function.symbol>
+f.arch, f.platform                   # get the architecture and platform of the function  <https://api.binary.ninja/binaryninja.function-module.html#binaryninja.function.Function.platform>
+f.view                               # get the BinaryView that owns the function  @bv  <https://api.binary.ninja/binaryninja.function-module.html#binaryninja.function.Function.view>
+f.is_exported                        # check if the function is exported  @export  <https://api.binary.ninja/binaryninja.function-module.html#binaryninja.function.Function.is_exported>
+f.is_thunk                           # check if the function only jumps to another  @stub @trampoline  <https://api.binary.ninja/binaryninja.function-module.html#binaryninja.function.Function.is_thunk>
+f.can_return                         # get or set whether the function returns  @noreturn  <https://api.binary.ninja/binaryninja.function-module.html#binaryninja.function.Function.can_return>
+f.too_large                          # check if analysis skipped the function for size  @skip  <https://api.binary.ninja/binaryninja.function-module.html#binaryninja.function.Function.too_large>
+f.analysis_skipped = False           # force analysis of a skipped function  @toolarge  <https://api.binary.ninja/binaryninja.function-module.html#binaryninja.function.Function.analysis_skipped>
+f.reanalyze()                        # redo analysis of this function  @refresh  <https://api.binary.ninja/binaryninja.function-module.html#binaryninja.function.Function.reanalyze>
+
+## prototype
+f.type                                    # get the function type (return type, params)  @signature @prototype  <https://api.binary.ninja/binaryninja.function-module.html#binaryninja.function.Function.type>
+f.set_user_type("int f(char* s, int n)")  # set the prototype from a C string  @signature @retype  <https://api.binary.ninja/binaryninja.function-module.html#binaryninja.function.Function.set_user_type>
+f.return_type                             # get or set the return type  <https://api.binary.ninja/binaryninja.function-module.html#binaryninja.function.Function.return_type>
+f.parameter_vars                          # list the parameter variables  @args @arguments  <https://api.binary.ninja/binaryninja.function-module.html#binaryninja.function.Function.parameter_vars>
+f.calling_convention                      # get or set the calling convention  @cdecl @stdcall @abi  <https://api.binary.ninja/binaryninja.function-module.html#binaryninja.function.Function.calling_convention>
+f.has_variable_arguments                  # get or set whether the function is variadic  @varargs @printf  <https://api.binary.ninja/binaryninja.function-module.html#binaryninja.function.Function.has_variable_arguments>
+f.stack_adjustment                        # get or set bytes popped by the callee on return  @stdcall  <https://api.binary.ninja/binaryninja.function-module.html#binaryninja.function.Function.stack_adjustment>
+f.clobbered_regs                          # get or set registers the function changes  <https://api.binary.ninja/binaryninja.function-module.html#binaryninja.function.Function.clobbered_regs>
+
+## calls
+f.callees                    # list functions this function calls  @calls @children  <https://api.binary.ninja/binaryninja.function-module.html#binaryninja.function.Function.callees>
+f.callee_addresses           # list addresses this function calls  <https://api.binary.ninja/binaryninja.function-module.html#binaryninja.function.Function.callee_addresses>
+f.callers                    # list functions that call this function  @xrefs @parents  <https://api.binary.ninja/binaryninja.function-module.html#binaryninja.function.Function.callers>
+f.caller_sites               # list call sites (ReferenceSource) that call this function  @xrefs  <https://api.binary.ninja/binaryninja.function-module.html#binaryninja.function.Function.caller_sites>
+f.call_sites                 # list call instructions in this function  <https://api.binary.ninja/binaryninja.function-module.html#binaryninja.function.Function.call_sites>
+f.is_call_instruction(ADDR)  # check if the instruction at ADDR is a call  <https://api.binary.ninja/binaryninja.function-module.html#binaryninja.function.Function.is_call_instruction>
+
+## basic blocks and cfg
+f.basic_blocks               # list basic blocks of the disassembly  @cfg @graph  <https://api.binary.ninja/binaryninja.function-module.html#binaryninja.function.Function.basic_blocks>
+f.get_basic_block_at(ADDR)   # get the block that holds ADDR  <https://api.binary.ninja/binaryninja.function-module.html#binaryninja.function.Function.get_basic_block_at>
+bb.start, bb.end, bb.length  # get a block's range (end is one past the last byte)  <https://api.binary.ninja/binaryninja.basicblock-module.html#binaryninja.basicblock.BasicBlock.start>
+bb.instruction_count         # get the number of instructions in a block  <https://api.binary.ninja/binaryninja.basicblock-module.html#binaryninja.basicblock.BasicBlock.instruction_count>
+bb.outgoing_edges            # list edges out of a block (edge.target, edge.type)  @successors @cfg  <https://api.binary.ninja/binaryninja.basicblock-module.html#binaryninja.basicblock.BasicBlock.outgoing_edges>
+bb.incoming_edges            # list edges into a block (edge.source)  @predecessors @cfg  <https://api.binary.ninja/binaryninja.basicblock-module.html#binaryninja.basicblock.BasicBlock.incoming_edges>
+bb.dominators                # list blocks that dominate this block  @dominance  <https://api.binary.ninja/binaryninja.basicblock-module.html#binaryninja.basicblock.BasicBlock.dominators>
+bb.immediate_dominator       # get the closest dominator  @idom  <https://api.binary.ninja/binaryninja.basicblock-module.html#binaryninja.basicblock.BasicBlock.immediate_dominator>
+bb.dominance_frontier        # get the dominance frontier  @ssa  <https://api.binary.ninja/binaryninja.basicblock-module.html#binaryninja.basicblock.BasicBlock.dominance_frontier>
+bb.post_dominators           # list blocks that post-dominate this block  <https://api.binary.ninja/binaryninja.basicblock-module.html#binaryninja.basicblock.BasicBlock.post_dominators>
+bb.can_exit                  # check if the block can return  @noreturn  <https://api.binary.ninja/binaryninja.basicblock-module.html#binaryninja.basicblock.BasicBlock.can_exit>
+bb.disassembly_text          # get the disassembly lines of a block  @asm @print  <https://api.binary.ninja/binaryninja.basicblock-module.html#binaryninja.basicblock.BasicBlock.disassembly_text>
+for tokens, size in bb: ...  # iterate the instructions of a disassembly block  @loop  <https://api.binary.ninja/binaryninja.basicblock-module.html#binaryninja.basicblock.BasicBlock>
+bb.function                  # get the function that owns a block  <https://api.binary.ninja/binaryninja.basicblock-module.html#binaryninja.basicblock.BasicBlock.function>
+bb.source_block              # get the disassembly block behind an IL block  <https://api.binary.ninja/binaryninja.basicblock-module.html#binaryninja.basicblock.BasicBlock.source_block>
+
+## instructions
+f.instructions                            # iterate (tokens, address) for each instruction  @asm @disassembly  <https://api.binary.ninja/binaryninja.function-module.html#binaryninja.function.Function.instructions>
+f.get_instruction_containing_address(ADDR)  # get the start of the instruction that covers ADDR  <https://api.binary.ninja/binaryninja.function-module.html#binaryninja.function.Function.get_instruction_containing_address>
+f.get_reg_value_at(ADDR, "rax")           # get the known value of a register before ADDR  @dataflow @constant  <https://api.binary.ninja/binaryninja.function-module.html#binaryninja.function.Function.get_reg_value_at>
+f.get_reg_value_after(ADDR, "rax")        # get the known value of a register after ADDR  @dataflow  <https://api.binary.ninja/binaryninja.function-module.html#binaryninja.function.Function.get_reg_value_after>
+f.get_stack_contents_at(ADDR, OFFSET, SIZE)  # get the known value on the stack at ADDR  @dataflow  <https://api.binary.ninja/binaryninja.function-module.html#binaryninja.function.Function.get_stack_contents_at>
+f.get_parameter_at(ADDR, None, I)         # get the value of argument I at the call at ADDR  @args @dataflow  <https://api.binary.ninja/binaryninja.function-module.html#binaryninja.function.Function.get_parameter_at>
+f.get_regs_read_by(ADDR)                  # list registers the instruction reads  <https://api.binary.ninja/binaryninja.function-module.html#binaryninja.function.Function.get_regs_read_by>
+f.get_regs_written_by(ADDR)               # list registers the instruction writes  <https://api.binary.ninja/binaryninja.function-module.html#binaryninja.function.Function.get_regs_written_by>
+f.get_constants_referenced_by(ADDR)       # list constants used by the instruction  @immediate  <https://api.binary.ninja/binaryninja.function-module.html#binaryninja.function.Function.get_constants_referenced_by>
+
+## il access
+f.llil                                    # get the Low Level IL function  @lowlevelil  <https://api.binary.ninja/binaryninja.function-module.html#binaryninja.function.Function.llil>
+f.mlil                                    # get the Medium Level IL function  @mediumlevelil  <https://api.binary.ninja/binaryninja.function-module.html#binaryninja.function.Function.mlil>
+f.hlil                                    # get the High Level IL function (decompiled)  @highlevelil @decompile  <https://api.binary.ninja/binaryninja.function-module.html#binaryninja.function.Function.hlil>
+f.lifted_il                               # get the raw lifted IL before any cleanup  <https://api.binary.ninja/binaryninja.function-module.html#binaryninja.function.Function.lifted_il>
+f.mlil_if_available                       # get MLIL only if already built, else None (no analysis)  @fast  <https://api.binary.ninja/binaryninja.function-module.html#binaryninja.function.Function.mlil_if_available>
+f.get_llil_at(ADDR)                       # get the LLIL instruction at an address  <https://api.binary.ninja/binaryninja.function-module.html#binaryninja.function.Function.get_llil_at>
+f.get_llils_at(ADDR)                      # list all LLIL instructions at an address  <https://api.binary.ninja/binaryninja.function-module.html#binaryninja.function.Function.get_llils_at>
+f.pseudo_c                                # get the Pseudo C language representation  @decompile @c  <https://api.binary.ninja/binaryninja.function-module.html#binaryninja.function.Function.pseudo_c>
+"\n".join(map(str, f.hlil.instructions))  # print decompiled code as text  @decompile @dump  <https://api.binary.ninja/binaryninja.highlevelil-module.html#binaryninja.highlevelil.HighLevelILFunction.instructions>
+
+## variables
+f.vars                                    # list all variables  @locals  <https://api.binary.ninja/binaryninja.function-module.html#binaryninja.function.Function.vars>
+f.stack_layout                            # list stack variables by offset  @locals @frame  <https://api.binary.ninja/binaryninja.function-module.html#binaryninja.function.Function.stack_layout>
+f.get_variable_by_name(NAME)              # get a variable by name  <https://api.binary.ninja/binaryninja.function-module.html#binaryninja.function.Function.get_variable_by_name>
+v.name = NAME                             # rename a variable  @rename  <https://api.binary.ninja/binaryninja.variable-module.html#binaryninja.variable.Variable.name>
+v.type = "char*"                          # change a variable's type, as a C string or Type  @retype  <https://api.binary.ninja/binaryninja.variable-module.html#binaryninja.variable.Variable.type>
+v.set_name_and_type_async(NAME, TYPE)     # rename and retype without waiting, fast for bulk edits  @rename @bulk  <https://api.binary.ninja/binaryninja.variable-module.html#binaryninja.variable.Variable.set_name_and_type_async>
+v.source_type, v.storage                  # get where a variable lives: stack offset, register or flag  @register @stack  <https://api.binary.ninja/binaryninja.variable-module.html#binaryninja.variable.CoreVariable>
+v.is_parameter_variable                   # check if a variable is a parameter  @args  <https://api.binary.ninja/binaryninja.variable-module.html#binaryninja.variable.Variable.is_parameter_variable>
+f.create_user_stack_var(OFFSET, TYPE, NAME)  # make a stack variable at an offset  @locals @define  <https://api.binary.ninja/binaryninja.function-module.html#binaryninja.function.Function.create_user_stack_var>
+f.create_user_var(VAR, TYPE, NAME)        # set a variable's name and type as user-defined  <https://api.binary.ninja/binaryninja.function-module.html#binaryninja.function.Function.create_user_var>
+f.merge_vars(TARGET, [SRC])               # merge variables into one  @combine  <https://api.binary.ninja/binaryninja.function-module.html#binaryninja.function.Function.merge_vars>
+f.split_var(VAR)                          # split a variable at its definition  <https://api.binary.ninja/binaryninja.function-module.html#binaryninja.function.Function.split_var>
+f.set_user_var_value(VAR, DEF_ADDR, VALUE)  # tell analysis a variable has a fixed value  @constant @dataflow  <https://api.binary.ninja/binaryninja.function-module.html#binaryninja.function.Function.set_user_var_value>
+f.get_mlil_var_refs(VAR)                  # list MLIL uses of a variable  @xrefs  <https://api.binary.ninja/binaryninja.function-module.html#binaryninja.function.Function.get_mlil_var_refs>
+f.get_hlil_var_refs(VAR)                  # list HLIL uses of a variable  @xrefs  <https://api.binary.ninja/binaryninja.function-module.html#binaryninja.function.Function.get_hlil_var_refs>
+
+## comments, tags, highlight
+f.comment = "text"                        # set the comment at the top of the function  @note  <https://api.binary.ninja/binaryninja.function-module.html#binaryninja.function.Function.comment>
+f.set_comment_at(ADDR, "text")            # put a comment on an instruction  @note @annotate  <https://api.binary.ninja/binaryninja.function-module.html#binaryninja.function.Function.set_comment_at>
+f.get_comment_at(ADDR)                    # read an instruction comment  <https://api.binary.ninja/binaryninja.function-module.html#binaryninja.function.Function.get_comment_at>
+f.comments                                # get a dict of address to comment in the function  <https://api.binary.ninja/binaryninja.function-module.html#binaryninja.function.Function.comments>
+f.add_tag("Bugs", "text")                 # tag the whole function  @bookmark  <https://api.binary.ninja/binaryninja.function-module.html#binaryninja.function.Function.add_tag>
+f.add_tag("Bugs", "text", ADDR)           # tag one instruction  @bookmark  <https://api.binary.ninja/binaryninja.function-module.html#binaryninja.function.Function.add_tag>
+f.tags                                    # list address tags in the function  <https://api.binary.ninja/binaryninja.function-module.html#binaryninja.function.Function.tags>
+f.get_function_tags()                     # list tags on the whole function  <https://api.binary.ninja/binaryninja.function-module.html#binaryninja.function.Function.get_function_tags>
+f.set_user_instr_highlight(ADDR, HighlightStandardColor.RedHighlightColor)  # color one instruction  @color @mark  <https://api.binary.ninja/binaryninja.function-module.html#binaryninja.function.Function.set_user_instr_highlight>
+bb.set_user_highlight(HighlightStandardColor.GreenHighlightColor)  # color a whole basic block  @color @mark @coverage  <https://api.binary.ninja/binaryninja.basicblock-module.html#binaryninja.basicblock.BasicBlock.set_user_highlight>
+HighlightColor(red=255, green=0, blue=0)  # make a custom RGB highlight color  @color @rgb  <https://api.binary.ninja/binaryninja.highlight-module.html#binaryninja.highlight.HighlightColor>
+
+## xrefs and fixes
+f.add_user_code_ref(FROM, TO)             # add a code xref by hand (e.g. resolved indirect call)  @xrefs @indirect  <https://api.binary.ninja/binaryninja.function-module.html#binaryninja.function.Function.add_user_code_ref>
+f.set_user_indirect_branches(SRC, [(ARCH, DEST)])  # give targets for a jump table or indirect jump  @switch @jumptable  <https://api.binary.ninja/binaryninja.function-module.html#binaryninja.function.Function.set_user_indirect_branches>
+f.unresolved_indirect_branches            # list indirect jumps analysis could not resolve  @switch  <https://api.binary.ninja/binaryninja.function-module.html#binaryninja.function.Function.unresolved_indirect_branches>
+f.set_call_type_adjustment(ADDR, TYPE)    # override the prototype for one call site  @signature @callsite  <https://api.binary.ninja/binaryninja.function-module.html#binaryninja.function.Function.set_call_type_adjustment>
+f.set_int_display_type(ADDR, VALUE, OPERAND, DISPLAY_TYPE)  # show a constant as hex, char, enum...  @format @IntegerDisplayType  <https://api.binary.ninja/binaryninja.function-module.html#binaryninja.function.Function.set_int_display_type>
+
+## metadata and graphs
+f.store_metadata(KEY, VALUE)  # save a value on the function in the database  @persist  <https://api.binary.ninja/binaryninja.function-module.html#binaryninja.function.Function.store_metadata>
+f.query_metadata(KEY)         # read a saved value on the function  <https://api.binary.ninja/binaryninja.function-module.html#binaryninja.function.Function.query_metadata>
+f.session_data[KEY] = VALUE   # keep plugin data on the function for this session  <https://api.binary.ninja/binaryninja.function-module.html#binaryninja.function.Function.session_data>
+f.create_graph()              # build the function's FlowGraph for layout or export  @cfg @render  <https://api.binary.ninja/binaryninja.function-module.html#binaryninja.function.Function.create_graph>

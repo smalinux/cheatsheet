@@ -1,0 +1,115 @@
+title: gdb targets and remote debugging
+url:   https://sourceware.org/gdb/current/onlinedocs/gdb.html/Remote-Debugging.html
+tags:  gdb debugger remote gdbserver target embedded cross qemu jtag
+
+## targets
+target TYPE PARAMS               # connect to a target  @connect <https://sourceware.org/gdb/current/onlinedocs/gdb.html/Target-Commands.html>
+target native                    # use the local process target
+target core FILE                 # use a core file as the target
+target exec FILE                 # use an executable file as the target
+target remote HOST:PORT          # connect to gdbserver or a stub over TCP
+target remote /dev/ttyS0         # connect to a stub over a serial line  @uart
+target remote | CMD              # connect to a stub over a pipe
+target extended-remote HOST:PORT # connect in extended mode: run, attach and restart on the remote
+target sim [ARGS]                # use the built-in simulator
+target tfile FILE                # open a saved trace file, also target ctf DIR  @tracepoints
+help target                      # list the available targets
+disconnect                       # leave the target without killing it
+flash-erase                      # erase flash memory on the remote target
+set endian big|little|auto       # set the target byte order  @endianness
+show endian                      # show the target byte order
+set architecture ARCH            # set the target arch, e.g. i386:x86-64, arm, riscv:rv64  @set-arch
+show architecture                # show the target arch
+set osabi OSABI                  # set the target OS ABI, e.g. GNU/Linux or none
+show osabi                       # show the target OS ABI
+set gnutarget FORMAT             # set the BFD file format, e.g. elf32-littlearm
+set hash on|off                  # print "#" while loading to a remote target
+set debug remote 1               # print remote protocol packets  @rsp @trace
+
+## connect to a remote target
+target remote 192.168.1.10:2345      # connect to gdbserver on another machine  <https://sourceware.org/gdb/current/onlinedocs/gdb.html/Connecting.html>
+target remote localhost:2345         # connect to gdbserver on this machine  @qemu
+target remote :2345                  # connect to gdbserver on this machine, short form  @qemu
+target remote tcp:HOST:PORT          # connect over TCP explicitly, also udp:HOST:PORT
+target remote unix:/path/socket      # connect over a Unix domain socket
+target remote /dev/ttyUSB0           # connect over USB serial, see set serial baud
+set remote exec-file /path/on/target # set the program to run on the remote (extended-remote)
+run (extended-remote)                # start the program on the remote, only in extended-remote mode
+attach PID (extended-remote)         # attach to a remote process in extended-remote mode
+monitor CMD                          # send a command to gdbserver or the stub  @qRcmd
+monitor help                         # list the gdbserver monitor commands
+monitor exit                         # stop gdbserver
+monitor set debug 0|1                # turn gdbserver debug output on or off
+monitor set debug-format all|none|timestamp # choose the gdbserver debug format
+monitor set remote-debug 0|1         # turn gdbserver protocol debug on or off
+monitor set event-loop-debug 0|1     # turn gdbserver event loop debug on or off
+monitor set debug-file FILE          # send gdbserver debug output to a file
+monitor set libthread-db-search-path PATH # set where gdbserver looks for libthread_db
+detach (remote)                      # detach and let the remote program continue
+
+## remote settings
+set serial baud RATE                   # set the serial line speed  @remotebaud <https://sourceware.org/gdb/current/onlinedocs/gdb.html/Remote-Configuration.html>
+set serial parity none|odd|even        # set the serial parity
+set remotetimeout SECONDS              # set how long to wait for the remote
+set remotelogfile FILE                 # log remote traffic to a file
+set remotelogbase hex|octal|ascii      # choose the format of the remote log
+set remote interrupt-sequence Ctrl-C|BREAK|BREAK-g # choose what GDB sends to interrupt
+set remote interrupt-on-connect on|off # interrupt the target when connecting
+set remoteflow on|off                  # use hardware flow control on serial
+set remote hardware-breakpoint-limit N # tell GDB how many hardware breakpoints the target has
+set remote hardware-watchpoint-limit N # tell GDB how many hardware watchpoints the target has
+set remote hardware-watchpoint-length-limit N # tell GDB the max watch length in bytes
+set remote PACKET-NAME-packet on|off|auto # turn a remote packet on or off, e.g. set remote Z-packet off
+set remote multiprocess-feature-packet on # use the multiprocess feature
+show remote                            # show all remote settings
+set tcp connect-timeout SECONDS|unlimited # set the TCP connect timeout
+set tcp auto-retry on|off              # retry TCP connections
+remote get TARGETFILE HOSTFILE         # copy a file from the target  @download @scp
+remote put HOSTFILE TARGETFILE         # copy a file to the target  @upload @scp
+remote delete TARGETFILE               # delete a file on the target
+set remote system-call-allowed 0|1     # allow system() in the File-I/O extension
+show remote system-call-allowed        # show if system() is allowed
+
+## gdbserver
+gdbserver :2345 ./prog ARGS       # run a program under gdbserver on TCP port 2345  @target <man:gdbserver(1)>
+gdbserver HOST:2345 ./prog        # run a program under gdbserver, the host part is ignored
+gdbserver /dev/ttyS0 ./prog       # run a program under gdbserver on a serial line
+gdbserver --attach :2345 PID      # attach gdbserver to a running process
+gdbserver --multi :2345           # start gdbserver in extended mode and wait for commands
+gdbserver --once :2345 ./prog     # exit gdbserver after GDB disconnects
+gdbserver --debug                 # print gdbserver debug output, also --remote-debug --event-loop-debug
+gdbserver --debug-file=FILE       # send gdbserver debug output to a file
+gdbserver --wrapper env FOO=bar -- :2345 ./prog # start the program through a wrapper
+gdbserver --disable-randomization # turn off ASLR, also --no-disable-randomization
+gdbserver --startup-with-shell    # start the program through a shell, also --no-startup-with-shell
+gdbserver --disable-packet=vCont,threads,Tthread,qC # turn off some protocol packets
+gdbserver --version               # print the gdbserver version, also --help
+remote session                    # debug a program on another machine with gdbserver  @howto
+    # on the target
+    gdbserver :2345 ./prog
+    # on the host, same binary with symbols
+    gdb ./prog
+    (gdb) target remote TARGET:2345
+    (gdb) set sysroot /path/to/target/rootfs
+    (gdb) b main
+    (gdb) c               # gdbserver already started the program
+
+## bare metal stub
+set_debug_traps() # install the stub's exception handlers (bare metal)  @stub <https://sourceware.org/gdb/current/onlinedocs/gdb.html/Remote-Stub.html>
+breakpoint()      # stop the program so GDB can connect (bare metal stub)
+stub functions    # write getDebugChar, putDebugChar, exceptionHandler, flush_i_cache for the stub
+
+## in-process agent
+LD_PRELOAD=libinproctrace.so ./prog # load the in-process agent, needed for fast tracepoints  @ipa <https://sourceware.org/gdb/current/onlinedocs/gdb.html/In_002dProcess-Agent.html>
+set agent on|off                    # use the in-process agent when possible
+show agent                          # show if the in-process agent is used
+
+## overlays
+overlay off                   # turn off overlay support  <https://sourceware.org/gdb/current/onlinedocs/gdb.html/Overlays.html>
+overlay manual                # tell GDB yourself which overlays are mapped
+overlay map-overlay OVERLAY   # mark an overlay as mapped  @overlay-map
+overlay unmap-overlay OVERLAY # mark an overlay as unmapped  @overlay-unmap
+overlay auto                  # let GDB read _ovly_table from the program
+overlay load-target           # read the overlay table again  @overlay-load
+overlay list-overlays         # list overlays  @overlay-list
+_ovly_table                   # define this table in the program for automatic overlays, with _novlys and _ovly_debug_event()

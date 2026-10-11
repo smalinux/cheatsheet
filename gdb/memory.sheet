@@ -1,0 +1,108 @@
+title: gdb registers, memory, core files
+url:   https://sourceware.org/gdb/current/onlinedocs/gdb.html/Data.html
+tags:  gdb debugger register memory core coredump dump
+
+## registers
+info registers         # show the general registers  @info-reg @i-r <https://sourceware.org/gdb/current/onlinedocs/gdb.html/Registers.html>
+info registers rax rbx # show some registers
+info registers rip     # show one register
+info all-registers     # show all registers: float, vector, system
+info registers general|float|vector|system|all # show registers by group
+maint print reggroups  # list the register groups
+p $pc                  # print the program counter, same name on every arch  @instruction-pointer
+p $sp                  # print the stack pointer, same name on every arch
+p $fp                  # print the frame pointer, same name on every arch
+p $ps                  # print the processor status register
+p/x $rax               # print a register in hex
+p $xmm0                # print a vector register as a union  @simd @sse
+p $xmm0.v4_float[0]    # print one float lane of a vector register  @simd
+p $ymm0.v8_float       # print a 256-bit vector register as 8 floats  @avx
+p $eflags              # print the x86 flags register  @flags
+set $rax = 0           # write a register  @modify
+set var $pc = ADDR     # write the program counter
+info float             # show the floating point unit status  @fpu <https://sourceware.org/gdb/current/onlinedocs/gdb.html/Floating-Point-Hardware.html>
+info vector            # show the vector unit status  @simd <https://sourceware.org/gdb/current/onlinedocs/gdb.html/Vector-Unit.html>
+
+## os info
+info auxv          # show the auxiliary vector (AT_* entries) from the kernel  @elf <https://sourceware.org/gdb/current/onlinedocs/gdb.html/OS-Information.html>
+info os            # list the OS info types
+info os processes  # list OS processes, also procgroups threads files sockets shm semaphores msg modules cpus
+info proc mappings # show the memory map of the process (Linux)  @maps @vmmap @fav
+
+## memory regions
+mem LOW HIGH ATTRS...                  # define a memory region with attributes ro rw wo 8 16 32 64 cache nocache  @embedded <https://sourceware.org/gdb/current/onlinedocs/gdb.html/Memory-Region-Attributes.html>
+mem 0x1000 0x2000 ro                   # define a read-only memory region
+mem 0x2000 0x3000 rw 8                 # define a read-write region with 8-byte access
+mem auto                               # use the memory map from the target
+info mem                               # list memory regions
+delete mem N...                        # delete memory regions, also disable mem and enable mem
+set mem inaccessible-by-default on|off # treat memory outside regions as inaccessible
+show mem inaccessible-by-default       # show if unknown memory is inaccessible
+
+## dump and restore
+dump [FORMAT] memory FILE START END    # save memory to a file, FORMAT binary ihex srec tekhex verilog  @save <https://sourceware.org/gdb/current/onlinedocs/gdb.html/Dump_002fRestore-Files.html>
+dump [FORMAT] value FILE EXPR          # save a value to a file
+dump binary memory mem.bin 0x400000 0x401000 # save a memory range as raw binary
+dump ihex value out.hex ARR            # save a value as Intel hex
+append [binary] memory FILE START END  # append memory to a file
+append [binary] value FILE EXPR        # append a value to a file
+restore FILE [binary] [BIAS START END] # load a file into memory  @load
+restore mem.bin binary 0x400000        # load a raw binary file at an address
+
+## core files
+generate-core-file [FILE]         # write a core dump of the running process  @snapshot @fav <https://sourceware.org/gdb/current/onlinedocs/gdb.html/Core-File-Generation.html>
+gcore [FILE]                      # write a core dump of the running process, process keeps running  @snapshot @fav
+gcore PID                         # write a core dump of any process from the shell  @snapshot <man:gcore(1)>
+set use-coredump-filter on|off    # follow /proc/PID/coredump_filter when writing cores
+set dump-excluded-mappings on|off # include mappings marked as excluded in cores
+core-file FILE                    # load a core file  @core @postmortem @fav
+core-file                         # discard the core file
+target core FILE                  # load a core file as a target
+ulimit -c unlimited               # allow core dumps in this shell  @crash
+cat /proc/sys/kernel/core_pattern # show where the kernel writes core files
+coredumpctl gdb                   # open the last crash in GDB on systemd systems  @crash <man:coredumpctl(1)>
+snapshot a running program        # stop it, write a core, then inspect the core  @scenario @htop
+    # terminal 1
+    $ tty
+    /dev/pts/8
+    # terminal 2
+    $ gdb -n /usr/bin/htop
+    (gdb) set inferior-tty /dev/pts/8
+    (gdb) start
+    (gdb) c
+    ^C
+    (gdb) generate-core-file
+    Saved corefile core.2755591
+    (gdb) core-file core.2755591
+    (gdb) bt
+get a core on crash               # enable cores, run until it crashes, open ./core  @scenario @segfault
+    $ ulimit -c unlimited
+    $ ./faulty            # segfaults -> writes ./core (core_pattern = core)
+    $ gdb ./faulty core
+
+## character sets
+set charset CHARSET             # set both host and target character sets, e.g. UTF-8  @encoding <https://sourceware.org/gdb/current/onlinedocs/gdb.html/Character-Sets.html>
+set host-charset CHARSET        # set the host character set
+set target-charset CHARSET      # set the target character set
+set target-wide-charset CHARSET # set the target wide character set  @wchar
+show charset                    # show the character sets
+
+## caching
+set remotecache on|off # cache target memory (remote)  <https://sourceware.org/gdb/current/onlinedocs/gdb.html/Caching-Target-Data.html>
+set stack-cache on|off # cache stack memory
+set code-cache on|off  # cache code memory
+info dcache [line]     # show data cache statistics
+maint flush dcache     # clear the data cache
+
+## search memory
+find START, END, VAL1 [, VAL2...]     # search memory for values  @grep @scan <https://sourceware.org/gdb/current/onlinedocs/gdb.html/Searching-Memory.html>
+find START, +LENGTH, VAL1...          # search LENGTH bytes from START
+find &BUF[0], +100, "hello"           # search memory for a string
+find/w 0x400000, 0x500000, 0xdeadbeef # search memory for a 4-byte value
+find/1 START, END, VAL                # stop at the first match
+$numfound                             # hold the number of matches found by find  @convenience
+$_ (after find)                       # hold the address of the last match  @convenience
+
+## value sizes
+set max-value-size N|unlimited # fail on values bigger than N bytes (default 64k)  <https://sourceware.org/gdb/current/onlinedocs/gdb.html/Value-Sizes.html>
+show max-value-size            # show the max value size

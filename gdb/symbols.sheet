@@ -1,0 +1,93 @@
+title: gdb symbols, types, languages, macros
+url:   https://sourceware.org/gdb/current/onlinedocs/gdb.html/Symbols.html
+tags:  gdb debugger symbol type ptype struct language macro cpp
+
+## types
+whatis EXPR                       # show the type of an expression, one level  @typeof <https://sourceware.org/gdb/current/onlinedocs/gdb.html/Symbols.html>
+whatis struct foo                 # show what a type name is
+ptype EXPR                        # show the full type definition of an expression  @struct @definition @fav
+ptype TYPE                        # show the full definition of a type
+ptype/o struct foo                # show a struct layout with offsets, sizes and padding  @pahole @layout @offsetof
+ptype/r TYPE                      # show a type raw, without typedef substitution
+ptype/m TYPE                      # show a type without methods
+ptype/t TYPE                      # show a type without typedefs
+ptype/x struct foo                # show struct offsets in hex, /d for decimal
+set opaque-type-resolution on|off # resolve opaque struct types from other files
+info vtbl OBJ                     # print the virtual table of a C++ object  @virtual
+
+## symbol lookup
+info address SYMBOL             # show where a symbol is stored: register, static, stack
+info symbol ADDR                # show which symbol is at an address, e.g. main + 4 in .text  @addr2line @reverse-lookup
+info scope LOCATION             # list all variables local to a scope
+info types [REGEX]              # list types matching a regex
+info types -q REGEX             # list matching types without file headers
+info functions [REGEX]          # list functions matching a regex, -q -n -t TYPEREGEX  @list @find
+info functions -n ^foo          # list matching functions, skip non-debugging symbols
+info variables [REGEX]          # list global and static variables matching a regex  @globals
+info variables -q -t int$ REGEX # list variables by name and type regex
+info sources [-dirname|-basename] [--] [REGEX] # list all source files  @files
+info modules [-q] [REGEX]       # list Fortran modules
+info module functions [-m MODREGEX] [-t TYPEREGEX] [REGEX] # list functions in Fortran modules
+info module variables [-m MODREGEX] [-t TYPEREGEX] [REGEX] # list variables in Fortran modules
+demangle [-l LANG] [--] NAME    # demangle a C++ mangled name  @c++filt
+set demangle-style gnu-v3       # choose the demangling style
+
+## symbol internals
+maint print symbols [FILE]    # dump full symbols, also maint print psymbols and msymbols
+maint info symtabs            # list expanded symbol tables, also maint info psymtabs
+maint expand-symtabs [REGEX]  # expand symbol tables now
+maint set symbol-cache-size N # set the symbol cache size
+maint print symbol-cache      # dump the symbol cache, also symbol-cache-statistics
+maint flush symbol-cache      # clear the symbol cache
+
+## languages
+show language               # show the current working language  <https://sourceware.org/gdb/current/onlinedocs/gdb.html/Languages.html>
+set language auto           # choose the language from the current frame (default)  @local
+set language c|c++|d|go|objective-c|opencl|fortran|pascal|rust|modula-2|ada|asm|minimal # set the expression language by hand
+info source (language)      # show the language of the current file
+set check type on|off       # turn type checking on or off
+set check range on|off|warn # turn range checking on or off (Modula-2, Pascal, Ada)
+show check type             # show type checking, also show check range
+
+## c and c++
+set overload-resolution on|off # resolve C++ overloads in expressions  @cpp <https://sourceware.org/gdb/current/onlinedocs/gdb.html/C.html>
+p OBJ.*MEMFN                   # use a C++ pointer to member  @cpp
+p dynamic_cast<D*>(BASE)       # cast in C++ syntax, also static_cast reinterpret_cast const_cast  @cpp
+p sizeof(T)                    # get the size of a type or expression
+p this->X                      # use "this" in C++ methods  @cpp
+set cp-abi auto|gnu-v3         # choose the C++ ABI
+show cp-abi                    # show the C++ ABI
+
+## objective-c, rust, go, d
+info classes [REGEX]   # list Objective-C classes  @objc
+info selectors [REGEX] # list Objective-C selectors  @objc
+p [OBJ message]        # send an Objective-C message in an expression  @objc
+p X as u32             # cast in Rust syntax  @rust
+p X.0                  # get a Rust tuple field  @rust
+p MOD::ITEM            # use a Rust path  @rust
+
+## fortran
+info common [NAME]                     # show Fortran COMMON blocks  @fortran <https://sourceware.org/gdb/current/onlinedocs/gdb.html/Fortran.html>
+set fortran repack-array-slices on|off # repack Fortran array slices  @fortran
+p ARR(1:5:2)                           # print a Fortran array slice  @fortran
+p SIZE(ARR)                            # call Fortran intrinsics, also LBOUND UBOUND KIND  @fortran
+
+## ada
+info tasks                        # list Ada tasks  @ada <https://sourceware.org/gdb/current/onlinedocs/gdb.html/Ada.html>
+task N                            # switch to Ada task N  @ada
+task apply all CMD                # run CMD on all Ada tasks, also task apply 1 2 -s CMD  @ada
+set ada print-signatures on|off   # show signatures of overloaded Ada functions  @ada
+set ada trust-PAD-over-XVS on|off # work around old GNAT encodings  @ada
+set ada source-charset CHARSET    # set the Ada source character set  @ada
+
+## macros
+macro expand EXPR            # show an expression with all macros expanded, needs -g3  @preprocessor @define <https://sourceware.org/gdb/current/onlinedocs/gdb.html/Macros.html>
+macro expand-once EXPR       # expand macros only one level
+info macro [-a|-all] NAME    # show a macro definition and where it is, -a for all definitions
+info macro -- -NAME          # use "--" when the macro name starts with "-"
+info macros [LOCATION]       # list all macros visible at a location
+macro define NAME(ARGS) BODY # define a macro in GDB
+macro define PI 3.14         # define a simple macro in GDB
+macro undef NAME             # remove a macro defined in GDB
+macro list                   # list macros defined in GDB
+p SOME_MACRO(3)              # use a macro in an expression, GDB expands it
