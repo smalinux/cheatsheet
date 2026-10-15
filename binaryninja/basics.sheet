@@ -1,126 +1,196 @@
 title: binary ninja basics
 url:   https://api.binary.ninja/
-tags:  binaryninja binja bn python api headless reverse-engineering disassembler decompiler
+tags:  binaryninja binja bn python api headless script console reverse-engineering disassembler decompiler
 
-; bv = BinaryView, f = Function. Names in UPPERCASE are placeholders.
+; bv = BinaryView, f = Function. UPPERCASE words are placeholders.
 
-## load and close
-from binaryninja import *                 # import the whole API in a script or headless run  @headless
-bv = load(PATH)                           # open a binary or .bndb and wait for analysis to finish  @open @headless  <https://api.binary.ninja/index.html#binaryninja.load>
-bv = load(PATH, update_analysis=False)    # open fast, skip analysis, run bv.update_analysis_and_wait() later  @lazy  <https://api.binary.ninja/index.html#binaryninja.load>
-bv = load(PATH, options={"loader.imageBase": 0x400000})  # open with load settings, e.g. a new image base  @rebase @options  <https://api.binary.ninja/index.html#binaryninja.load>
-load(DATA, options={"loader.platform": "x86"})  # load raw bytes or shellcode with a forced platform  @shellcode  <https://api.binary.ninja/index.html#binaryninja.load>
-with load(PATH) as bv:                    # open and auto-close the view at the end of the block  @context @cleanup  <https://api.binary.ninja/index.html#binaryninja.load>
-bv.file.close()                           # release a view you opened without "with"  @free @leak  <https://api.binary.ninja/binaryninja.filemetadata-module.html#binaryninja.filemetadata.FileMetadata.close>
-BinaryView.new(DATA)                      # make a Raw view from bytes, no file on disk  @memory  <https://api.binary.ninja/binaryninja.binaryview-module.html#binaryninja.binaryview.BinaryView.new>
-bv.get_view_of_type("Raw")                # get another view of the same file, e.g. the raw bytes  @raw @fileoffset  <https://api.binary.ninja/binaryninja.binaryview-module.html#binaryninja.binaryview.BinaryView.get_view_of_type>
-bv.file.raw                               # get the Raw view (file bytes before mapping)  @raw  <https://api.binary.ninja/binaryninja.filemetadata-module.html#binaryninja.filemetadata.FileMetadata.raw>
-bv.available_view_types                   # list view types that can parse this file (ELF, PE, Mach-O...)  @format  <https://api.binary.ninja/binaryninja.binaryview-module.html#binaryninja.binaryview.BinaryView.available_view_types>
-BinaryViewType["ELF"]                     # get a view type by name  @format @loader  <https://api.binary.ninja/binaryninja.binaryview-module.html#binaryninja.binaryview.BinaryViewType>
-shutdown()                                # stop the core cleanly at the end of a headless script  @exit  <https://api.binary.ninja/index.html#binaryninja.shutdown>
+## load and open
+from binaryninja import *          # import the whole API in a script or headless run  <https://api.binary.ninja/index.html#binaryninja.load>
+bv = load(PATH)                    # open a binary or .bndb and wait for analysis to finish  @headless  <https://api.binary.ninja/index.html#binaryninja.load>
+bv = load(PATH, update_analysis=False)  # open fast without analysis, call bv.update_analysis_and_wait() later  @lazy  <https://api.binary.ninja/index.html#binaryninja.load>
+bv = load(PATH, options={"loader.imageBase": 0x400000})  # open with load settings, e.g. a new image base  @rebase  <https://api.binary.ninja/index.html#binaryninja.load>
+bv = load(DATA, options={"loader.platform": "x86"})  # load raw bytes or shellcode with a forced platform  @blob  <https://api.binary.ninja/index.html#binaryninja.load>
+bv = load(PATH, options={"analysis.mode": "basic"})  # open with less analysis (controlFlow, basic, intermediate, full)  @speed  <https://docs.binary.ninja/guide/settings.html#analysis.mode>
+bv = load(PATH, progress_func=CB)  # open a .bndb and report progress, CB(cur, total) must return True  <https://api.binary.ninja/index.html#binaryninja.load>
+with load(PATH) as bv:             # # open a view and close it automatically at the end of the block  @context @cleanup  <https://api.binary.ninja/index.html#binaryninja.load>
+    with load("/bin/ls") as bv:
+        print(len(list(bv.functions)))
+bv.file.close()                    # release a view opened without "with" so memory is freed  @free @leak  <https://api.binary.ninja/binaryninja.filemetadata-module.html#binaryninja.filemetadata.FileMetadata.close>
+BinaryView.new(DATA)               # make a Raw view from bytes in memory, no file on disk  <https://api.binary.ninja/binaryninja.binaryview-module.html#binaryninja.binaryview.BinaryView.new>
+BinaryView.load(SRC, update_analysis=True)  # same as load() but returns None instead of raising  @open  <https://api.binary.ninja/binaryninja.binaryview-module.html#binaryninja.binaryview.BinaryView.load>
+BinaryViewType["ELF"]              # get a file format loader by name (ELF, PE, Mach-O, Raw...)  <https://api.binary.ninja/binaryninja.binaryview-module.html#binaryninja.binaryview.BinaryViewType>
+BinaryViewType["ELF"].parse(DATA)  # parse a view header only, without full load  @format  <https://api.binary.ninja/binaryninja.binaryview-module.html#binaryninja.binaryview.BinaryViewType.parse>
+BinaryViewType["ELF"].get_load_settings_for_data(DATA)  # get the load settings a format offers for this data  @options  <https://api.binary.ninja/binaryninja.binaryview-module.html#binaryninja.binaryview.BinaryViewType.get_load_settings_for_data>
+bv.get_view_of_type("Raw")         # get another view of the same file, e.g. the raw file bytes  @fileoffset  <https://api.binary.ninja/binaryninja.binaryview-module.html#binaryninja.binaryview.BinaryView.get_view_of_type>
+bv.file.raw                        # get the Raw view (file bytes before mapping)  <https://api.binary.ninja/binaryninja.filemetadata-module.html#binaryninja.filemetadata.FileMetadata.raw>
+bv.parent_view                     # get the view this view reads its data from  @raw  <https://api.binary.ninja/binaryninja.binaryview-module.html#binaryninja.binaryview.BinaryView.parent_view>
+bv.available_view_types            # list view types that can parse this file  @format  <https://api.binary.ninja/binaryninja.binaryview-module.html#binaryninja.binaryview.BinaryView.available_view_types>
+bv.view_type                       # get the name of this view's format, e.g. "ELF"  <https://api.binary.ninja/binaryninja.binaryview-module.html#binaryninja.binaryview.BinaryView.view_type>
+bv.file.filename                   # get the path of the opened file or .bndb  <https://api.binary.ninja/binaryninja.filemetadata-module.html#binaryninja.filemetadata.FileMetadata.filename>
+bv.file.original_filename          # get the path of the original binary behind a .bndb  <https://api.binary.ninja/binaryninja.filemetadata-module.html#binaryninja.filemetadata.FileMetadata.original_filename>
+bv.file.existing_views             # list names of all views open on this file  <https://api.binary.ninja/binaryninja.filemetadata-module.html#binaryninja.filemetadata.FileMetadata.existing_views>
+shutdown()                         # stop the core cleanly at the end of a headless script  @exit @quit  <https://api.binary.ninja/index.html#binaryninja.shutdown>
+disable_default_log()              # stop the headless default log output for this session  @quiet  <https://api.binary.ninja/index.html#binaryninja.disable_default_log>
 
-## database
-bv.create_database(PATH + ".bndb")  # save the analysis as a new .bndb  @save @bndb  <https://api.binary.ninja/binaryninja.binaryview-module.html#binaryninja.binaryview.BinaryView.create_database>
-bv.save_auto_snapshot()             # save again to the .bndb already open  @save @snapshot  <https://api.binary.ninja/binaryninja.binaryview-module.html#binaryninja.binaryview.BinaryView.save_auto_snapshot>
-bv.save(PATH)                       # write the patched binary (not the database) to disk  @export @patch  <https://api.binary.ninja/binaryninja.binaryview-module.html#binaryninja.binaryview.BinaryView.save>
-bv.file.filename                    # get the path of the open file or .bndb  @path  <https://api.binary.ninja/binaryninja.filemetadata-module.html#binaryninja.filemetadata.FileMetadata.filename>
-bv.file.original_filename           # get the path of the original binary behind a .bndb  @path  <https://api.binary.ninja/binaryninja.filemetadata-module.html#binaryninja.filemetadata.FileMetadata.original_filename>
-bv.has_database                     # check if the view is backed by a .bndb  @bndb  <https://api.binary.ninja/binaryninja.binaryview-module.html#binaryninja.binaryview.BinaryView.has_database>
-bv.file.modified                    # check for unsaved changes  @dirty  <https://api.binary.ninja/binaryninja.filemetadata-module.html#binaryninja.filemetadata.FileMetadata.modified>
+## save and databases
+bv.create_database(PATH)  # save analysis to a new .bndb file  <https://api.binary.ninja/binaryninja.binaryview-module.html#binaryninja.binaryview.BinaryView.create_database>
+bv.save_auto_snapshot()   # save analysis into the .bndb it was opened from  <https://api.binary.ninja/binaryninja.binaryview-module.html#binaryninja.binaryview.BinaryView.save_auto_snapshot>
+bv.save(PATH)             # write the patched binary (not a .bndb) to PATH  @patch @export  <https://api.binary.ninja/binaryninja.binaryview-module.html#binaryninja.binaryview.BinaryView.save>
+bv.file.has_database      # check whether the file is backed by a .bndb  <https://api.binary.ninja/binaryninja.filemetadata-module.html#binaryninja.filemetadata.FileMetadata.has_database>
+bv.file.modified          # check whether there are unsaved changes  @dirty  <https://api.binary.ninja/binaryninja.filemetadata-module.html#binaryninja.filemetadata.FileMetadata.modified>
+bv.file.database          # get the low level Database object of a .bndb  @snapshot  <https://api.binary.ninja/binaryninja.filemetadata-module.html#binaryninja.filemetadata.FileMetadata.database>
+SaveSettings().set_option(SaveOption.TrimSnapshots)  # drop old snapshot data to make a smaller .bndb  @size @trim  <https://api.binary.ninja/binaryninja.filemetadata-module.html#binaryninja.filemetadata.SaveSettings.set_option>
+bv.create_database(PATH, settings=SETTINGS)  # save a .bndb with SaveSettings options  <https://api.binary.ninja/binaryninja.binaryview-module.html#binaryninja.binaryview.BinaryView.create_database>
 
-## undo
-with bv.undoable_transaction():  # group changes into one undo step, revert on exception  @undo @transaction  <https://api.binary.ninja/binaryninja.binaryview-module.html#binaryninja.binaryview.BinaryView.undoable_transaction>
-state = bv.begin_undo_actions()  # start recording changes by hand  @undo  <https://api.binary.ninja/binaryninja.binaryview-module.html#binaryninja.binaryview.BinaryView.begin_undo_actions>
-bv.commit_undo_actions(state)    # keep the recorded changes as one undo step  @undo  <https://api.binary.ninja/binaryninja.binaryview-module.html#binaryninja.binaryview.BinaryView.commit_undo_actions>
-bv.revert_undo_actions(state)    # throw away the recorded changes  @undo @rollback  <https://api.binary.ninja/binaryninja.binaryview-module.html#binaryninja.binaryview.BinaryView.revert_undo_actions>
-bv.undo()                        # undo the last step  @revert  <https://api.binary.ninja/binaryninja.binaryview-module.html#binaryninja.binaryview.BinaryView.undo>
-bv.redo()                        # redo the last undone step  <https://api.binary.ninja/binaryninja.binaryview-module.html#binaryninja.binaryview.BinaryView.redo>
+## analysis control
+bv.update_analysis_and_wait()         # run analysis and block until it is done  @sync  <https://api.binary.ninja/binaryninja.binaryview-module.html#binaryninja.binaryview.BinaryView.update_analysis_and_wait>
+bv.update_analysis()                  # start analysis in the background and return at once  @async  <https://api.binary.ninja/binaryninja.binaryview-module.html#binaryninja.binaryview.BinaryView.update_analysis>
+bv.reanalyze()                        # mark every function for reanalysis and start it  @refresh @rerun  <https://api.binary.ninja/binaryninja.binaryview-module.html#binaryninja.binaryview.BinaryView.reanalyze>
+bv.abort_analysis()                   # stop running analysis (it can be resumed later)  @cancel  <https://api.binary.ninja/binaryninja.binaryview-module.html#binaryninja.binaryview.BinaryView.abort_analysis>
+bv.analysis_progress                  # get current analysis state and progress counts  @status @percent  <https://api.binary.ninja/binaryninja.binaryview-module.html#binaryninja.binaryview.BinaryView.analysis_progress>
+bv.analysis_state                     # get the AnalysisState enum (Idle, Disassemble, Analyze...)  @status  <https://api.binary.ninja/binaryninja.binaryview-module.html#binaryninja.binaryview.BinaryView.analysis_state>
+bv.analysis_info                      # get analysis state and functions currently being analyzed  @status  <https://api.binary.ninja/binaryninja.binaryview-module.html#binaryninja.binaryview.BinaryView.analysis_info>
+bv.set_analysis_hold(True)            # hold analysis so changes queue up until you release it  @pause @defer  <https://api.binary.ninja/binaryninja.binaryview-module.html#binaryninja.binaryview.BinaryView.set_analysis_hold>
+bv.add_analysis_completion_event(CB)  # call CB() once when the current analysis finishes  @callback @done  <https://api.binary.ninja/binaryninja.binaryview-module.html#binaryninja.binaryview.BinaryView.add_analysis_completion_event>
+bv.has_initial_analysis()             # check whether initial analysis has already run  @status  <https://api.binary.ninja/binaryninja.binaryview-module.html#binaryninja.binaryview.BinaryView.has_initial_analysis>
+bv.max_function_size_for_analysis = N  # skip auto analysis of functions bigger than N bytes  @too-large @limit  <https://api.binary.ninja/binaryninja.binaryview-module.html#binaryninja.binaryview.BinaryView.max_function_size_for_analysis>
+bv.new_auto_function_analysis_suppressed = True  # stop analysis of newly found functions  @suppress  <https://api.binary.ninja/binaryninja.binaryview-module.html#binaryninja.binaryview.BinaryView.new_auto_function_analysis_suppressed>
+bv.add_analysis_option("linearsweep")  # ask analysis to run an extra pass like linear sweep  <https://api.binary.ninja/binaryninja.binaryview-module.html#binaryninja.binaryview.BinaryView.add_analysis_option>
+
+## python console magic variables
+bv                                  # the BinaryView in the active tab  @console @current_view
+here                                # the current address in the UI (same as current_address)  @console @cursor
+current_address                     # the current address; assign to navigate there  @console
+current_function                    # the Function under the cursor  @console
+current_basic_block                 # the BasicBlock under the cursor  @console
+current_llil / current_mlil / current_hlil  # the IL function of the current function  @console
+current_lifted_il / current_mapped_mlil  # the lifted IL or mapped MLIL of the current function  @console
+current_llil_ssa / current_mlil_ssa / current_hlil_ssa  # the SSA form of each IL level of the current function  @console
+current_il_instruction              # the IL instruction under the cursor in an IL view  @console
+current_il_instructions             # all IL instructions for the current line or address  @console
+current_il_function / current_il_basic_block  # the IL function or IL block of the active IL view  @console
+current_il_expr / current_il_index  # the IL expression or instruction index under the cursor  @console
+current_selection                   # (start, end) of the selection; assign to change it  @console @range
+current_raw_offset                  # the file offset of the cursor; assign to navigate  @console @fileoffset
+current_symbol / current_symbols    # the Symbol(s) at the current address  @console @name
+current_data_var                    # the DataVariable at the cursor  @console
+current_variable                    # the IL Variable under the cursor  @console @var
+current_token                       # the text token under the cursor  @console
+current_comment                     # the comment at the current address; assign to set it  @console
+current_segment / current_sections  # the Segment and Sections at the cursor  @console
+current_project                     # the open Project, if any  @console
+current_thread                      # the thread the console runs Python on
+current_ui_context / current_ui_view / current_ui_view_frame  # UI objects for the current window and view  @console
+PythonScriptingProvider.register_magic_variable(NAME, GET, SET)  # add your own variable to the Python console  @custom  <https://api.binary.ninja/binaryninja.scriptingprovider-module.html#binaryninja.scriptingprovider.PythonScriptingProvider.register_magic_variable>
 
 ## logging
-log_info("text")                       # print to the log pane at info level  @print  <https://api.binary.ninja/binaryninja.log-module.html#binaryninja.log.log_info>
-log_warn("text")                       # log a warning  @print  <https://api.binary.ninja/binaryninja.log-module.html#binaryninja.log.log_warn>
-log_error("text")                      # log an error  @print  <https://api.binary.ninja/binaryninja.log-module.html#binaryninja.log.log_error>
-log_debug("text")                      # log at debug level (hidden by default)  @print  <https://api.binary.ninja/binaryninja.log-module.html#binaryninja.log.log_debug>
-log_alert("text")                      # log and pop up a message box in the UI  @popup  <https://api.binary.ninja/binaryninja.log-module.html#binaryninja.log.log_alert>
-log_error_for_exception("text")        # log an error with the current exception's traceback  @traceback @except  <https://api.binary.ninja/binaryninja.log-module.html#binaryninja.log.log_error_for_exception>
-log_to_stdout(LogLevel.InfoLog)        # send log messages to stdout in headless mode  @headless @console  <https://api.binary.ninja/binaryninja.log-module.html#binaryninja.log.log_to_stdout>
-log_to_file(LogLevel.DebugLog, PATH)   # write log messages to a file  @logfile  <https://api.binary.ninja/binaryninja.log-module.html#binaryninja.log.log_to_file>
-disable_default_log()                  # silence the default headless log output  @quiet  <https://api.binary.ninja/index.html#binaryninja.disable_default_log>
-logger = Logger(0, "MyPlugin")         # make a named logger for a plugin  @plugin  <https://api.binary.ninja/binaryninja.log-module.html#binaryninja.log.Logger>
-logger = bv.create_logger("MyPlugin")  # make a named logger tied to one view  @plugin  <https://api.binary.ninja/binaryninja.binaryview-module.html#binaryninja.binaryview.BinaryView.create_logger>
-logger.log_info("text")                # log through a named logger  @plugin  <https://api.binary.ninja/binaryninja.log-module.html#binaryninja.log.Logger.log_info>
+log_info(MSG)                         # write an info message to the log  @print  <https://api.binary.ninja/binaryninja.log-module.html#binaryninja.log.log_info>
+log_debug(MSG)                        # write a debug message (shown only at debug level)  @verbose  <https://api.binary.ninja/binaryninja.log-module.html#binaryninja.log.log_debug>
+log_warn(MSG)                         # write a warning to the log  <https://api.binary.ninja/binaryninja.log-module.html#binaryninja.log.log_warn>
+log_error(MSG)                        # write an error to the log (focuses the log in the UI)  <https://api.binary.ninja/binaryninja.log-module.html#binaryninja.log.log_error>
+log_alert(MSG)                        # write a message and show a pop-up in the UI  @popup  <https://api.binary.ninja/binaryninja.log-module.html#binaryninja.log.log_alert>
+log_error_for_exception(MSG)          # log a message with the stack trace of the current exception  @traceback @except  <https://api.binary.ninja/binaryninja.log-module.html#binaryninja.log.log_error_for_exception>
+log_info(MSG, logger="NAME")          # log under a named source shown in the log filter  <https://api.binary.ninja/binaryninja.log-module.html#binaryninja.log.log_info>
+Logger(0, "NAME")                     # create a named logger object with .log_info/.log_warn/...  <https://api.binary.ninja/binaryninja.log-module.html#binaryninja.log.Logger>
+bv.create_logger("NAME")              # create a logger tied to this view's session  <https://api.binary.ninja/binaryninja.binaryview-module.html#binaryninja.binaryview.BinaryView.create_logger>
+log_to_stdout(LogLevel.InfoLog)       # print log messages to stdout in headless scripts  <https://api.binary.ninja/binaryninja.log-module.html#binaryninja.log.log_to_stdout>
+log_to_stderr(LogLevel.WarningLog)    # print log messages to stderr  @headless  <https://api.binary.ninja/binaryninja.log-module.html#binaryninja.log.log_to_stderr>
+log_to_file(LogLevel.DebugLog, PATH)  # write log messages to a file  <https://api.binary.ninja/binaryninja.log-module.html#binaryninja.log.log_to_file>
+close_logs()                          # close all log files  @file  <https://api.binary.ninja/binaryninja.log-module.html#binaryninja.log.close_logs>
+redirect_output_to_log()              # send Python print/stdout into the Binary Ninja log  <https://api.binary.ninja/binaryninja.log-module.html#binaryninja.log.redirect_output_to_log>
 
 ## settings
-Settings().get_bool(KEY)                 # read a boolean setting, e.g. "analysis.linearSweep.autorun"  @config @preference  <https://api.binary.ninja/binaryninja.settings-module.html#binaryninja.settings.Settings.get_bool>
-Settings().get_string(KEY)               # read a string setting  @config  <https://api.binary.ninja/binaryninja.settings-module.html#binaryninja.settings.Settings.get_string>
-Settings().get_integer(KEY)              # read an integer setting  @config  <https://api.binary.ninja/binaryninja.settings-module.html#binaryninja.settings.Settings.get_integer>
-Settings().set_bool(KEY, True)           # change a boolean setting for the user  @config  <https://api.binary.ninja/binaryninja.settings-module.html#binaryninja.settings.Settings.set_bool>
-Settings().set_string(KEY, VALUE, bv)    # change a setting only for one view (resource scope)  @config @scope  <https://api.binary.ninja/binaryninja.settings-module.html#binaryninja.settings.Settings.set_string>
-Settings().keys()                        # list every setting key  @config @list  <https://api.binary.ninja/binaryninja.settings-module.html#binaryninja.settings.Settings.keys>
-Settings().contains(KEY)                 # check that a setting exists  @config  <https://api.binary.ninja/binaryninja.settings-module.html#binaryninja.settings.Settings.contains>
-Settings().reset(KEY)                    # put a setting back to its default  @config @default  <https://api.binary.ninja/binaryninja.settings-module.html#binaryninja.settings.Settings.reset>
-Settings().register_group(GROUP, TITLE)  # add a settings group for a plugin  @plugin @config  <https://api.binary.ninja/binaryninja.settings-module.html#binaryninja.settings.Settings.register_group>
-Settings().register_setting(KEY, JSON)   # add a plugin setting from a JSON schema string  @plugin @config  <https://api.binary.ninja/binaryninja.settings-module.html#binaryninja.settings.Settings.register_setting>
-bv.get_load_settings(TYPE_NAME)          # get the load settings a view was opened with  @loader @options  <https://api.binary.ninja/binaryninja.binaryview-module.html#binaryninja.binaryview.BinaryView.get_load_settings>
+Settings()                           # get the default settings store  @config @preferences  <https://api.binary.ninja/binaryninja.settings-module.html#binaryninja.settings.Settings>
+Settings().get_bool("analysis.linearSweep.autorun")  # read a bool setting by its key  @config  <https://api.binary.ninja/binaryninja.settings-module.html#binaryninja.settings.Settings.get_bool>
+Settings().get_string(KEY, bv)       # read a setting as seen by this view (resource scope)  @config  <https://api.binary.ninja/binaryninja.settings-module.html#binaryninja.settings.Settings.get_string>
+Settings().get_integer(KEY)          # read an integer setting  @config  <https://api.binary.ninja/binaryninja.settings-module.html#binaryninja.settings.Settings.get_integer>
+Settings().get_string_list(KEY)      # read a list of strings setting  @config  <https://api.binary.ninja/binaryninja.settings-module.html#binaryninja.settings.Settings.get_string_list>
+Settings().get_json(KEY)             # read any setting as a JSON string  @config  <https://api.binary.ninja/binaryninja.settings-module.html#binaryninja.settings.Settings.get_json>
+Settings().get_bool_with_scope(KEY)  # read a setting and the scope it came from  @config  <https://api.binary.ninja/binaryninja.settings-module.html#binaryninja.settings.Settings.get_bool_with_scope>
+Settings().set_bool(KEY, VAL)        # change a bool setting at user scope  @config @write  <https://api.binary.ninja/binaryninja.settings-module.html#binaryninja.settings.Settings.set_bool>
+Settings().set_string(KEY, VAL, bv, SettingsScope.SettingsResourceScope)  # change a setting for this view only  @config  <https://api.binary.ninja/binaryninja.settings-module.html#binaryninja.settings.Settings.set_string>
+Settings().set_integer(KEY, VAL)     # change an integer setting  @config  <https://api.binary.ninja/binaryninja.settings-module.html#binaryninja.settings.Settings.set_integer>
+Settings().reset(KEY)                # reset a setting to its default  <https://api.binary.ninja/binaryninja.settings-module.html#binaryninja.settings.Settings.reset>
+Settings().keys()                    # list all setting keys  <https://api.binary.ninja/binaryninja.settings-module.html#binaryninja.settings.Settings.keys>
+Settings().contains(KEY)             # check whether a setting key exists  <https://api.binary.ninja/binaryninja.settings-module.html#binaryninja.settings.Settings.contains>
+Settings().query_property_string(KEY, "description")  # read a property of a setting, e.g. its title or description  @schema  <https://api.binary.ninja/binaryninja.settings-module.html#binaryninja.settings.Settings.query_property_string>
+Settings().register_group("myplugin", "My Plugin")  # add a settings group for your plugin  @schema  <https://api.binary.ninja/binaryninja.settings-module.html#binaryninja.settings.Settings.register_group>
+Settings().register_setting("myplugin.enable", JSON)  # add a new setting with a JSON schema  @plugin  <https://api.binary.ninja/binaryninja.settings-module.html#binaryninja.settings.Settings.register_setting>
+    Settings().register_setting("myplugin.enable", json.dumps({
+        "title": "Enable", "type": "boolean", "default": True,
+        "description": "Turn the plugin on"}))
+Settings("my_instance")              # make a separate settings store with its own id  @custom  <https://api.binary.ninja/binaryninja.settings-module.html#binaryninja.settings.Settings>
+bv.get_load_settings("ELF")          # get the load settings used for this view type  @loader @options  <https://api.binary.ninja/binaryninja.binaryview-module.html#binaryninja.binaryview.BinaryView.get_load_settings>
+Settings().serialize_settings(scope=SettingsScope.SettingsUserScope)  # dump user settings as JSON  @export  <https://api.binary.ninja/binaryninja.settings-module.html#binaryninja.settings.Settings.serialize_settings>
 
-## threads
-execute_on_main_thread(FN)           # run FN on the UI thread without waiting  @ui @thread  <https://api.binary.ninja/binaryninja.mainthread-module.html#binaryninja.mainthread.execute_on_main_thread>
-execute_on_main_thread_and_wait(FN)  # run FN on the UI thread and wait for it  @ui @thread @sync  <https://api.binary.ninja/binaryninja.mainthread-module.html#binaryninja.mainthread.execute_on_main_thread_and_wait>
-worker_enqueue(FN)                   # run FN on a background analysis worker  @async @thread  <https://api.binary.ninja/binaryninja.mainthread-module.html#binaryninja.mainthread.worker_enqueue>
-is_main_thread()                     # check if the code runs on the UI thread  @thread  <https://api.binary.ninja/binaryninja.mainthread-module.html#binaryninja.mainthread.is_main_thread>
-set_worker_thread_count(N)           # change how many analysis threads run  @performance @cpu  <https://api.binary.ninja/binaryninja.mainthread-module.html#binaryninja.mainthread.set_worker_thread_count>
+## undo
+with bv.undoable_transaction():  # group changes into one undo step, reverted if an exception escapes  <https://api.binary.ninja/binaryninja.binaryview-module.html#binaryninja.binaryview.BinaryView.undoable_transaction>
+ID = bv.begin_undo_actions()     # start recording changes for undo  <https://api.binary.ninja/binaryninja.binaryview-module.html#binaryninja.binaryview.BinaryView.begin_undo_actions>
+bv.commit_undo_actions(ID)       # save recorded changes as one undo step  <https://api.binary.ninja/binaryninja.binaryview-module.html#binaryninja.binaryview.BinaryView.commit_undo_actions>
+bv.revert_undo_actions(ID)       # throw away recorded changes and roll them back  @rollback  <https://api.binary.ninja/binaryninja.binaryview-module.html#binaryninja.binaryview.BinaryView.revert_undo_actions>
+bv.forget_undo_actions(ID)       # stop recording but keep the changes, with no undo step  <https://api.binary.ninja/binaryninja.binaryview-module.html#binaryninja.binaryview.BinaryView.forget_undo_actions>
+bv.undo()                        # undo the last committed step  <https://api.binary.ninja/binaryninja.binaryview-module.html#binaryninja.binaryview.BinaryView.undo>
+bv.redo()                        # redo the last undone step  <https://api.binary.ninja/binaryninja.binaryview-module.html#binaryninja.binaryview.BinaryView.redo>
+bv.file.undo_entries             # list the undo history entries  <https://api.binary.ninja/binaryninja.filemetadata-module.html#binaryninja.filemetadata.FileMetadata.undo_entries>
 
-## user input (ui or console)
-get_text_line_input(PROMPT, TITLE)        # ask the user for one line of text, returns bytes or None  @prompt @dialog  <https://api.binary.ninja/binaryninja.interaction-module.html#binaryninja.interaction.get_text_line_input>
-get_int_input(PROMPT, TITLE)              # ask the user for an integer  @prompt @dialog @number  <https://api.binary.ninja/binaryninja.interaction-module.html#binaryninja.interaction.get_int_input>
-get_address_input(PROMPT, TITLE)          # ask the user for an address or expression  @prompt @dialog  <https://api.binary.ninja/binaryninja.interaction-module.html#binaryninja.interaction.get_address_input>
-get_choice_input(PROMPT, TITLE, ["a", "b"])  # ask the user to pick one item, returns its index  @prompt @dialog @menu  <https://api.binary.ninja/binaryninja.interaction-module.html#binaryninja.interaction.get_choice_input>
-get_checkbox_input(PROMPT, TITLE, DEFAULT)  # ask a yes/no checkbox question  @prompt @dialog @bool  <https://api.binary.ninja/binaryninja.interaction-module.html#binaryninja.interaction.get_checkbox_input>
-get_open_filename_input(PROMPT, "*.txt")  # ask the user for a file to open  @prompt @dialog @path  <https://api.binary.ninja/binaryninja.interaction-module.html#binaryninja.interaction.get_open_filename_input>
-get_save_filename_input(PROMPT, "txt", DEFAULT)  # ask the user where to save a file  @prompt @dialog @path  <https://api.binary.ninja/binaryninja.interaction-module.html#binaryninja.interaction.get_save_filename_input>
-get_directory_name_input(PROMPT)          # ask the user for a directory  @prompt @dialog @folder  <https://api.binary.ninja/binaryninja.interaction-module.html#binaryninja.interaction.get_directory_name_input>
-get_form_input([F1, F2], TITLE)           # show one dialog with many fields, read field.result after  @prompt @dialog  <https://api.binary.ninja/binaryninja.interaction-module.html#binaryninja.interaction.get_form_input>
-    a = TextLineField("Name"); b = ChoiceField("Mode", ["x", "y"]); c = AddressField("Where")
-    if get_form_input([a, b, c], "Options"): print(a.result, b.result, c.result)
-show_message_box(TITLE, TEXT)             # show a message box with buttons  @popup @dialog @alert  <https://api.binary.ninja/binaryninja.interaction-module.html#binaryninja.interaction.show_message_box>
-show_plain_text_report(TITLE, TEXT)       # show text in a new tab (prints in headless)  @report @output  <https://api.binary.ninja/binaryninja.interaction-module.html#binaryninja.interaction.show_plain_text_report>
-show_markdown_report(TITLE, MD)           # show rendered markdown in a new tab  @report @output  <https://api.binary.ninja/binaryninja.interaction-module.html#binaryninja.interaction.show_markdown_report>
-show_html_report(TITLE, HTML)             # show an HTML page in a new tab  @report @output  <https://api.binary.ninja/binaryninja.interaction-module.html#binaryninja.interaction.show_html_report>
-show_graph_report(TITLE, GRAPH)           # show a FlowGraph you built in a new tab  @report @graph  <https://api.binary.ninja/binaryninja.interaction-module.html#binaryninja.interaction.show_graph_report>
-open_url(URL)                             # open a link in the web browser  @browser  <https://api.binary.ninja/binaryninja.interaction-module.html#binaryninja.interaction.open_url>
-run_progress_dialog(TITLE, True, TASK)    # run TASK(progress) in a thread with a cancelable dialog  @progress  <https://api.binary.ninja/binaryninja.interaction-module.html#binaryninja.interaction.run_progress_dialog>
+## threads and workers
+execute_on_main_thread(FN)           # run FN on the UI main thread later  <https://api.binary.ninja/binaryninja.mainthread-module.html#binaryninja.mainthread.execute_on_main_thread>
+execute_on_main_thread_and_wait(FN)  # run FN on the main thread and wait for it  @ui @sync  <https://api.binary.ninja/binaryninja.mainthread-module.html#binaryninja.mainthread.execute_on_main_thread_and_wait>
+is_main_thread()                     # check whether code runs on the UI main thread  <https://api.binary.ninja/binaryninja.mainthread-module.html#binaryninja.mainthread.is_main_thread>
+worker_enqueue(FN, "NAME")           # run FN on a core worker thread  @async  <https://api.binary.ninja/binaryninja.mainthread-module.html#binaryninja.mainthread.worker_enqueue>
+worker_priority_enqueue(FN)          # run FN on a worker thread ahead of normal jobs  <https://api.binary.ninja/binaryninja.mainthread-module.html#binaryninja.mainthread.worker_priority_enqueue>
+get_worker_thread_count()            # get the number of analysis worker threads  @cpu  <https://api.binary.ninja/binaryninja.mainthread-module.html#binaryninja.mainthread.get_worker_thread_count>
+set_worker_thread_count(N)           # change the number of analysis worker threads  @cpu  <https://api.binary.ninja/binaryninja.mainthread-module.html#binaryninja.mainthread.set_worker_thread_count>
 
-## scripting console (ui only)
-bv                          # the BinaryView in the current tab  @console @current  <https://docs.binary.ninja/guide/index.html#script-python-console>
-here                        # the current address in the UI, same as current_address  @console @cursor  <https://docs.binary.ninja/guide/index.html#script-python-console>
-current_function            # the Function under the cursor  @console @cursor  <https://docs.binary.ninja/guide/index.html#script-python-console>
-current_basic_block         # the BasicBlock under the cursor  @console @cursor  <https://docs.binary.ninja/guide/index.html#script-python-console>
-current_llil                # the LLIL function of the current function, also current_mlil current_hlil  @console  <https://docs.binary.ninja/guide/index.html#script-python-console>
-current_il_instruction      # the IL instruction under the cursor in an IL view  @console @cursor  <https://docs.binary.ninja/guide/index.html#script-python-console>
-current_selection           # the selected (start, end) range  @console @range  <https://docs.binary.ninja/guide/index.html#script-python-console>
-current_data_var            # the data variable under the cursor  @console @cursor  <https://docs.binary.ninja/guide/index.html#script-python-console>
-bv.navigate(bv.view, ADDR)  # move the UI cursor to an address  @goto @jump  <https://api.binary.ninja/binaryninja.binaryview-module.html#binaryninja.binaryview.BinaryView.navigate>
+## version, license and paths
+core_version()                        # get the Binary Ninja version string  <https://api.binary.ninja/index.html#binaryninja.core_version>
+core_version_info()                   # get the version as major, minor, build, channel  <https://api.binary.ninja/index.html#binaryninja.core_version_info>
+core_build_id()                       # get the build number  @version  <https://api.binary.ninja/index.html#binaryninja.core_build_id>
+core_version_info() >= CoreVersionInfo(5, 1, 8104)  # check a minimum version before using a newer API  @compat  <https://api.binary.ninja/index.html#binaryninja.CoreVersionInfo>
+core_product() / core_product_type()  # get the license product name and type  @edition  <https://api.binary.ninja/index.html#binaryninja.core_product>
+core_license_count() / core_expires()  # get the license seat count and expiry  <https://api.binary.ninja/index.html#binaryninja.core_expires>
+core_ui_enabled()                     # check whether running inside the UI and not headless  @gui  <https://api.binary.ninja/index.html#binaryninja.core_ui_enabled>
+user_directory()                      # get the user folder (settings, plugins, repositories)  @path @config  <https://api.binary.ninja/index.html#binaryninja.user_directory>
+user_plugin_path()                    # get the user plugin folder  @plugins  <https://api.binary.ninja/index.html#binaryninja.user_plugin_path>
+bundled_plugin_path()                 # get the plugin folder inside the install  @plugins  <https://api.binary.ninja/index.html#binaryninja.bundled_plugin_path>
+get_install_directory()               # get the folder where Binary Ninja is installed  @path  <https://api.binary.ninja/index.html#binaryninja.get_install_directory>
+get_unique_identifier()               # make a new GUID string  @uuid  <https://api.binary.ninja/index.html#binaryninja.get_unique_identifier>
+connect_vscode_debugger(port=5678)    # wait for VS Code to attach a Python debugger  @debug @debugpy  <https://api.binary.ninja/index.html#binaryninja.connect_vscode_debugger>
+connect_pycharm_debugger(port=5678)   # attach to a PyCharm debug server  <https://api.binary.ninja/index.html#binaryninja.connect_pycharm_debugger>
+get_memory_usage_info()               # count core objects in memory to find leaks  @leak  <https://api.binary.ninja/index.html#binaryninja.get_memory_usage_info>
 
-## data buffers and transforms
-DataBuffer(b"bytes")                      # wrap bytes for core APIs that need a DataBuffer  <https://api.binary.ninja/binaryninja.databuffer-module.html#binaryninja.databuffer.DataBuffer>
-DataBuffer(DATA).zlib_decompress()        # inflate zlib data  @unzip @decompress  <https://api.binary.ninja/binaryninja.databuffer-module.html#binaryninja.databuffer.DataBuffer.zlib_decompress>
-DataBuffer(DATA).base64_decode()          # decode base64 data  @b64  <https://api.binary.ninja/binaryninja.databuffer-module.html#binaryninja.databuffer.DataBuffer.base64_decode>
-list(Transform)                           # list every transform (XOR, RawHex, SHA512, Base64...)  @encode @decode  <https://api.binary.ninja/binaryninja.transform-module.html#binaryninja.transform.Transform>
-Transform["XOR"].decode(DATA, {"key": b"KEY"})  # XOR-decode data with a key  @decrypt @deobfuscate  <https://api.binary.ninja/binaryninja.transform-module.html#binaryninja.transform.Transform.decode>
-Transform["RawHex"].encode(DATA)          # turn bytes into a hex string  @hexlify  <https://api.binary.ninja/binaryninja.transform-module.html#binaryninja.transform.Transform.encode>
-Transform["SHA256"].encode(DATA)          # hash data  @digest @checksum  <https://api.binary.ninja/binaryninja.transform-module.html#binaryninja.transform.Transform.encode>
+## user interaction and reports
+get_text_line_input("PROMPT", "TITLE")  # ask the user for a line of text, None on cancel  <https://api.binary.ninja/binaryninja.interaction-module.html#binaryninja.interaction.get_text_line_input>
+get_int_input("PROMPT", "TITLE")      # ask the user for an integer  @number  <https://api.binary.ninja/binaryninja.interaction-module.html#binaryninja.interaction.get_int_input>
+get_address_input("PROMPT", "TITLE")  # ask the user for an address or expression  <https://api.binary.ninja/binaryninja.interaction-module.html#binaryninja.interaction.get_address_input>
+get_choice_input("PROMPT", "TITLE", ["a", "b"])  # ask the user to pick one item, returns its index  @select @combo  <https://api.binary.ninja/binaryninja.interaction-module.html#binaryninja.interaction.get_choice_input>
+get_large_choice_input("PROMPT", "TITLE", ITEMS)  # ask the user to pick from a long filterable list  @search  <https://api.binary.ninja/binaryninja.interaction-module.html#binaryninja.interaction.get_large_choice_input>
+get_open_filename_input("PROMPT", "*.json")  # ask the user for a file to open  @dialog  <https://api.binary.ninja/binaryninja.interaction-module.html#binaryninja.interaction.get_open_filename_input>
+get_save_filename_input("PROMPT", "json", "out.json")  # ask the user for a file to save to  @dialog  <https://api.binary.ninja/binaryninja.interaction-module.html#binaryninja.interaction.get_save_filename_input>
+get_directory_name_input("PROMPT")    # ask the user for a folder  <https://api.binary.ninja/binaryninja.interaction-module.html#binaryninja.interaction.get_directory_name_input>
+get_checkbox_input("PROMPT", "TITLE", default=False)  # ask the user a yes/no question with a checkbox  @bool  <https://api.binary.ninja/binaryninja.interaction-module.html#binaryninja.interaction.get_checkbox_input>
+get_form_input([FIELD, ...], "TITLE")  # show a dialog with many fields, values land in FIELD.result  @prompt  <https://api.binary.ninja/binaryninja.interaction-module.html#binaryninja.interaction.get_form_input>
+    a = TextLineField("Name"); n = IntegerField("Count")
+    c = ChoiceField("Mode", ["fast", "full"]); f = OpenFileNameField("Input")
+    if get_form_input([a, SeparatorField(), n, c, f], "Options"):
+        print(a.result, n.result, c.result, f.result)
+show_message_box("TITLE", "TEXT", MessageBoxButtonSet.YesNoButtonSet)  # show a message box and return the button pressed  @popup  <https://api.binary.ninja/binaryninja.interaction-module.html#binaryninja.interaction.show_message_box>
+show_plain_text_report("TITLE", TEXT)  # show text in a new tab (prints in headless)  @output  <https://api.binary.ninja/binaryninja.interaction-module.html#binaryninja.interaction.show_plain_text_report>
+show_markdown_report("TITLE", MD)     # show rendered markdown in a new tab  <https://api.binary.ninja/binaryninja.interaction-module.html#binaryninja.interaction.show_markdown_report>
+show_html_report("TITLE", HTML)       # show an HTML page in a new tab  <https://api.binary.ninja/binaryninja.interaction-module.html#binaryninja.interaction.show_html_report>
+show_graph_report("TITLE", GRAPH)     # show a FlowGraph in a new tab  <https://api.binary.ninja/binaryninja.interaction-module.html#binaryninja.interaction.show_graph_report>
+show_report_collection("TITLE", REPORTS)  # show several reports in one tab  <https://api.binary.ninja/binaryninja.interaction-module.html#binaryninja.interaction.show_report_collection>
+open_url(URL)                         # open a link in the user's web browser  <https://api.binary.ninja/binaryninja.interaction-module.html#binaryninja.interaction.open_url>
+run_progress_dialog("TITLE", True, TASK)  # run TASK(progress_cb) in the background with a progress dialog  <https://api.binary.ninja/binaryninja.interaction-module.html#binaryninja.interaction.run_progress_dialog>
+bv.navigate(bv.view, ADDR)            # move the UI to an address in the current view  @goto @jump  <https://api.binary.ninja/binaryninja.binaryview-module.html#binaryninja.binaryview.BinaryView.navigate>
+bv.file.navigate(bv.view, ADDR)       # move the UI to an address  @goto @jump  <https://api.binary.ninja/binaryninja.filemetadata-module.html#binaryninja.filemetadata.FileMetadata.navigate>
 
-## demangle
-demangle_any(NAME)            # demangle a C++ name with whichever demangler fits  @cpp @symbol  <https://api.binary.ninja/binaryninja.demangle-module.html#binaryninja.demangle.demangle_any>
-demangle_gnu3(bv.arch, NAME)  # demangle an Itanium/GCC name (_Z...) to (type, name parts)  @cpp @itanium  <https://api.binary.ninja/binaryninja.demangle-module.html#binaryninja.demangle.demangle_gnu3>
-demangle_ms(bv.arch, NAME)    # demangle an MSVC name (?...) to (type, name parts)  @cpp @msvc  <https://api.binary.ninja/binaryninja.demangle-module.html#binaryninja.demangle.demangle_ms>
-demangle_llvm(NAME)           # demangle with the LLVM demangler  @cpp @rust @swift  <https://api.binary.ninja/binaryninja.demangle-module.html#binaryninja.demangle.demangle_llvm>
-
-## install and version
-core_version()                       # get the Binary Ninja version string  @about  <https://api.binary.ninja/index.html#binaryninja.core_version>
-core_product()                       # get the edition name (Personal, Commercial...)  @license @edition  <https://api.binary.ninja/index.html#binaryninja.core_product>
-user_directory()                     # get the user folder with settings and plugins  @path @config  <https://api.binary.ninja/index.html#binaryninja.user_directory>
-user_plugin_path()                   # get the folder where user plugins live  @path @plugins  <https://api.binary.ninja/index.html#binaryninja.user_plugin_path>
-get_install_directory()              # get the folder Binary Ninja runs from  @path  <https://api.binary.ninja/index.html#binaryninja.get_install_directory>
-connect_vscode_debugger(port=5678)   # wait for VS Code to attach to the Python in Binary Ninja  @debug @debugpy  <https://api.binary.ninja/index.html#binaryninja.connect_vscode_debugger>
-connect_pycharm_debugger(port=5678)  # connect to a waiting PyCharm debug server  @debug @pydevd  <https://api.binary.ninja/index.html#binaryninja.connect_pycharm_debugger>
+## guides and references
+https://api.binary.ninja/  # open the Python API reference  @docs  <https://api.binary.ninja/>
+https://docs.binary.ninja/dev/cookbook.html  # open the official snippets cookbook  @recipes @examples  <https://docs.binary.ninja/dev/cookbook.html>
+https://docs.binary.ninja/dev/concepts.html  # read the core concepts (views, functions, analysis)  @learn  <https://docs.binary.ninja/dev/concepts.html>
+https://docs.binary.ninja/dev/bnil-overview.html  # read the BNIL (LLIL/MLIL/HLIL) overview  @il @learn  <https://docs.binary.ninja/dev/bnil-overview.html>
+https://docs.binary.ninja/dev/annotation.html  # read how to apply symbols, tags and types  @learn  <https://docs.binary.ninja/dev/annotation.html>
+https://docs.binary.ninja/dev/batch.html  # read how to run headless batch scripts  <https://docs.binary.ninja/dev/batch.html>
+https://docs.binary.ninja/dev/workflows.html  # read the workflows and activities guide  @workflow  <https://docs.binary.ninja/dev/workflows.html>
+https://docs.binary.ninja/guide/settings.html  # list every setting key with its meaning  @config  <https://docs.binary.ninja/guide/settings.html>

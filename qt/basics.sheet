@@ -1,0 +1,98 @@
+title: qt basics (pyside6)
+url:   https://doc.qt.io/qtforpython-6/
+tags:  qt qt6 pyside pyside6 python gui widgets binaryninja
+
+; Python only (PySide6). Binary Ninja ships Qt 6.11.1 + PySide6 6.11.1: no pip install needed.
+; Modules in Binary Ninja's PySide6: QtCore, QtGui, QtWidgets, QtSvg, QtPrintSupport, QtDBus. No QtUiTools, no QtQml.
+
+## docs and sources
+doc.qt.io/qtforpython-6             # read the PySide6 docs: Python signatures, tutorials, examples  @docs @reference  <https://doc.qt.io/qtforpython-6/>
+doc.qt.io/qt-6                      # read the Qt 6 C++ docs; more complete, names are the same in Python  @docs @cpp  <https://doc.qt.io/qt-6/>
+doc.qt.io/qt-6/qtwidgets-index.html  # list all widget classes and guides  @widgets  <https://doc.qt.io/qt-6/qtwidgets-index.html>
+doc.qt.io/qt-6/classes.html         # list every Qt class A-Z  @index @all  <https://doc.qt.io/qt-6/classes.html>
+/opt/binaryninja/python3/PySide6/QtWidgets.pyi  # read exact Python signatures of the PySide6 that Binary Ninja uses  @stubs @signature  <file:/opt/binaryninja/python3/PySide6/QtWidgets.pyi>
+/opt/binaryninja/python3/PySide6/QtCore.pyi  # read exact Python signatures for QtCore (signals, models, timers)  @stubs @signature  <file:/opt/binaryninja/python3/PySide6/QtCore.pyi>
+code.qt.io pyside-setup examples   # browse official PySide6 example programs  @example  <https://code.qt.io/cgit/pyside/pyside-setup.git/tree/examples?h=v6.11.1>
+help(QWidget.setLayout)             # show a method signature in the Binary Ninja console  @signature @console
+
+## imports
+from PySide6.QtCore import Qt, QObject, Signal, Slot, QTimer  # core: enums, signals, timers, models  @import  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/index.html>
+from PySide6.QtGui import QColor, QFont, QIcon, QKeySequence, QAction  # gui: colors, fonts, icons, actions  @import  <https://doc.qt.io/qtforpython-6/PySide6/QtGui/index.html>
+from PySide6.QtWidgets import QWidget, QLabel, QVBoxLayout  # widgets: everything you see on screen  @import  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/index.html>
+import binaryninjaui                # in a Binary Ninja plugin, import this before PySide6 so the right Qt loads  @crash @binaryninja  <https://docs.binary.ninja/dev/plugins.html#ui-plugins>
+QAction                             # lives in QtGui in Qt 6, not QtWidgets as in Qt 5  @importerror @qt5  <https://doc.qt.io/qtforpython-6/PySide6/QtGui/QAction.html>
+
+## application and event loop
+app = QApplication(sys.argv)        # create the app object once, before any widget (standalone scripts only)  @start @main  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QApplication.html>
+sys.exit(app.exec())                # run the event loop until the last window closes  @mainloop @run  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QApplication.html#PySide6.QtWidgets.QApplication.exec>
+    import sys
+    from PySide6.QtWidgets import QApplication, QLabel
+    app = QApplication(sys.argv)
+    w = QLabel("Hello"); w.show()
+    sys.exit(app.exec())
+QApplication.instance()             # get the running app; in Binary Ninja it already exists, never create one  @binaryninja @existing  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/QCoreApplication.html#PySide6.QtCore.QCoreApplication.instance>
+exec() vs exec_()                   # use exec(); exec_() is the old Qt 5 name  @qt5 @deprecated
+QApplication.processEvents()        # let the UI repaint during a long loop (better: use a thread)  @freeze @hang  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/QCoreApplication.html#PySide6.QtCore.QCoreApplication.processEvents>
+QApplication.clipboard().setText(S)  # copy text to the clipboard  @copy  <https://doc.qt.io/qtforpython-6/PySide6/QtGui/QClipboard.html>
+
+## enums
+Qt.AlignmentFlag.AlignCenter        # write enums with their full scope; Qt.AlignCenter also works but is old style  @enum @flag  <https://doc.qt.io/qtforpython-6/considerations.html>
+Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignVCenter  # combine flags with |  @or @flags
+Qt.ItemDataRole.UserRole            # first role number free for your own data in models  @role
+Qt.Orientation.Horizontal           # horizontal or vertical, used by headers, splitters, sliders  @direction
+value.value                         # get the int behind a Python enum member  @int @enum
+
+## object tree and memory
+QWidget(parent)                     # give a parent so Qt owns and deletes the child with it  @ownership @delete @leak  <https://doc.qt.io/qt-6/objecttrees.html>
+self.w = QWidget()                  # keep a Python reference to a top-level widget or it is garbage collected and vanishes  @disappear @gc
+w.deleteLater()                     # delete a QObject safely when control returns to the event loop  @destroy @free  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/QObject.html#PySide6.QtCore.QObject.deleteLater>
+w.setParent(None)                   # detach a widget from its parent (it becomes a window or is collected)  @remove
+w.findChild(QLabel, "NAME")         # find a child by type and objectName  @search  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/QObject.html#PySide6.QtCore.QObject.findChild>
+w.setObjectName("NAME")             # name a widget, used by findChild and stylesheets  @id  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/QObject.html#PySide6.QtCore.QObject.setObjectName>
+RuntimeError: Internal C++ object already deleted  # Python still holds a widget Qt has freed; keep a parent or reference  @error @crash
+doc.qt.io/qt-6/objecttrees.html     # read how parents own children  @ownership  <https://doc.qt.io/qt-6/objecttrees.html>
+
+## timers
+QTimer.singleShot(MS, FN)           # run FN once after MS milliseconds on the UI thread  @delay @later  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/QTimer.html#PySide6.QtCore.QTimer.singleShot>
+QTimer.singleShot(0, FN)            # run FN after the current event finishes  @defer
+t = QTimer(self); t.timeout.connect(FN); t.start(MS)  # run FN every MS milliseconds  @repeat @interval @poll  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/QTimer.html>
+t.stop()                            # stop a repeating timer  @cancel
+t.setSingleShot(True)               # make a QTimer fire once; restart it to debounce  @debounce
+
+## threads
+widgets only on the main thread     # never create or touch widgets from a worker thread; send a signal instead  @crash @thread  <https://doc.qt.io/qt-6/threads-qobject.html>
+class Worker(QObject)               # put long work in a QObject moved to a QThread, report back with signals  @background @async  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/QThread.html>
+    class Worker(QObject):
+        finished = Signal(object)
+        @Slot()
+        def run(self):
+            self.finished.emit(slow_work())
+    self.thread = QThread(); self.worker = Worker()
+    self.worker.moveToThread(self.thread)
+    self.thread.started.connect(self.worker.run)
+    self.worker.finished.connect(self.on_done)          # runs on the UI thread
+    self.worker.finished.connect(self.thread.quit)
+    self.thread.start()
+QThreadPool.globalInstance().start(RUNNABLE)  # run a QRunnable on a shared pool of threads  @pool  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/QThreadPool.html>
+execute_on_main_thread(FN)          # in Binary Ninja, the simple way to run UI code from a worker  @binaryninja  <https://api.binary.ninja/binaryninja.mainthread-module.html>
+
+## events (override methods)
+def mousePressEvent(self, event)    # react to a mouse click on your widget; event.button(), event.position()  @click  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QWidget.html#PySide6.QtWidgets.QWidget.mousePressEvent>
+def keyPressEvent(self, event)      # react to a key; event.key() == Qt.Key.Key_Escape  @keyboard  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QWidget.html#PySide6.QtWidgets.QWidget.keyPressEvent>
+def paintEvent(self, event)         # draw a custom widget with QPainter(self)  @draw @paint  <https://doc.qt.io/qtforpython-6/PySide6/QtGui/QPainter.html>
+def resizeEvent(self, event)        # react when the widget changes size  @resize
+def closeEvent(self, event)         # react when a window closes; event.ignore() to cancel  @close
+def contextMenuEvent(self, event)   # show your own right-click menu  @rightclick @menu
+w.update()                          # schedule a repaint (calls paintEvent later)  @redraw @refresh  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QWidget.html#PySide6.QtWidgets.QWidget.update>
+obj.installEventFilter(self)        # see another object's events in self.eventFilter(obj, event)  @intercept @hook  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/QObject.html#PySide6.QtCore.QObject.installEventFilter>
+super().keyPressEvent(event)        # pass the event on to the default handler  @default
+doc.qt.io/qt-6/eventsandfilters.html  # read how events and event filters work  @events  <https://doc.qt.io/qt-6/eventsandfilters.html>
+
+## look and feel
+w.setStyleSheet("color: #fff; background: #262626;")  # style a widget with CSS-like rules  @css @qss @color  <https://doc.qt.io/qt-6/stylesheet-reference.html>
+app.setStyleSheet(open("style.qss").read())  # style the whole app from a .qss file  @css @theme
+QLabel#NAME { color: red; }         # target one widget by objectName in a stylesheet  @css @selector  <https://doc.qt.io/qt-6/stylesheet-syntax.html>
+QColor("#41cd52") / QColor(R, G, B)  # make a color  @rgb @hex  <https://doc.qt.io/qtforpython-6/PySide6/QtGui/QColor.html>
+QFont("Monospace", 10)              # make a font  @text  <https://doc.qt.io/qtforpython-6/PySide6/QtGui/QFont.html>
+w.palette().color(QPalette.ColorRole.Window)  # read a theme color so your widget matches dark/light mode  @theme @dark  <https://doc.qt.io/qtforpython-6/PySide6/QtGui/QPalette.html>
+QIcon.fromTheme("document-open")   # get a standard icon from the system theme  @icon  <https://doc.qt.io/qtforpython-6/PySide6/QtGui/QIcon.html>

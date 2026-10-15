@@ -1,73 +1,144 @@
-title: binary ninja plugins and workflows
+title: binary ninja plugins and extensions
 url:   https://docs.binary.ninja/dev/plugins.html
-tags:  binaryninja binja bn plugin command menu workflow activity background flowgraph python api
+tags:  binaryninja binja bn python api plugin extension command menu background-task binaryview-type loader render-layer flowgraph transform
 
-; bv = BinaryView. Names in UPPERCASE are placeholders.
+; UPPERCASE words are placeholders. Plugins live in user_plugin_path(); restart to load new ones.
 
 ## plugin layout
-user_plugin_path()  # get the folder to drop a plugin folder into  @install @path  <https://api.binary.ninja/index.html#binaryninja.user_plugin_path>
-PLUGIN/__init__.py  # the file Binary Ninja imports when it loads a plugin folder  @layout  <https://docs.binary.ninja/dev/plugins.html>
-PLUGIN/plugin.json  # the manifest for the plugin manager (name, version, api, platforms)  @manifest @metadata  <https://docs.binary.ninja/dev/plugins.html>
+MYPLUGIN/__init__.py                # entry file run when Binary Ninja loads the plugin folder  @layout  <https://docs.binary.ninja/dev/plugins.html#creating-the-plugin>
+MYPLUGIN/plugin.json                # metadata for the extension manager (name, version, minimumbinaryninjaversion...)  @manifest  <https://docs.binary.ninja/dev/plugins.html#plugin-description-display>
+MYPLUGIN/requirements.txt           # Python packages the extension manager installs for the plugin  @pip @dependencies  <https://docs.binary.ninja/dev/plugins.html#creating-the-plugin>
+user_plugin_path()                  # get the folder for your own plugins  @install  <https://api.binary.ninja/index.html#binaryninja.user_plugin_path>
+importlib.reload(MOD); MOD.run(bv)  # reload plugin code in the console while you work on it  @iterate @test  <https://docs.binary.ninja/dev/plugins.html#testing>
+https://github.com/Vector35/sample_plugin  # template plugin to start from  @example  <https://github.com/Vector35/sample_plugin>
+https://github.com/Vector35/binaryninja-api/tree/dev/python/examples  # official Python plugin examples  <https://github.com/Vector35/binaryninja-api/tree/dev/python/examples>
 
-## menu commands
-PluginCommand.register(NAME, DESC, FN)    # add a menu command that gets FN(bv)  @menu @action @command-palette  <https://api.binary.ninja/binaryninja.plugin-module.html#binaryninja.plugin.PluginCommand.register>
-    def run(bv): log_info(f"{len(bv.functions)} functions")
-    PluginCommand.register("My Tools\\Count functions", "Print the function count", run)
-PluginCommand.register(NAME, DESC, FN, IS_VALID)  # add a command that is only enabled when IS_VALID(bv) is True  @menu @enable  <https://api.binary.ninja/binaryninja.plugin-module.html#binaryninja.plugin.PluginCommand.register>
-PluginCommand.register_for_address(NAME, DESC, FN)  # add a command that gets FN(bv, addr)  @menu @cursor  <https://api.binary.ninja/binaryninja.plugin-module.html#binaryninja.plugin.PluginCommand.register_for_address>
-PluginCommand.register_for_range(NAME, DESC, FN)  # add a command that gets FN(bv, start, length)  @menu @selection  <https://api.binary.ninja/binaryninja.plugin-module.html#binaryninja.plugin.PluginCommand.register_for_range>
-PluginCommand.register_for_function(NAME, DESC, FN)  # add a command that gets FN(bv, func)  @menu  <https://api.binary.ninja/binaryninja.plugin-module.html#binaryninja.plugin.PluginCommand.register_for_function>
-PluginCommand.register_for_high_level_il_instruction(NAME, DESC, FN)  # add a command that gets FN(bv, hlil_instr)  @menu @hlil  <https://api.binary.ninja/binaryninja.plugin-module.html#binaryninja.plugin.PluginCommand.register_for_high_level_il_instruction>
-PluginCommand.register_for_medium_level_il_function(NAME, DESC, FN)  # add a command that gets FN(bv, mlil_func)  @menu @mlil  <https://api.binary.ninja/binaryninja.plugin-module.html#binaryninja.plugin.PluginCommand.register_for_medium_level_il_function>
-PluginCommand.register_for_project(NAME, DESC, FN)  # add a command that runs on a whole project  @menu  <https://api.binary.ninja/binaryninja.plugin-module.html#binaryninja.plugin.PluginCommand.register_for_project>
-PluginCommand.register_global(NAME, DESC, FN)  # add a command that needs no open file  @menu @global  <https://api.binary.ninja/binaryninja.plugin-module.html#binaryninja.plugin.PluginCommand.register_global>
+## plugin commands (menu entries)
+PluginCommand.register("Menu\\Name", "DESC", FN)  # add a menu command; FN(bv)  @action  <https://api.binary.ninja/binaryninja.plugin-module.html#binaryninja.plugin.PluginCommand.register>
+PluginCommand.register_for_address("NAME", "DESC", FN)  # add a command run on the cursor address; FN(bv, addr)  @menu  <https://api.binary.ninja/binaryninja.plugin-module.html#binaryninja.plugin.PluginCommand.register_for_address>
+PluginCommand.register_for_range("NAME", "DESC", FN)  # add a command run on the selection; FN(bv, addr, length)  @menu  <https://api.binary.ninja/binaryninja.plugin-module.html#binaryninja.plugin.PluginCommand.register_for_range>
+PluginCommand.register_for_function("NAME", "DESC", FN)  # add a command run on the current function; FN(bv, func)  @menu  <https://api.binary.ninja/binaryninja.plugin-module.html#binaryninja.plugin.PluginCommand.register_for_function>
+PluginCommand.register_for_high_level_il_instruction(N, D, FN)  # add a command on an HLIL instruction; FN(bv, instr)  @menu  <https://api.binary.ninja/binaryninja.plugin-module.html#binaryninja.plugin.PluginCommand.register_for_high_level_il_instruction>
+PluginCommand.register_for_medium_level_il_function(N, D, FN)  # add a command on an MLIL function; FN(bv, mlil)  @menu  <https://api.binary.ninja/binaryninja.plugin-module.html#binaryninja.plugin.PluginCommand.register_for_medium_level_il_function>
+PluginCommand.register_global("NAME", "DESC", FN)  # add a command that needs no open file; FN() takes no args  @menu  <https://api.binary.ninja/binaryninja.plugin-module.html#binaryninja.plugin.PluginCommand.register_global>
+PluginCommand.register_for_project("NAME", "DESC", FN)  # add a command run on a project; FN(project)  @menu  <https://api.binary.ninja/binaryninja.plugin-module.html#binaryninja.plugin.PluginCommand.register_for_project>
+PluginCommand.register("NAME", "DESC", FN, is_valid=CHECK)  # show a command only when CHECK(bv) is True  @enable  <https://api.binary.ninja/binaryninja.plugin-module.html#binaryninja.plugin.PluginCommand.register>
+"Group\\Sub\\Name"  # put a command in a sub menu by using backslashes in its name  @submenu @folder  <https://api.binary.ninja/binaryninja.plugin-module.html#binaryninja.plugin.PluginCommand.register>
+PluginCommand.get_valid_list(PluginCommandContext(bv))  # list commands valid in a context, by name  @invoke @call  <https://api.binary.ninja/binaryninja.plugin-module.html#binaryninja.plugin.PluginCommand.get_valid_list>
+    ctx = PluginCommandContext(bv); ctx.address = here
+    PluginCommand.get_valid_list(ctx)["My Plugin"].execute(ctx)
+UIAction.registerAction("NAME", QKeySequence("F3"))  # make a UI action with a hotkey (binaryninjaui, UI only)  @shortcut  <https://docs.binary.ninja/dev/cookbook.html#apply-a-hotkey-to-a-register_-plugin>
+UIActionHandler.globalActions().bindAction("NAME", UIAction(FN))  # bind code to a UI action; FN(ctx) gets ctx.binaryView  @hotkey  <https://docs.binary.ninja/dev/cookbook.html#apply-a-hotkey-to-a-register_-plugin>
+Menu.mainMenu("Plugins").addAction("NAME", "GROUP")  # put a UI action into a menu  <https://docs.binary.ninja/dev/cookbook.html#apply-a-hotkey-to-a-register_-plugin>
 
 ## background work
-class Task(BackgroundTaskThread):  # run long work off the UI thread with a progress line  @thread @async @progress  <https://api.binary.ninja/binaryninja.plugin-module.html#binaryninja.plugin.BackgroundTaskThread>
+class Task(BackgroundTaskThread):    # run long work off the UI thread with a status bar entry  @async @progress  <https://api.binary.ninja/binaryninja.plugin-module.html#binaryninja.plugin.BackgroundTaskThread>
     class Task(BackgroundTaskThread):
-        def __init__(self, bv): super().__init__("Working...", can_cancel=True); self.bv = bv
+        def __init__(self, bv):
+            super().__init__("Working...", can_cancel=True); self.bv = bv
         def run(self):
-            for f in self.bv.functions:
+            for i, f in enumerate(self.bv.functions):
                 if self.cancelled: break
-                self.progress = f"Working on {f.name}"
+                self.progress = f"Working... {i}"
+            self.finish()
     Task(bv).start()
-task.progress = "text"             # update the status bar text of a task  @status  <https://api.binary.ninja/binaryninja.plugin-module.html#binaryninja.plugin.BackgroundTask.progress>
-task.cancelled                     # check if the user canceled the task  @stop  <https://api.binary.ninja/binaryninja.plugin-module.html#binaryninja.plugin.BackgroundTask.cancelled>
-task.finish()                      # mark a task done  <https://api.binary.ninja/binaryninja.plugin-module.html#binaryninja.plugin.BackgroundTask.finish>
+task.progress = "TEXT"               # update the text shown in the status bar  <https://api.binary.ninja/binaryninja.plugin-module.html#binaryninja.plugin.BackgroundTask.progress>
+task.cancelled                       # check whether the user pressed cancel  @stop  <https://api.binary.ninja/binaryninja.plugin-module.html#binaryninja.plugin.BackgroundTask.cancelled>
+task.finish()                        # mark the task as done and remove it from the status bar  <https://api.binary.ninja/binaryninja.plugin-module.html#binaryninja.plugin.BackgroundTask.finish>
+task.join()                          # wait for a BackgroundTaskThread to finish  @headless  <https://api.binary.ninja/binaryninja.plugin-module.html#binaryninja.plugin.BackgroundTaskThread.join>
+BackgroundTask("TEXT", can_cancel=True)  # make a status bar task you update yourself (no thread)  @progress  <https://api.binary.ninja/binaryninja.plugin-module.html#binaryninja.plugin.BackgroundTask>
+execute_on_main_thread_and_wait(FN)  # run UI code safely from a worker thread  <https://api.binary.ninja/binaryninja.mainthread-module.html#binaryninja.mainthread.execute_on_main_thread_and_wait>
+with bv.undoable_transaction():      # group a plugin's changes into one undo step  <https://api.binary.ninja/binaryninja.binaryview-module.html#binaryninja.binaryview.BinaryView.undoable_transaction>
 
-## workflows
-Workflow("core.function.metaAnalysis").clone(NAME)  # copy the function analysis pipeline to change it  @pipeline @analysis  <https://api.binary.ninja/binaryninja.workflow-module.html#binaryninja.workflow.Workflow.clone>
-Workflow("core.module.metaAnalysis").clone(NAME)  # copy the whole-binary analysis pipeline  @pipeline @module  <https://api.binary.ninja/binaryninja.workflow-module.html#binaryninja.workflow.Workflow.clone>
-wf.register_activity(Activity(CONFIG_JSON, action=FN))  # add a step; FN(context) runs during analysis  @step @pass  <https://api.binary.ninja/binaryninja.workflow-module.html#binaryninja.workflow.Workflow.register_activity>
-    def act(ctx): ctx.function.add_tag("Bugs", "seen")
-    wf = Workflow("core.function.metaAnalysis").clone("my.wf")
-    wf.register_activity(Activity(json.dumps({"name": "my.wf.tag", "title": "Tag", "description": "x",
-        "eligibility": {"auto": {"default": True}}}), action=act))
-    wf.insert("core.function.generateHighLevelIL", ["my.wf.tag"]); wf.register()
-wf.insert(EXISTING, [NEW])                # place a step before an existing step  @order  <https://api.binary.ninja/binaryninja.workflow-module.html#binaryninja.workflow.Workflow.insert>
-wf.insert_after(EXISTING, [NEW])          # place a step after an existing step  @order  <https://api.binary.ninja/binaryninja.workflow-module.html#binaryninja.workflow.Workflow.insert_after>
-wf.remove(ACTIVITY)                       # drop a step from the pipeline  @disable  <https://api.binary.ninja/binaryninja.workflow-module.html#binaryninja.workflow.Workflow.remove>
-wf.register()                             # make the workflow selectable  <https://api.binary.ninja/binaryninja.workflow-module.html#binaryninja.workflow.Workflow.register>
-wf.show_topology()                        # draw the pipeline as a graph  @debug @visualize  <https://api.binary.ninja/binaryninja.workflow-module.html#binaryninja.workflow.Workflow.show_topology>
-list(Workflow)                            # list registered workflows  <https://api.binary.ninja/binaryninja.workflow-module.html#binaryninja.workflow.Workflow>
-bv.workflow, f.workflow                   # get the workflow a view or function uses  <https://api.binary.ninja/binaryninja.binaryview-module.html#binaryninja.binaryview.BinaryView.workflow>
-load(PATH, options={"analysis.workflows.functionWorkflow": NAME})  # open a file with a custom function workflow  @select  <https://api.binary.ninja/index.html#binaryninja.load>
-ctx.function, ctx.view                    # get the function and view inside an activity  <https://api.binary.ninja/binaryninja.workflow-module.html#binaryninja.workflow.AnalysisContext.function>
-ctx.mlil, ctx.llil, ctx.hlil              # get the IL being built inside an activity  @rewrite  <https://api.binary.ninja/binaryninja.workflow-module.html#binaryninja.workflow.AnalysisContext.mlil>
-ctx.set_mlil_function(NEW_MLIL)           # replace the MLIL from an activity  @rewrite @deobfuscate  <https://api.binary.ninja/binaryninja.workflow-module.html#binaryninja.workflow.AnalysisContext.set_mlil_function>
+## custom file format (binaryview type)
+class MyView(BinaryView):     # start a loader for a new file format; set name and long_name  @parser  <https://api.binary.ninja/binaryninja.binaryview-module.html#binaryninja.binaryview.BinaryView>
+    class MyView(BinaryView):
+        name = "MyFmt"; long_name = "My Format"
+        def __init__(self, data):
+            BinaryView.__init__(self, parent_view=data, file_metadata=data.file)
+            self.platform = Architecture["armv7"].standalone_platform
+        @classmethod
+        def is_valid_for_data(cls, data):
+            return data.read(0, 4) == b"MYFT"
+        def init(self):
+            self.add_auto_segment(0x8000, 0x1000, 0x40, 0x1000,
+                SegmentFlag.SegmentReadable | SegmentFlag.SegmentExecutable)
+            self.add_auto_section(".text", 0x8000, 0x1000, SectionSemantics.ReadOnlyCodeSectionSemantics)
+            self.add_entry_point(0x8000)
+            return True
+        def perform_get_entry_point(self): return 0x8000
+        def perform_is_executable(self): return True
+    MyView.register()
+is_valid_for_data(cls, data)  # return True if the raw data is your format (check magic bytes)  @detect  <https://api.binary.ninja/binaryninja.binaryview-module.html#binaryninja.binaryview.BinaryViewType.is_valid_for_data>
+init(self)                    # build segments, sections, symbols and entry points; return True on success  @loader  <https://api.binary.ninja/binaryninja.binaryview-module.html#binaryninja.binaryview.BinaryView.init>
+self.add_auto_segment(ADDR, LEN, FILE_OFF, FILE_LEN, FLAGS)  # map file bytes into memory from a loader  <https://api.binary.ninja/binaryninja.binaryview-module.html#binaryninja.binaryview.BinaryView.add_auto_segment>
+self.add_auto_section(NAME, ADDR, LEN, SEMANTICS)  # add a section from a loader  <https://api.binary.ninja/binaryninja.binaryview-module.html#binaryninja.binaryview.BinaryView.add_auto_section>
+self.define_auto_symbol(Symbol(SymbolType.FunctionSymbol, ADDR, "name"))  # add a symbol from a loader  <https://api.binary.ninja/binaryninja.binaryview-module.html#binaryninja.binaryview.BinaryView.define_auto_symbol>
+self.add_entry_point(ADDR)    # add an analysis start point from a loader  <https://api.binary.ninja/binaryninja.binaryview-module.html#binaryninja.binaryview.BinaryView.add_entry_point>
+perform_get_entry_point / perform_is_executable / perform_get_address_size  # override basic file facts in a custom view  <https://api.binary.ninja/binaryninja.binaryview-module.html#binaryninja.binaryview.BinaryView.perform_get_entry_point>
+MyView.register()             # make the format show up in the open-with list  <https://api.binary.ninja/binaryninja.binaryview-module.html#binaryninja.binaryview.BinaryView.register>
+get_load_settings_for_data(cls, data)  # offer load options (image base, arch) for your format  <https://api.binary.ninja/binaryninja.binaryview-module.html#binaryninja.binaryview.BinaryViewType.get_load_settings_for_data>
+bv.record_imported_object_library(LIB, NAME, ADDR)  # record which type library an import came from (in loaders)  @imports  <https://api.binary.ninja/binaryninja.binaryview-module.html#binaryninja.binaryview.BinaryView.record_imported_object_library>
+
+## render layers (change how code looks)
+class Layer(RenderLayer):           # change rendered lines of disassembly/IL; set name, override apply_to_*  @render  <https://api.binary.ninja/binaryninja.renderlayer-module.html#binaryninja.renderlayer.RenderLayer>
+    class HighlightRet(RenderLayer):
+        name = "Highlight Returns"
+        def apply_to_high_level_il_body(self, function, lines):
+            for line in lines:
+                if any(t.text == "return" for t in line.contents.tokens):
+                    line.contents.highlight = HighlightColor(red=0, green=80, blue=0)
+            return lines
+    HighlightRet.register()
+apply_to_block(self, block, lines)  # change lines of any basic block (asm, LLIL, MLIL)  @render  <https://api.binary.ninja/binaryninja.renderlayer-module.html#binaryninja.renderlayer.RenderLayer.apply_to_block>
+apply_to_high_level_il_body(self, function, lines)  # change lines of a whole HLIL function  @render  <https://api.binary.ninja/binaryninja.renderlayer-module.html#binaryninja.renderlayer.RenderLayer.apply_to_high_level_il_body>
+apply_to_flow_graph(self, graph)    # change nodes and edges of a graph view  @render  <https://api.binary.ninja/binaryninja.renderlayer-module.html#binaryninja.renderlayer.RenderLayer.apply_to_flow_graph>
+Layer.register()                    # make a render layer available (users enable it per view)  <https://api.binary.ninja/binaryninja.renderlayer-module.html#binaryninja.renderlayer.RenderLayer.register>
+
+## data renderers (custom data display)
+class R(DataRenderer):        # render data of a type your own way in linear view  @struct @display  <https://api.binary.ninja/binaryninja.datarender-module.html#binaryninja.datarender.DataRenderer>
+    class BarRenderer(DataRenderer):
+        def perform_is_valid_for_data(self, ctxt, view, addr, type, context):
+            return DataRenderer.is_type_of_struct_name(type, "BAR", context)
+        def perform_get_lines_for_data(self, ctxt, view, addr, type, prefix, width, context):
+            prefix.append(InstructionTextToken(InstructionTextTokenType.TextToken, "BAR!"))
+            return [DisassemblyTextLine(prefix, addr)]
+    BarRenderer().register_type_specific()
+R().register_type_specific()  # use the renderer before the generic ones  <https://api.binary.ninja/binaryninja.datarender-module.html#binaryninja.datarender.DataRenderer.register_type_specific>
+R().register_generic()        # use the renderer as a fallback for any type  <https://api.binary.ninja/binaryninja.datarender-module.html#binaryninja.datarender.DataRenderer.register_generic>
 
 ## flow graphs
-g = FlowGraph()                           # start a custom graph  @graph @cfg @visualize  <https://api.binary.ninja/binaryninja.flowgraph-module.html#binaryninja.flowgraph.FlowGraph>
-n = FlowGraphNode(g); n.lines = ["text"]  # make a graph node with text lines  @graph  <https://api.binary.ninja/binaryninja.flowgraph-module.html#binaryninja.flowgraph.FlowGraphNode.lines>
-g.append(n)                               # add a node to a graph  <https://api.binary.ninja/binaryninja.flowgraph-module.html#binaryninja.flowgraph.FlowGraph.append>
-a.add_outgoing_edge(BranchType.UnconditionalBranch, b)  # connect two nodes  @edge @arrow  <https://api.binary.ninja/binaryninja.flowgraph-module.html#binaryninja.flowgraph.FlowGraphNode.add_outgoing_edge>
-n.highlight = HighlightStandardColor.BlueHighlightColor  # color a graph node  @color  <https://api.binary.ninja/binaryninja.flowgraph-module.html#binaryninja.flowgraph.FlowGraphNode.highlight>
-g.show("Title")                           # open the graph in a new tab  @display  <https://api.binary.ninja/binaryninja.flowgraph-module.html#binaryninja.flowgraph.FlowGraph.show>
-f.create_graph()                          # get the function's own graph  @cfg  <https://api.binary.ninja/binaryninja.function-module.html#binaryninja.function.Function.create_graph>
+g = FlowGraph()                # make an empty custom graph  @diagram  <https://api.binary.ninja/binaryninja.flowgraph-module.html#binaryninja.flowgraph.FlowGraph>
+n = FlowGraphNode(g); n.lines = ["TEXT"]; g.append(n)  # add a node with text lines  <https://api.binary.ninja/binaryninja.flowgraph-module.html#binaryninja.flowgraph.FlowGraphNode>
+a.add_outgoing_edge(BranchType.UnconditionalBranch, b)  # connect two nodes (TrueBranch, FalseBranch... set the color)  @arrow  <https://api.binary.ninja/binaryninja.flowgraph-module.html#binaryninja.flowgraph.FlowGraphNode.add_outgoing_edge>
+a.add_outgoing_edge(TYPE, b, EdgeStyle(EdgePenStyle.DashLine, 2, COLOR))  # connect nodes with a custom line style  <https://api.binary.ninja/binaryninja.flowgraph-module.html#binaryninja.flowgraph.EdgeStyle>
+n.highlight = HighlightStandardColor.BlueHighlightColor  # color a graph node  <https://api.binary.ninja/binaryninja.flowgraph-module.html#binaryninja.flowgraph.FlowGraphNode.highlight>
+show_graph_report("TITLE", g)  # show a graph in a new tab  @ui  <https://api.binary.ninja/binaryninja.interaction-module.html#binaryninja.interaction.show_graph_report>
+g.layout_and_wait()            # compute node positions without the UI (e.g. to export)  @headless  <https://api.binary.ninja/binaryninja.flowgraph-module.html#binaryninja.flowgraph.FlowGraph.layout_and_wait>
+f.create_graph()               # get the built-in graph of a function to inspect or show  @cfg  <https://api.binary.ninja/binaryninja.function-module.html#binaryninja.function.Function.create_graph>
 
-## other extension points
-Transform                                 # subclass to add an encoder or decoder  @plugin @codec  <https://api.binary.ninja/binaryninja.transform-module.html#binaryninja.transform.Transform>
-DataRenderer                              # subclass to change how data of a type is shown in linear view  @plugin @render  <https://api.binary.ninja/binaryninja.datarender-module.html#binaryninja.datarender.DataRenderer>
-class MyView(BinaryView): ...; MyView.register()  # add a new file format loader  @plugin @loader @format  <https://api.binary.ninja/binaryninja.binaryview-module.html#binaryninja.binaryview.BinaryView.register>
-FunctionRecognizer                        # subclass to name or type functions as they are found  @plugin @signature  <https://api.binary.ninja/binaryninja.functionrecognizer-module.html#binaryninja.functionrecognizer.FunctionRecognizer>
-ScriptingProvider                         # subclass to add a scripting language console  @plugin @repl  <https://api.binary.ninja/binaryninja.scriptingprovider-module.html#binaryninja.scriptingprovider.ScriptingProvider>
+## transforms (encode, decode, hash, unpack)
+list(Transform)                      # list transforms (Base64, Zlib, XOR, AES, SHA256, RawHex...)  @encode @decode  <https://api.binary.ninja/binaryninja.transform-module.html#binaryninja.transform.Transform>
+Transform["Base64"].decode(DATA)     # decode bytes with a transform  <https://api.binary.ninja/binaryninja.transform-module.html#binaryninja.transform.Transform.decode>
+Transform["Zlib"].decode(DATA)       # decompress zlib data  @inflate  <https://api.binary.ninja/binaryninja.transform-module.html#binaryninja.transform.Transform.decode>
+Transform["XOR"].decode(DATA, {"key": b"KEY"})  # xor-decode bytes with a key  @decrypt  <https://api.binary.ninja/binaryninja.transform-module.html#binaryninja.transform.Transform.decode>
+Transform["SHA256"].encode(DATA)     # hash bytes (MD5, SHA1, SHA256...)  @digest  <https://api.binary.ninja/binaryninja.transform-module.html#binaryninja.transform.Transform.encode>
+Transform["AES-128 CBC"].parameters  # list the parameter names a transform needs (key, iv...)  @decrypt @options  <https://api.binary.ninja/binaryninja.transform-module.html#binaryninja.transform.Transform>
+class MyT(Transform):                # add your own transform; override perform_decode / perform_encode  @custom  <https://api.binary.ninja/binaryninja.transform-module.html#binaryninja.transform.Transform>
+TransformSession(PATH)               # open a container (zip, tar.gz, base64...) and extract down to a loadable file  @archive  <https://api.binary.ninja/binaryninja.transform-module.html#binaryninja.transform.TransformSession>
+    s = TransformSession("archive.tar.gz")
+    if s.process():
+        s.set_selected_contexts(s.current_context)
+        with load(s.current_view) as bv:
+            print(bv.file.virtual_path)   # Gzip(...)::Tar()::file
+ctx.set_transform_name("Base64"); s.process_from(ctx)  # force a transform when auto-detect fails  @container @manual  <https://api.binary.ninja/binaryninja.transform-module.html#binaryninja.transform.TransformContext.set_transform_name>
+ctx.available_files / ctx.set_requested_files([NAMES])  # list and pick files inside an archive context  @container  <https://api.binary.ninja/binaryninja.transform-module.html#binaryninja.transform.TransformContext.set_requested_files>
+DataBuffer(DATA).base64_decode()     # decode base64 with a DataBuffer  <https://api.binary.ninja/binaryninja.databuffer-module.html#binaryninja.databuffer.DataBuffer.base64_decode>
+DataBuffer(DATA).zlib_decompress()   # inflate zlib data with a DataBuffer  <https://api.binary.ninja/binaryninja.databuffer-module.html#binaryninja.databuffer.DataBuffer.zlib_decompress>
+
+## extension manager
+RepositoryManager()  # get the plugin repositories manager  @extensions @install  <https://api.binary.ninja/binaryninja.extensionmanager-module.html#binaryninja.extensionmanager.RepositoryManager>
+RepositoryManager().default_repository.plugins  # list plugins in the official repository  @extensions  <https://api.binary.ninja/binaryninja.extensionmanager-module.html#binaryninja.extensionmanager.Repository.plugins>
+RepositoryManager().default_repository["PLUGIN_PATH"].install()  # install a plugin from a repository  <https://api.binary.ninja/binaryninja.extensionmanager-module.html#binaryninja.extensionmanager.Extension.install>
+plugin.enabled = False / plugin.enable()  # turn an installed plugin off or on  @toggle  <https://api.binary.ninja/binaryninja.extensionmanager-module.html#binaryninja.extensionmanager.Extension.enabled>
+RepositoryManager().check_for_updates()  # check repositories for plugin updates  @update  <https://api.binary.ninja/binaryninja.extensionmanager-module.html#binaryninja.extensionmanager.RepositoryManager.check_for_updates>

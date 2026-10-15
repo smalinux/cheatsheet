@@ -1,0 +1,70 @@
+title: qt signals and slots (pyside6)
+url:   https://doc.qt.io/qtforpython-6/tutorials/basictutorial/signals_and_slots.html
+tags:  qt qt6 pyside pyside6 python signal slot connect emit event callback
+
+; Python only (PySide6). A signal is "something happened"; a slot is the function that runs.
+
+## connect and disconnect
+button.clicked.connect(FN)          # run FN when the signal fires  @callback @onclick @bind  <https://doc.qt.io/qtforpython-6/tutorials/basictutorial/signals_and_slots.html>
+button.clicked.connect(line_edit.clear)  # connect a signal to a built-in slot of another widget  @slot
+edit.textChanged.connect(lambda s: print(s))  # use a lambda as a slot; the signal args are passed to it  @lambda
+button.clicked.connect(lambda: self.go(ADDR))  # pass extra args with a lambda that ignores the signal args  @arguments
+functools.partial(FN, ARG)          # bind extra args to a slot without a lambda  @arguments @partial
+c = sig.connect(FN); sig.disconnect(c)  # keep the Connection to remove one connection later  @remove @unbind  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/QMetaObject.html>
+sig.disconnect(FN)                  # remove the connection to FN  @remove
+sig.disconnect()                    # remove every connection of a signal  @remove @all
+sig_a.connect(sig_b)                # chain signals: emitting A emits B  @forward @relay
+sig.connect(FN, Qt.ConnectionType.QueuedConnection)  # run FN later from the event loop instead of right now  @queued @async  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/Qt.html#PySide6.QtCore.Qt.ConnectionType>
+Qt.ConnectionType.AutoConnection    # default: direct if same thread, queued if the receiver lives in another thread  @thread
+w.blockSignals(True)                # stop a widget emitting signals while you change it from code  @mute @loop @recursion  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/QObject.html#PySide6.QtCore.QObject.blockSignals>
+with QSignalBlocker(w): w.setValue(5)  # block signals only inside the with block  @mute  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/QSignalBlocker.html>
+self.sender()                       # inside a slot, get the object that emitted the signal  @who @source  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/QObject.html#PySide6.QtCore.QObject.sender>
+
+## define your own signals
+class C(QObject): done = Signal(int)  # declare a signal as a class attribute of a QObject subclass  @custom @new  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/Signal.html>
+    class Loader(QObject):
+        progress = Signal(int)
+        finished = Signal(str, list)
+        def run(self):
+            self.progress.emit(50)
+            self.finished.emit("ok", [1, 2])
+self.done.emit(VALUE)               # fire a signal with values  @trigger @send  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/Signal.html>
+Signal()                            # signal with no arguments  @empty
+Signal(int, str)                    # signal with several arguments  @types
+Signal(object)                      # signal that carries any Python object (dict, BinaryView...)  @any @pyobject
+Signal(int, name="rangeChanged")    # give the signal a different Qt name than the Python attribute  @rename
+Signal((int,), (str,))              # overloaded signal; pick one with sig[str].connect / sig[str].emit (legacy style)  @overload
+Signal on a non-QObject class       # does not work: the class must inherit QObject or a widget  @error @attributeerror
+doc.qt.io/qt-6/signalsandslots.html  # read the full signals and slots concept guide  @guide  <https://doc.qt.io/qt-6/signalsandslots.html>
+
+## slots
+@Slot()                             # mark a method as a slot: faster connect, correct thread for queued calls  @decorator  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/Slot.html>
+@Slot(str)                          # slot that takes a str  @decorator @types
+@Slot(int, result=int)              # slot with a return type  @return
+    from PySide6.QtCore import QObject, Slot
+    class Handler(QObject):
+        @Slot(str)
+        def on_text(self, s):
+            print(s)
+QT_LOGGING_RULES="qt.pyside.libpyside.warning=true"  # env var: warn about slots missing the @Slot decorator  @debug @warning  <https://doc.qt.io/qtforpython-6/tutorials/basictutorial/signals_and_slots.html>
+
+## threads
+worker.moveToThread(thread)         # make a QObject's @Slot methods run in that thread  @thread @affinity  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/QObject.html#PySide6.QtCore.QObject.moveToThread>
+emit from worker, slot on UI object  # the safe way to update widgets from a thread: queued call lands on the UI thread  @thread @crash @update
+lambda slots run in the sender thread  # a plain function or lambda slot is not moved to the receiver thread  @thread @gotcha
+
+## common built-in signals
+QPushButton.clicked                 # button was pressed and released  @click @button  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QAbstractButton.html#PySide6.QtWidgets.QAbstractButton.clicked>
+QCheckBox.toggled(bool)             # check box or toggle button changed state  @checkbox  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QAbstractButton.html#PySide6.QtWidgets.QAbstractButton.toggled>
+QLineEdit.textChanged(str)          # text changed by user or code  @input @edit  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QLineEdit.html#PySide6.QtWidgets.QLineEdit.textChanged>
+QLineEdit.textEdited(str)           # text changed by the user only, not by setText  @input
+QLineEdit.returnPressed             # user pressed Enter in the line edit  @enter @submit
+QComboBox.currentIndexChanged(int)  # user or code picked another item  @dropdown @select  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QComboBox.html>
+QSpinBox.valueChanged(int)          # number changed  @number
+QAbstractItemView.doubleClicked(QModelIndex)  # item double-clicked in a list, table or tree  @row @open  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QAbstractItemView.html>
+view.selectionModel().selectionChanged  # selection in an item view changed  @select @row  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/QItemSelectionModel.html>
+view.selectionModel().currentChanged(cur, prev)  # current (focused) item changed  @cursor
+QTimer.timeout                      # timer fired  @timer
+QThread.started / QThread.finished  # thread started or ended  @thread
+QObject.destroyed                   # object is being deleted; use for cleanup  @cleanup @delete
+QWidget.customContextMenuRequested(QPoint)  # right-click when policy is CustomContextMenu  @rightclick @menu

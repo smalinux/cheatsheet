@@ -1,0 +1,57 @@
+title: qt layouts (pyside6)
+url:   https://doc.qt.io/qt-6/layout.html
+tags:  qt qt6 pyside pyside6 python layout box grid form splitter size stretch resize spacing margin
+
+; Python only (PySide6). A layout places and resizes the child widgets of one widget.
+
+## basic layouts
+QVBoxLayout(self)                   # stack widgets top to bottom; passing self installs it on the widget  @vertical @column  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QVBoxLayout.html>
+QHBoxLayout()                       # put widgets left to right  @horizontal @row  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QHBoxLayout.html>
+QGridLayout()                       # put widgets in rows and columns  @table @grid  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QGridLayout.html>
+QFormLayout()                       # two columns: label on the left, field on the right  @form @settings  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QFormLayout.html>
+QStackedLayout() / QStackedWidget()  # show one of several pages at a time (like tabs without tabs)  @pages @switch  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QStackedWidget.html>
+self.setLayout(layout)              # install a layout on a widget  @apply  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QWidget.html#PySide6.QtWidgets.QWidget.setLayout>
+    layout = QVBoxLayout(self)
+    row = QHBoxLayout()
+    row.addWidget(QLabel("Name:")); row.addWidget(self.edit)
+    layout.addLayout(row)
+    layout.addWidget(self.table)
+
+## adding things
+layout.addWidget(W)                 # add a widget; the layout reparents it, no parent needed  @add  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QBoxLayout.html#PySide6.QtWidgets.QBoxLayout.addWidget>
+layout.addWidget(W, STRETCH)        # add a widget with a stretch factor (share of extra space)  @grow  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QBoxLayout.html#PySide6.QtWidgets.QBoxLayout.addWidget>
+layout.addWidget(W, alignment=Qt.AlignmentFlag.AlignRight)  # add a widget aligned inside its cell  @align
+layout.addLayout(INNER)             # nest a layout inside another  @nest  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QBoxLayout.html#PySide6.QtWidgets.QBoxLayout.addLayout>
+layout.insertWidget(INDEX, W)       # add a widget at a position  @insert
+layout.addStretch()                 # add empty space that pushes widgets to one side  @spacer @push @center  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QBoxLayout.html#PySide6.QtWidgets.QBoxLayout.addStretch>
+layout.addSpacing(PX)               # add fixed empty space  @gap
+grid.addWidget(W, ROW, COL)         # put a widget in a grid cell  @cell  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QGridLayout.html#PySide6.QtWidgets.QGridLayout.addWidget>
+grid.addWidget(W, ROW, COL, ROWSPAN, COLSPAN)  # make a widget span several cells  @span @merge
+form.addRow("Label:", W)            # add a labeled row to a form  @field  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QFormLayout.html#PySide6.QtWidgets.QFormLayout.addRow>
+layout.removeWidget(W); W.deleteLater()  # take a widget out of a layout and delete it  @remove @delete
+while layout.count(): layout.takeAt(0).widget().deleteLater()  # empty a layout (check widget() is not None for nested layouts)  @clear
+
+## space and size
+layout.setContentsMargins(0, 0, 0, 0)  # remove the border space around a layout  @margin @padding @tight  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QLayout.html#PySide6.QtWidgets.QLayout.setContentsMargins>
+layout.setSpacing(PX)               # set the gap between widgets  @gap  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QLayout.html#PySide6.QtWidgets.QLayout.setSpacing>
+layout.setStretch(INDEX, N)         # change the stretch of an item already in a box layout  @grow
+grid.setColumnStretch(COL, N)       # let a grid column take extra space  @grow  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QGridLayout.html#PySide6.QtWidgets.QGridLayout.setColumnStretch>
+w.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Fixed)  # grow wide, keep fixed height  @expand @fill  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QSizePolicy.html>
+QSizePolicy.Policy.Expanding / Preferred / Fixed / Minimum / Maximum  # how a widget reacts to more or less space  @policy
+w.setFixedWidth(PX) / w.setFixedSize(W, H)  # lock a widget's size  @size
+w.setMinimumWidth(PX) / w.setMaximumHeight(PX)  # limit how small or big a widget can get  @min @max
+def sizeHint(self): return QSize(W, H)  # tell layouts the preferred size of your custom widget  @custom  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QWidget.html#PySide6.QtWidgets.QWidget.sizeHint>
+w.updateGeometry()                  # tell the layout your sizeHint or size policy changed  @relayout
+widget is invisible in QScrollArea  # set the layout on the inner widget before scroll.setWidget(inner)  @gotcha @missing  <https://doc.qt.io/qt-6/layout.html#layout-issues>
+scroll.setWidgetResizable(True)     # make the inner widget of a QScrollArea fill the area  @scroll  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QScrollArea.html>
+doc.qt.io/qt-6/layout.html          # read how layouts give out space (size hints, policies, stretch)  @guide  <https://doc.qt.io/qt-6/layout.html>
+
+## containers
+QSplitter(Qt.Orientation.Horizontal)  # put widgets side by side with a draggable divider  @divider @resize @pane  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QSplitter.html>
+splitter.addWidget(W)               # add a widget to a splitter  @add
+splitter.setSizes([200, 600])       # set the initial size of each splitter part  @width
+splitter.setStretchFactor(INDEX, N)  # choose which splitter part grows on resize  @grow
+QTabWidget().addTab(W, "TITLE")     # put widgets in tabs  @tabs  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QTabWidget.html>
+QGroupBox("TITLE")                  # draw a titled frame around a group of widgets; give it its own layout  @frame @section  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QGroupBox.html>
+QScrollArea()                       # make a widget scrollable when it is bigger than the space  @scroll  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QScrollArea.html>
+QFrame(frameShape=QFrame.Shape.HLine)  # draw a horizontal separator line  @separator @line  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QFrame.html>

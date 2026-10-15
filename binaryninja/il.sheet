@@ -1,111 +1,176 @@
-title: binary ninja IL (LLIL MLIL HLIL)
-url:   https://docs.binary.ninja/dev/bnil-overview.html
-tags:  binaryninja binja bn bnil il llil mlil hlil ssa intermediate-language decompiler dataflow python api
+title: binary ninja il (llil mlil hlil)
+url:   https://api.binary.ninja/binaryninja.mediumlevelil-module.html
+tags:  binaryninja binja bn python api il bnil llil mlil hlil ssa intermediate-language decompiler dataflow
 
-; il = an IL function (f.llil / f.mlil / f.hlil), i = an IL instruction.
-; LLIL = registers and flags, MLIL = variables and typed calls, HLIL = C-like AST.
-; Most lines work at all three levels, the link shows one of them.
+; i = an IL instruction (any level), il = an IL function. UPPERCASE words are placeholders.
+; Guide: https://docs.binary.ninja/dev/bnil-overview.html
 
-## get il
-f.llil, f.mlil, f.hlil        # get the IL function of a Function at each level  @lowlevelil @mediumlevelil @highlevelil  <https://api.binary.ninja/binaryninja.function-module.html#binaryninja.function.Function.mlil>
-il.instructions               # iterate the top-level instructions  @loop @walk  <https://api.binary.ninja/binaryninja.mediumlevelil-module.html#binaryninja.mediumlevelil.MediumLevelILFunction.instructions>
-[i for bb in il for i in bb]  # list all instructions by walking IL blocks  @loop @cfg  <https://api.binary.ninja/binaryninja.mediumlevelil-module.html#binaryninja.mediumlevelil.MediumLevelILBasicBlock>
-il.basic_blocks               # list IL basic blocks  <https://api.binary.ninja/binaryninja.mediumlevelil-module.html#binaryninja.mediumlevelil.MediumLevelILFunction.basic_blocks>
-il[INDEX]                     # get an instruction by its instruction index  @index  <https://api.binary.ninja/binaryninja.mediumlevelil-module.html#binaryninja.mediumlevelil.MediumLevelILFunction>
-il.get_expr(EXPR_INDEX)       # get an expression by its expression index  <https://api.binary.ninja/binaryninja.mediumlevelil-module.html#binaryninja.mediumlevelil.MediumLevelILFunction.get_expr>
-il.source_function            # get the Function that owns this IL  @owner  <https://api.binary.ninja/binaryninja.mediumlevelil-module.html#binaryninja.mediumlevelil.MediumLevelILFunction.source_function>
-il.ssa_form                   # get the SSA version of the IL function  @ssa  <https://api.binary.ninja/binaryninja.mediumlevelil-module.html#binaryninja.mediumlevelil.MediumLevelILFunction.ssa_form>
-il.non_ssa_form               # go back from SSA to the normal IL function  <https://api.binary.ninja/binaryninja.mediumlevelil-module.html#binaryninja.mediumlevelil.MediumLevelILFunction.non_ssa_form>
-il.root                       # get the top node of the HLIL tree  @ast  <https://api.binary.ninja/binaryninja.highlevelil-module.html#binaryninja.highlevelil.HighLevelILFunction.root>
-f.get_llil_at(ADDR)           # get the LLIL instruction at a code address  <https://api.binary.ninja/binaryninja.function-module.html#binaryninja.function.Function.get_llil_at>
-ref.mlil                      # get the MLIL instruction at an xref (from bv.get_code_refs)  @xrefs  <https://api.binary.ninja/binaryninja.binaryview-module.html#binaryninja.binaryview.ReferenceSource.mlil>
+## get il functions
+f.llil / f.mlil / f.hlil     # get the Low, Medium or High Level IL of a function  @bnil  <https://api.binary.ninja/binaryninja.function-module.html#binaryninja.function.Function.hlil>
+f.lifted_il                  # get the lifted IL (LLIL before flag and stack cleanup)  @lift @raw  <https://api.binary.ninja/binaryninja.function-module.html#binaryninja.function.Function.lifted_il>
+f.mmlil                      # get the mapped MLIL (keeps stores that MLIL drops)  <https://api.binary.ninja/binaryninja.function-module.html#binaryninja.function.Function.mmlil>
+il.ssa_form                  # get the SSA form of an IL function  <https://api.binary.ninja/binaryninja.mediumlevelil-module.html#binaryninja.mediumlevelil.MediumLevelILFunction.ssa_form>
+il.non_ssa_form              # get the normal form back from an SSA IL function  <https://api.binary.ninja/binaryninja.mediumlevelil-module.html#binaryninja.mediumlevelil.MediumLevelILFunction.non_ssa_form>
+il.source_function           # get the Function an IL function belongs to  @owner  <https://api.binary.ninja/binaryninja.mediumlevelil-module.html#binaryninja.mediumlevelil.MediumLevelILFunction.source_function>
+il.llil / il.mlil / il.hlil  # move between IL levels of the same function  @map @level  <https://api.binary.ninja/binaryninja.mediumlevelil-module.html#binaryninja.mediumlevelil.MediumLevelILFunction.hlil>
+il.view / il.arch            # get the BinaryView and Architecture of an IL function  @bv  <https://api.binary.ninja/binaryninja.mediumlevelil-module.html#binaryninja.mediumlevelil.MediumLevelILFunction.view>
+str(f.hlil)                  # print the whole decompiled function  @decompile @text  <https://api.binary.ninja/binaryninja.highlevelil-module.html#binaryninja.highlevelil.HighLevelILFunction>
+f.hlil.root                  # get the top HLIL instruction (the function body block)  @ast @tree  <https://api.binary.ninja/binaryninja.highlevelil-module.html#binaryninja.highlevelil.HighLevelILFunction.root>
 
-## instruction fields
-i.operation          # get the opcode enum, e.g. MediumLevelILOperation.MLIL_CALL  @opcode @kind  <https://api.binary.ninja/binaryninja.mediumlevelil-module.html#binaryninja.mediumlevelil.MediumLevelILInstruction.operation>
-i.address            # get the native address the instruction came from  @addr  <https://api.binary.ninja/binaryninja.mediumlevelil-module.html#binaryninja.mediumlevelil.MediumLevelILInstruction.address>
-i.instr_index        # get the instruction index in its IL function  @index  <https://api.binary.ninja/binaryninja.mediumlevelil-module.html#binaryninja.mediumlevelil.MediumLevelILInstruction>
-i.expr_index         # get the expression index  <https://api.binary.ninja/binaryninja.mediumlevelil-module.html#binaryninja.mediumlevelil.MediumLevelILInstruction>
-i.size               # get the operation size in bytes  @width  <https://api.binary.ninja/binaryninja.mediumlevelil-module.html#binaryninja.mediumlevelil.MediumLevelILInstruction.size>
-i.operands           # list the operands (sub-expressions, vars, constants)  <https://api.binary.ninja/binaryninja.mediumlevelil-module.html#binaryninja.mediumlevelil.MediumLevelILInstruction.operands>
-i.detailed_operands  # list (name, value, type) for each operand, good for learning  @debug @explore  <https://api.binary.ninja/binaryninja.mediumlevelil-module.html#binaryninja.mediumlevelil.MediumLevelILInstruction.detailed_operands>
-i.tokens             # get the text tokens of the instruction  @print @render  <https://api.binary.ninja/binaryninja.mediumlevelil-module.html#binaryninja.mediumlevelil.MediumLevelILInstruction.tokens>
-str(i)               # get the instruction as text  @print  <https://api.binary.ninja/binaryninja.mediumlevelil-module.html#binaryninja.mediumlevelil.MediumLevelILInstruction>
+## walk instructions
+il.instructions           # iterate every top-level IL instruction of a function  @loop  <https://api.binary.ninja/binaryninja.mediumlevelil-module.html#binaryninja.mediumlevelil.MediumLevelILFunction.instructions>
+for bb in il:             # iterate the IL basic blocks of a function  @loop  <https://api.binary.ninja/binaryninja.mediumlevelil-module.html#binaryninja.mediumlevelil.MediumLevelILFunction>
+for i in bb:              # iterate the instructions of an IL basic block  @loop  <https://api.binary.ninja/binaryninja.mediumlevelil-module.html#binaryninja.mediumlevelil.MediumLevelILBasicBlock>
+il[N]                     # get instruction number N (an instruction index)  <https://api.binary.ninja/binaryninja.mediumlevelil-module.html#binaryninja.mediumlevelil.MediumLevelILFunction>
+len(il)                   # count the top-level instructions  <https://api.binary.ninja/binaryninja.mediumlevelil-module.html#binaryninja.mediumlevelil.MediumLevelILFunction>
+bv.hlil_instructions      # iterate every HLIL instruction in the whole binary  @all @global  <https://api.binary.ninja/binaryninja.binaryview-module.html#binaryninja.binaryview.BinaryView.hlil_instructions>
+il.traverse(CB)           # walk every instruction and sub-expression, yield what CB returns (non None)  @find  <https://api.binary.ninja/binaryninja.mediumlevelil-module.html#binaryninja.mediumlevelil.MediumLevelILFunction.traverse>
+    def find_consts(i):
+        if isinstance(i, Constant):
+            return i.constant
+    print(list(current_mlil.traverse(find_consts)))
+i.traverse(CB, ARGS...)   # walk one instruction's expression tree depth-first, yield CB results  @recursive  <https://api.binary.ninja/binaryninja.mediumlevelil-module.html#binaryninja.mediumlevelil.MediumLevelILInstruction.traverse>
+i.visit(CB)               # call CB(name, inst, type, parent) on each sub-instruction; return False to stop going deeper  @walk  <https://api.binary.ninja/binaryninja.mediumlevelil-module.html#binaryninja.mediumlevelil.MediumLevelILInstruction.visit>
+i.visit_operands(CB)      # call CB on every leaf operand (vars, constants...)  @walk  <https://api.binary.ninja/binaryninja.mediumlevelil-module.html#binaryninja.mediumlevelil.MediumLevelILInstruction.visit_operands>
+i.prefix_operands / i.postfix_operands  # list all operands of the tree in prefix / postfix order  @flatten  <https://api.binary.ninja/binaryninja.mediumlevelil-module.html#binaryninja.mediumlevelil.MediumLevelILInstruction.prefix_operands>
+il.get_basic_block_at(N)  # get the IL block that holds instruction N  <https://api.binary.ninja/binaryninja.mediumlevelil-module.html#binaryninja.mediumlevelil.MediumLevelILFunction.get_basic_block_at>
+il.get_expr(EXPR_INDEX)   # get an IL expression by expression index  <https://api.binary.ninja/binaryninja.mediumlevelil-module.html#binaryninja.mediumlevelil.MediumLevelILFunction.get_expr>
+il.get_expr_count()       # count all expressions in the IL function  <https://api.binary.ninja/binaryninja.mediumlevelil-module.html#binaryninja.mediumlevelil.MediumLevelILFunction.get_expr_count>
+
+## instruction basics
+i.operation          # get the operation enum, e.g. MediumLevelILOperation.MLIL_CALL  @op @opcode @kind  <https://api.binary.ninja/binaryninja.mediumlevelil-module.html#binaryninja.mediumlevelil.MediumLevelILInstruction.operation>
+i.operation.name     # get the operation name as text, e.g. "HLIL_ASSIGN"  @op  <https://api.binary.ninja/binaryninja.mediumlevelil-module.html#binaryninja.mediumlevelil.MediumLevelILInstruction.operation>
+i.address            # get the assembly address this IL came from (approximate)  @addr @location  <https://api.binary.ninja/binaryninja.mediumlevelil-module.html#binaryninja.mediumlevelil.MediumLevelILInstruction.address>
+i.size               # get the result size in bytes  @width  <https://api.binary.ninja/binaryninja.mediumlevelil-module.html#binaryninja.mediumlevelil.MediumLevelILInstruction.size>
+i.instr_index        # get the index of the top-level instruction that holds this expression  <https://api.binary.ninja/binaryninja.mediumlevelil-module.html#binaryninja.mediumlevelil.MediumLevelILInstruction>
+i.expr_index         # get the expression index inside the IL function  <https://api.binary.ninja/binaryninja.mediumlevelil-module.html#binaryninja.mediumlevelil.MediumLevelILInstruction>
+i.function           # get the IL function that owns the instruction  @owner  <https://api.binary.ninja/binaryninja.mediumlevelil-module.html#binaryninja.mediumlevelil.MediumLevelILInstruction>
 i.il_basic_block     # get the IL block that holds the instruction  <https://api.binary.ninja/binaryninja.mediumlevelil-module.html#binaryninja.mediumlevelil.MediumLevelILInstruction.il_basic_block>
-i.function           # get the IL function of the instruction  <https://api.binary.ninja/binaryninja.mediumlevelil-module.html#binaryninja.mediumlevelil.MediumLevelILInstruction>
-i.expr_type          # get the type of an MLIL or HLIL expression  @typeof  <https://api.binary.ninja/binaryninja.mediumlevelil-module.html#binaryninja.mediumlevelil.MediumLevelILInstruction.expr_type>
-i.parent             # get the parent node in the HLIL tree  @ast @up  <https://api.binary.ninja/binaryninja.highlevelil-module.html#binaryninja.highlevelil.HighLevelILInstruction.parent>
-i.lines              # get the HLIL lines for this node  @print @decompile  <https://api.binary.ninja/binaryninja.highlevelil-module.html#binaryninja.highlevelil.HighLevelILInstruction.lines>
+i.operands           # list the operands (sub-expressions, vars, ints...)  @args @children  <https://api.binary.ninja/binaryninja.mediumlevelil-module.html#binaryninja.mediumlevelil.MediumLevelILInstruction.operands>
+i.detailed_operands  # list (name, value, type) for each operand  @args @names @debug  <https://api.binary.ninja/binaryninja.mediumlevelil-module.html#binaryninja.mediumlevelil.MediumLevelILInstruction.detailed_operands>
+i.tokens             # get the instruction as text tokens  @render  <https://api.binary.ninja/binaryninja.mediumlevelil-module.html#binaryninja.mediumlevelil.MediumLevelILInstruction.tokens>
+str(i)               # get the instruction as text  @render @print  <https://api.binary.ninja/binaryninja.mediumlevelil-module.html#binaryninja.mediumlevelil.MediumLevelILInstruction>
+i.lines              # get the HLIL text lines of an instruction (HLIL only)  @render  <https://api.binary.ninja/binaryninja.highlevelil-module.html#binaryninja.highlevelil.HighLevelILInstruction.lines>
+i.expr_type          # get the Type of an MLIL/HLIL expression  <https://api.binary.ninja/binaryninja.mediumlevelil-module.html#binaryninja.mediumlevelil.MediumLevelILInstruction.expr_type>
+i.attributes         # get the set of ILInstructionAttribute flags on an instruction  <https://api.binary.ninja/binaryninja.mediumlevelil-module.html#binaryninja.mediumlevelil.MediumLevelILInstruction.attributes>
+i.parent             # get the parent expression in the HLIL tree  @ast @up  <https://api.binary.ninja/binaryninja.highlevelil-module.html#binaryninja.highlevelil.HighLevelILInstruction.parent>
+i.instr              # get the HLIL statement that holds an expression  @ast  <https://api.binary.ninja/binaryninja.highlevelil-module.html#binaryninja.highlevelil.HighLevelILInstruction.instr>
+i.has_side_effects   # check whether an HLIL expression has side effects  @pure  <https://api.binary.ninja/binaryninja.highlevelil-module.html#binaryninja.highlevelil.HighLevelILInstruction.has_side_effects>
+MediumLevelILInstruction.show_mlil_hierarchy()  # open a graph of all MLIL classes (also show_llil_ / show_hlil_hierarchy)  @learn  <https://api.binary.ninja/binaryninja.mediumlevelil-module.html#binaryninja.mediumlevelil.MediumLevelILInstruction.show_mlil_hierarchy>
 
-## match by class
-isinstance(i, MediumLevelILCall)          # test for a call; i.dest target, i.params args, i.output results  @call @args  <https://api.binary.ninja/binaryninja.mediumlevelil-module.html#binaryninja.mediumlevelil.MediumLevelILCall>
-isinstance(i, HighLevelILCall)            # test for an HLIL call; i.dest is the target, i.params the args  @call @args  <https://api.binary.ninja/binaryninja.highlevelil-module.html#binaryninja.highlevelil.HighLevelILCall>
-isinstance(i, MediumLevelILSetVar)        # test for "var = expr"; i.dest is the Variable, i.src the expression  @assign  <https://api.binary.ninja/binaryninja.mediumlevelil-module.html#binaryninja.mediumlevelil.MediumLevelILSetVar>
-isinstance(i, HighLevelILAssign)          # test for an HLIL assignment; i.dest and i.src  @assign  <https://api.binary.ninja/binaryninja.highlevelil-module.html#binaryninja.highlevelil.HighLevelILAssign>
-isinstance(i, HighLevelILVarInit)         # test for an HLIL declaration with a value "int x = ..."  @assign @declare  <https://api.binary.ninja/binaryninja.highlevelil-module.html#binaryninja.highlevelil.HighLevelILVarInit>
-isinstance(i, MediumLevelILIf)            # test for a branch; i.condition, i.true and i.false indexes  @branch @condition  <https://api.binary.ninja/binaryninja.mediumlevelil-module.html#binaryninja.mediumlevelil.MediumLevelILIf>
-isinstance(i, HighLevelILIf)              # test for an HLIL if; i.condition, i.true and i.false bodies  @branch @condition  <https://api.binary.ninja/binaryninja.highlevelil-module.html#binaryninja.highlevelil.HighLevelILIf>
-isinstance(i, MediumLevelILStore)         # test for a memory write "[dest] = src"  @write @pointer  <https://api.binary.ninja/binaryninja.mediumlevelil-module.html#binaryninja.mediumlevelil.MediumLevelILStore>
-isinstance(i, MediumLevelILLoad)          # test for a memory read "[src]"  @read @deref  <https://api.binary.ninja/binaryninja.mediumlevelil-module.html#binaryninja.mediumlevelil.MediumLevelILLoad>
-isinstance(i, Constant)                   # test for any constant at any level; i.constant is the value  @immediate @number  <https://api.binary.ninja/binaryninja.commonil-module.html#binaryninja.commonil.Constant>
-isinstance(i, Call)                       # test for any call at any level (Call, Tailcall, Syscall)  @call  <https://api.binary.ninja/binaryninja.commonil-module.html#binaryninja.commonil.Call>
-isinstance(i, Return)                     # test for any return instruction  @ret  <https://api.binary.ninja/binaryninja.commonil-module.html#binaryninja.commonil.Return>
-isinstance(i, Load), isinstance(i, Store)  # test for memory access at any level  @memory  <https://api.binary.ninja/binaryninja.commonil-module.html#binaryninja.commonil.Load>
-isinstance(i, BinaryOperation)            # test for any two-operand op; i.left and i.right  @arithmetic @add @xor  <https://api.binary.ninja/binaryninja.commonil-module.html#binaryninja.commonil.BinaryOperation>
-isinstance(i, Comparison)                 # test for a compare (==, <, ...); i.left and i.right  @cmp  <https://api.binary.ninja/binaryninja.commonil-module.html#binaryninja.commonil.Comparison>
-isinstance(i, Phi)                        # test for an SSA phi node  @ssa  <https://api.binary.ninja/binaryninja.commonil-module.html#binaryninja.commonil.Phi>
-i.operation == MediumLevelILOperation.MLIL_CALL  # test the opcode enum instead of the class  @opcode  <https://api.binary.ninja/binaryninja.enums-module.html#binaryninja.enums.MediumLevelILOperation>
-match i: case MediumLevelILCall(dest=MediumLevelILConstPtr(constant=c)):  # match a direct call to a known address  @match @call  <https://api.binary.ninja/binaryninja.mediumlevelil-module.html#binaryninja.mediumlevelil.MediumLevelILConstPtr>
+## match by kind
+isinstance(i, Call)               # match any call at any level (commonil class)  @filter  <https://api.binary.ninja/binaryninja.commonil-module.html#binaryninja.commonil.Call>
+isinstance(i, Localcall) / isinstance(i, Tailcall) / isinstance(i, Syscall)  # match normal calls, tail calls or syscalls  @call  <https://api.binary.ninja/binaryninja.commonil-module.html#binaryninja.commonil.Localcall>
+isinstance(i, Constant)           # match any constant expression  @const @immediate  <https://api.binary.ninja/binaryninja.commonil-module.html#binaryninja.commonil.Constant>
+isinstance(i, BinaryOperation) / isinstance(i, UnaryOperation)  # match two-operand or one-operand math  @arith  <https://api.binary.ninja/binaryninja.commonil-module.html#binaryninja.commonil.BinaryOperation>
+isinstance(i, Comparison)         # match compare expressions (==, <, ...)  @cmp @condition  <https://api.binary.ninja/binaryninja.commonil-module.html#binaryninja.commonil.Comparison>
+isinstance(i, Load) / isinstance(i, Store)  # match memory reads / writes  @deref  <https://api.binary.ninja/binaryninja.commonil-module.html#binaryninja.commonil.Load>
+isinstance(i, SetVar)             # match variable assignments  @assign  <https://api.binary.ninja/binaryninja.commonil-module.html#binaryninja.commonil.SetVar>
+isinstance(i, Return) / isinstance(i, Terminal)  # match returns / block-ending instructions  @ret  <https://api.binary.ninja/binaryninja.commonil-module.html#binaryninja.commonil.Return>
+isinstance(i, ControlFlow) / isinstance(i, Loop)  # match branches, ifs, loops  @flow  <https://api.binary.ninja/binaryninja.commonil-module.html#binaryninja.commonil.ControlFlow>
+isinstance(i, Phi)                # match SSA phi nodes  <https://api.binary.ninja/binaryninja.commonil-module.html#binaryninja.commonil.Phi>
+isinstance(i, Intrinsic)          # match CPU intrinsics  @builtin  <https://api.binary.ninja/binaryninja.commonil-module.html#binaryninja.commonil.Intrinsic>
+isinstance(i, FloatingPoint)      # match float operations  <https://api.binary.ninja/binaryninja.commonil-module.html#binaryninja.commonil.FloatingPoint>
+isinstance(i, MediumLevelILCall)  # match one exact operation class  @call @mlil  <https://api.binary.ninja/binaryninja.mediumlevelil-module.html#binaryninja.mediumlevelil.MediumLevelILCall>
+i.operation == HighLevelILOperation.HLIL_CALL  # match one exact operation by enum  @op  <https://api.binary.ninja/binaryninja.highlevelil-module.html#binaryninja.highlevelil.HighLevelILInstruction.operation>
+match i: case HighLevelILCall(dest=HighLevelILConstPtr(constant=ADDR)):  # pattern-match IL with keyword patterns (Python 3.10+)  <https://api.binary.ninja/binaryninja.highlevelil-module.html#binaryninja.highlevelil.HighLevelILCall>
+    match i:
+        case HighLevelILCall(dest=HighLevelILConstPtr(constant=c), params=[_, n, *_]):
+            print(hex(c), n)
+        case HighLevelILAssign(dest=HighLevelILVar(var=v)):
+            print("write", v)
 
-## walk sub-expressions
-il.traverse(FN)      # call FN(expr) on every expression, yield the non-None results  @visit @walk @search  <https://api.binary.ninja/binaryninja.mediumlevelil-module.html#binaryninja.mediumlevelil.MediumLevelILFunction.traverse>
-    def find_calls(e):
-        if isinstance(e, HighLevelILCall): return e
-    for c in f.hlil.traverse(find_calls): print(hex(c.address), c)
-i.traverse(FN, ARG)  # walk one instruction's tree, extra args go to FN(expr, ARG)  @visit @walk  <https://api.binary.ninja/binaryninja.highlevelil-module.html#binaryninja.highlevelil.HighLevelILInstruction.traverse>
-il.visit(FN)         # call FN(name, expr, type, parent) on each node, return False to stop descending  @walk  <https://api.binary.ninja/binaryninja.mediumlevelil-module.html#binaryninja.mediumlevelil.MediumLevelILFunction.visit>
-i.prefix_operands    # list the instruction tree flattened in prefix order  <https://api.binary.ninja/binaryninja.mediumlevelil-module.html#binaryninja.mediumlevelil.MediumLevelILInstruction.prefix_operands>
-i.postfix_operands   # list the instruction tree flattened in postfix order  <https://api.binary.ninja/binaryninja.mediumlevelil-module.html#binaryninja.mediumlevelil.MediumLevelILInstruction.postfix_operands>
+## common operands
+call.dest / call.params               # get a call's target and argument list  @args @arguments  <https://api.binary.ninja/binaryninja.mediumlevelil-module.html#binaryninja.mediumlevelil.MediumLevelILCall>
+call.output                           # list the variables a MLIL call writes  @return  <https://api.binary.ninja/binaryninja.mediumlevelil-module.html#binaryninja.mediumlevelil.MediumLevelILCall.output>
+set_var.dest / set_var.src            # get the target variable and value of an MLIL assignment  @assign  <https://api.binary.ninja/binaryninja.mediumlevelil-module.html#binaryninja.mediumlevelil.MediumLevelILSetVar>
+assign.dest / assign.src              # get both sides of an HLIL assignment (also HLIL_VAR_INIT)  <https://api.binary.ninja/binaryninja.highlevelil-module.html#binaryninja.highlevelil.HighLevelILAssign>
+if_.condition / if_.true / if_.false  # get an if's condition and both targets/bodies  @branch  <https://api.binary.ninja/binaryninja.mediumlevelil-module.html#binaryninja.mediumlevelil.MediumLevelILIf>
+load.src                              # get the address expression of a memory read  @deref  <https://api.binary.ninja/binaryninja.mediumlevelil-module.html#binaryninja.mediumlevelil.MediumLevelILLoad>
+store.dest / store.src                # get the address and value of a memory write  <https://api.binary.ninja/binaryninja.mediumlevelil-module.html#binaryninja.mediumlevelil.MediumLevelILStore>
+const.constant                        # get the integer of a constant or constant pointer  @immediate @value  <https://api.binary.ninja/binaryninja.mediumlevelil-module.html#binaryninja.mediumlevelil.MediumLevelILConstPtr>
+const_ptr.string                      # get (text, StringType) if a constant pointer points at a string  <https://api.binary.ninja/binaryninja.mediumlevelil-module.html#binaryninja.mediumlevelil.MediumLevelILConstPtr>
+var_expr.var / var_expr.src           # get the Variable read by a var expression (src on MLIL, var on HLIL)  <https://api.binary.ninja/binaryninja.mediumlevelil-module.html#binaryninja.mediumlevelil.MediumLevelILVar>
+binop.left / binop.right              # get both sides of a binary operation  @math @operands  <https://api.binary.ninja/binaryninja.commonil-module.html#binaryninja.commonil.BinaryOperation>
+unop.src                              # get the operand of a unary operation (neg, not, zx, sx, deref...)  @math  <https://api.binary.ninja/binaryninja.commonil-module.html#binaryninja.commonil.UnaryOperation>
+ret.src                               # list the returned values  @return  <https://api.binary.ninja/binaryninja.mediumlevelil-module.html#binaryninja.mediumlevelil.MediumLevelILRet>
+jump_to.dest / jump_to.targets        # get a switch jump's address and dict of case -> target  @jumptable  <https://api.binary.ninja/binaryninja.mediumlevelil-module.html#binaryninja.mediumlevelil.MediumLevelILJumpTo>
+deref_field.src / .offset / .member_index  # get the base, byte offset and member of HLIL p->field  @struct  <https://api.binary.ninja/binaryninja.highlevelil-module.html#binaryninja.highlevelil.HighLevelILDerefField>
+struct_field.src / .offset            # get the base and offset of HLIL s.field  @member  <https://api.binary.ninja/binaryninja.highlevelil-module.html#binaryninja.highlevelil.HighLevelILStructField>
+array_index.src / array_index.index   # get the array and index of HLIL a[i]  <https://api.binary.ninja/binaryninja.highlevelil-module.html#binaryninja.highlevelil.HighLevelILArrayIndex>
+loop.condition / loop.body            # get a while/do-while loop's test and body  <https://api.binary.ninja/binaryninja.highlevelil-module.html#binaryninja.highlevelil.HighLevelILWhile>
+for_.init / .condition / .update / .body  # get the parts of an HLIL for loop  <https://api.binary.ninja/binaryninja.highlevelil-module.html#binaryninja.highlevelil.HighLevelILFor>
+switch.condition / switch.cases / switch.default  # get the parts of an HLIL switch  @case  <https://api.binary.ninja/binaryninja.highlevelil-module.html#binaryninja.highlevelil.HighLevelILSwitch>
+addr_of.src                           # get the variable whose address is taken (&var)  @pointer  <https://api.binary.ninja/binaryninja.mediumlevelil-module.html#binaryninja.mediumlevelil.MediumLevelILAddressOf>
+intrinsic.intrinsic / intrinsic.params  # get an intrinsic's ILIntrinsic and its arguments  <https://api.binary.ninja/binaryninja.mediumlevelil-module.html#binaryninja.mediumlevelil.MediumLevelILIntrinsic>
+llil_set_reg.dest / llil_set_reg.src  # get the register and value of an LLIL register write  <https://api.binary.ninja/binaryninja.lowlevelil-module.html#binaryninja.lowlevelil.LowLevelILSetReg>
+llil_reg.src.name                     # get the register name read by LLIL_REG  <https://api.binary.ninja/binaryninja.lowlevelil-module.html#binaryninja.lowlevelil.ILRegister.name>
 
-## move between levels
-i.llil, i.mlil, i.hlil         # get the matching instruction at another level, or None  @map @convert  <https://api.binary.ninja/binaryninja.mediumlevelil-module.html#binaryninja.mediumlevelil.MediumLevelILInstruction.hlil>
-i.llils, i.mlils, i.hlils      # list all matching instructions at another level  @map  <https://api.binary.ninja/binaryninja.mediumlevelil-module.html#binaryninja.mediumlevelil.MediumLevelILInstruction.hlils>
-i.ssa_form                     # get the SSA version of an instruction  @ssa  <https://api.binary.ninja/binaryninja.mediumlevelil-module.html#binaryninja.mediumlevelil.MediumLevelILInstruction.ssa_form>
-i.non_ssa_form                 # get the normal version of an SSA instruction  <https://api.binary.ninja/binaryninja.mediumlevelil-module.html#binaryninja.mediumlevelil.MediumLevelILInstruction.non_ssa_form>
-f.llil.mapped_medium_level_il  # get MLIL that keeps a 1:1 map to LLIL  @mmlil  <https://api.binary.ninja/binaryninja.lowlevelil-module.html#binaryninja.lowlevelil.LowLevelILFunction.mapped_medium_level_il>
+## variables in il
+i.vars_read / i.vars_written          # list variables an instruction reads / writes  @uses @defs @dataflow  <https://api.binary.ninja/binaryninja.mediumlevelil-module.html#binaryninja.mediumlevelil.MediumLevelILInstruction.vars_read>
+i.vars_address_taken                  # list variables whose address the instruction takes  @alias  <https://api.binary.ninja/binaryninja.mediumlevelil-module.html#binaryninja.mediumlevelil.MediumLevelILInstruction.vars_address_taken>
+il.vars                               # list variables used in this IL function  @locals  <https://api.binary.ninja/binaryninja.mediumlevelil-module.html#binaryninja.mediumlevelil.MediumLevelILFunction.vars>
+il.aliased_vars                       # list variables whose address is taken and used elsewhere  @alias @pointer  <https://api.binary.ninja/binaryninja.mediumlevelil-module.html#binaryninja.mediumlevelil.MediumLevelILFunction.aliased_vars>
+il.get_var_definitions(VAR)           # list instructions that assign a variable  @defs @dataflow  <https://api.binary.ninja/binaryninja.mediumlevelil-module.html#binaryninja.mediumlevelil.MediumLevelILFunction.get_var_definitions>
+il.get_var_uses(VAR)                  # list instructions that read a variable  @dataflow  <https://api.binary.ninja/binaryninja.mediumlevelil-module.html#binaryninja.mediumlevelil.MediumLevelILFunction.get_var_uses>
+il.is_var_live_at(VAR, INSTR)         # check whether a variable is live at an instruction  @liveness  <https://api.binary.ninja/binaryninja.mediumlevelil-module.html#binaryninja.mediumlevelil.MediumLevelILFunction.is_var_live_at>
+il.get_live_instructions_for_var(VAR)  # list instructions where a variable is live  @liveness  <https://api.binary.ninja/binaryninja.mediumlevelil-module.html#binaryninja.mediumlevelil.MediumLevelILFunction.get_live_instructions_for_var>
+i.get_var_for_reg("rdi")              # get the MLIL variable that holds a register at an instruction  @map  <https://api.binary.ninja/binaryninja.mediumlevelil-module.html#binaryninja.mediumlevelil.MediumLevelILInstruction.get_var_for_reg>
+i.get_var_for_stack_location(OFFSET)  # get the MLIL variable at a stack offset at an instruction  @map  <https://api.binary.ninja/binaryninja.mediumlevelil-module.html#binaryninja.mediumlevelil.MediumLevelILInstruction.get_var_for_stack_location>
 
-## variables and def-use
-i.vars_read                         # list variables an MLIL or HLIL instruction reads  @use  <https://api.binary.ninja/binaryninja.mediumlevelil-module.html#binaryninja.mediumlevelil.MediumLevelILInstruction.vars_read>
-i.vars_written                      # list variables an instruction writes  @def @assign  <https://api.binary.ninja/binaryninja.mediumlevelil-module.html#binaryninja.mediumlevelil.MediumLevelILInstruction.vars_written>
-il.vars                             # list variables used in the IL function  @locals  <https://api.binary.ninja/binaryninja.mediumlevelil-module.html#binaryninja.mediumlevelil.MediumLevelILFunction.vars>
-il.get_var_definitions(VAR)         # list instructions that assign VAR  @def @defs  <https://api.binary.ninja/binaryninja.mediumlevelil-module.html#binaryninja.mediumlevelil.MediumLevelILFunction.get_var_definitions>
-il.get_var_uses(VAR)                # list instructions that read VAR  @use @uses  <https://api.binary.ninja/binaryninja.mediumlevelil-module.html#binaryninja.mediumlevelil.MediumLevelILFunction.get_var_uses>
-il.ssa_vars                         # list SSA variables (var + version)  @ssa  <https://api.binary.ninja/binaryninja.mediumlevelil-module.html#binaryninja.mediumlevelil.MediumLevelILFunction.ssa_vars>
-il.get_ssa_var_definition(SSA_VAR)  # get the one instruction that defines an SSA var  @ssa @def  <https://api.binary.ninja/binaryninja.mediumlevelil-module.html#binaryninja.mediumlevelil.MediumLevelILFunction.get_ssa_var_definition>
-il.get_ssa_var_uses(SSA_VAR)        # list instructions that use an SSA var  @ssa @use  <https://api.binary.ninja/binaryninja.mediumlevelil-module.html#binaryninja.mediumlevelil.MediumLevelILFunction.get_ssa_var_uses>
-il.get_ssa_var_value(SSA_VAR)       # get the dataflow value of an SSA var  @ssa @constant  <https://api.binary.ninja/binaryninja.mediumlevelil-module.html#binaryninja.mediumlevelil.MediumLevelILFunction.get_ssa_var_value>
-SSAVariable(VAR, VERSION)           # make an SSA variable to look up  @ssa  <https://api.binary.ninja/binaryninja.mediumlevelil-module.html#binaryninja.mediumlevelil.SSAVariable>
-i.get_var_for_reg("rdi")            # get the MLIL variable that holds a register here  @register @map  <https://api.binary.ninja/binaryninja.mediumlevelil-module.html#binaryninja.mediumlevelil.MediumLevelILInstruction.get_var_for_reg>
-i.get_ssa_var_version(VAR)          # get the SSA version of VAR at this instruction  @ssa  <https://api.binary.ninja/binaryninja.mediumlevelil-module.html#binaryninja.mediumlevelil.MediumLevelILInstruction.get_ssa_var_version>
+## ssa
+il.ssa_form                           # get the SSA version of the IL  <https://api.binary.ninja/binaryninja.mediumlevelil-module.html#binaryninja.mediumlevelil.MediumLevelILFunction.ssa_form>
+i.ssa_form / i.non_ssa_form           # move one instruction into or out of SSA form  @map  <https://api.binary.ninja/binaryninja.mediumlevelil-module.html#binaryninja.mediumlevelil.MediumLevelILInstruction.ssa_form>
+ssa_var.var / ssa_var.version         # get the Variable and version of an SSAVariable  <https://api.binary.ninja/binaryninja.mediumlevelil-module.html#binaryninja.mediumlevelil.SSAVariable>
+il.ssa_vars                           # list SSAVariables of the function  <https://api.binary.ninja/binaryninja.mediumlevelil-module.html#binaryninja.mediumlevelil.MediumLevelILFunction.ssa_vars>
+il.ssa_form.get_ssa_var_definition(SSA_VAR)  # get the one instruction that defines an SSA variable  @def @source  <https://api.binary.ninja/binaryninja.mediumlevelil-module.html#binaryninja.mediumlevelil.MediumLevelILFunction.get_ssa_var_definition>
+il.ssa_form.get_ssa_var_uses(SSA_VAR)  # list instructions that use an SSA variable  @sink  <https://api.binary.ninja/binaryninja.mediumlevelil-module.html#binaryninja.mediumlevelil.MediumLevelILFunction.get_ssa_var_uses>
+ssa_var.def_site / ssa_var.use_sites  # get the definition / uses straight from an SSAVariable  <https://api.binary.ninja/binaryninja.mediumlevelil-module.html#binaryninja.mediumlevelil.SSAVariable.def_site>
+    arg = call.params[0].ssa_form            # <mlil: x0#3>
+    d = arg.function.get_ssa_var_definition(arg.src)
+    # if d is a phi (MediumLevelILVarPhi), follow each d.src version in a worklist
+il.get_ssa_var_value(SSA_VAR)         # get the RegisterValue analysis found for an SSA variable  <https://api.binary.ninja/binaryninja.mediumlevelil-module.html#binaryninja.mediumlevelil.MediumLevelILFunction.get_ssa_var_value>
+il.is_ssa_var_live(SSA_VAR)           # check whether an SSA variable is used at all  @dead  <https://api.binary.ninja/binaryninja.mediumlevelil-module.html#binaryninja.mediumlevelil.MediumLevelILFunction.is_ssa_var_live>
+i.ssa_memory_version                  # get the memory version at an SSA instruction  <https://api.binary.ninja/binaryninja.mediumlevelil-module.html#binaryninja.mediumlevelil.MediumLevelILInstruction.ssa_memory_version>
+il.get_ssa_memory_definition(VERSION)  # get the instruction that makes a memory version  <https://api.binary.ninja/binaryninja.mediumlevelil-module.html#binaryninja.mediumlevelil.MediumLevelILFunction.get_ssa_memory_definition>
+llil.ssa_form.get_ssa_reg_definition(SSA_REG)  # get the LLIL instruction that defines an SSA register  <https://api.binary.ninja/binaryninja.lowlevelil-module.html#binaryninja.lowlevelil.LowLevelILFunction.get_ssa_reg_definition>
+llil.ssa_form.get_ssa_reg_uses(SSA_REG)  # list LLIL instructions that use an SSA register  <https://api.binary.ninja/binaryninja.lowlevelil-module.html#binaryninja.lowlevelil.LowLevelILFunction.get_ssa_reg_uses>
+llil.ssa_form.get_ssa_flag_definition(SSA_FLAG)  # get the LLIL instruction that sets an SSA flag  @flags  <https://api.binary.ninja/binaryninja.lowlevelil-module.html#binaryninja.lowlevelil.LowLevelILFunction.get_ssa_flag_definition>
 
-## dataflow values
-i.value                             # get the known value of an expression (RegisterValue)  @constant @dataflow  <https://api.binary.ninja/binaryninja.mediumlevelil-module.html#binaryninja.mediumlevelil.MediumLevelILInstruction.value>
-i.value.type, i.value.value         # check value kind (ConstantValue, StackFrameOffset...) and the number  @constant  <https://api.binary.ninja/binaryninja.variable-module.html#binaryninja.variable.RegisterValue>
-i.possible_values                   # get the set or range of values an expression can have  @range @dataflow @switch  <https://api.binary.ninja/binaryninja.mediumlevelil-module.html#binaryninja.mediumlevelil.MediumLevelILInstruction.possible_values>
-i.get_reg_value("rax")              # get the known register value before this instruction  @register  <https://api.binary.ninja/binaryninja.mediumlevelil-module.html#binaryninja.mediumlevelil.MediumLevelILInstruction.get_reg_value>
-i.get_reg_value_after("rax")        # get the known register value after this instruction  @register  <https://api.binary.ninja/binaryninja.mediumlevelil-module.html#binaryninja.mediumlevelil.MediumLevelILInstruction.get_reg_value_after>
-i.get_stack_contents(OFFSET, SIZE)  # get the known stack value at an offset  @stack  <https://api.binary.ninja/binaryninja.mediumlevelil-module.html#binaryninja.mediumlevelil.MediumLevelILInstruction.get_stack_contents>
-i.branch_dependence                 # get which branches decide whether this instruction runs  @control-dependence  <https://api.binary.ninja/binaryninja.mediumlevelil-module.html#binaryninja.mediumlevelil.MediumLevelILInstruction.branch_dependence>
+## map between levels
+i.llil / i.mlil / i.hlil        # map an instruction to the closest one at another level (may be None)  @translate  <https://api.binary.ninja/binaryninja.mediumlevelil-module.html#binaryninja.mediumlevelil.MediumLevelILInstruction.hlil>
+i.llils / i.mlils / i.hlils     # list all instructions at another level that make up this one (more exact)  @map  <https://api.binary.ninja/binaryninja.highlevelil-module.html#binaryninja.highlevelil.HighLevelILInstruction.mlils>
+i.mmlil                         # map LLIL to the mapped MLIL  <https://api.binary.ninja/binaryninja.lowlevelil-module.html#binaryninja.lowlevelil.LowLevelILInstruction.mmlil>
+f.get_llil_at(ADDR).hlil        # find the HLIL for an assembly address  @lookup  <https://api.binary.ninja/binaryninja.function-module.html#binaryninja.function.Function.get_llil_at>
+f.get_llils_at(ADDR)            # list LLIL instructions for an address (one address can lift to many)  @lookup  <https://api.binary.ninja/binaryninja.function-module.html#binaryninja.function.Function.get_llils_at>
+llil.get_instructions_at(ADDR)  # list LLIL instruction indexes for an address  @lookup @index  <https://api.binary.ninja/binaryninja.lowlevelil-module.html#binaryninja.lowlevelil.LowLevelILFunction.get_instructions_at>
+il.get_instruction_start(ADDR)  # get the first IL instruction index for an address  @lookup  <https://api.binary.ninja/binaryninja.mediumlevelil-module.html#binaryninja.mediumlevelil.MediumLevelILFunction.get_instruction_start>
+mlil.get_low_level_il_instruction_index(N)  # map an MLIL instruction index to LLIL  <https://api.binary.ninja/binaryninja.mediumlevelil-module.html#binaryninja.mediumlevelil.MediumLevelILFunction.get_low_level_il_instruction_index>
+mlil.get_high_level_il_instruction_index(N)  # map an MLIL instruction index to HLIL  <https://api.binary.ninja/binaryninja.mediumlevelil-module.html#binaryninja.mediumlevelil.MediumLevelILFunction.get_high_level_il_instruction_index>
+ref.hlil                        # get the HLIL at a cross reference (ReferenceSource)  @xrefs  <https://api.binary.ninja/binaryninja.binaryview-module.html#binaryninja.binaryview.ReferenceSource.hlil>
+
+## values and dataflow
+i.value                             # get the RegisterValue analysis found for an expression  @constant @dataflow  <https://api.binary.ninja/binaryninja.mediumlevelil-module.html#binaryninja.mediumlevelil.MediumLevelILInstruction.value>
+i.value.type == RegisterValueType.ConstantValue  # check whether an expression is a known constant  <https://api.binary.ninja/binaryninja.variable-module.html#binaryninja.variable.RegisterValue>
+i.possible_values                   # get the PossibleValueSet (ranges, sets, tables) of an expression  @range @dataflow  <https://api.binary.ninja/binaryninja.mediumlevelil-module.html#binaryninja.mediumlevelil.MediumLevelILInstruction.possible_values>
+pvs.type / pvs.value / pvs.ranges / pvs.values  # read the kind and contents of a PossibleValueSet  @range @set  <https://api.binary.ninja/binaryninja.variable-module.html#binaryninja.variable.PossibleValueSet>
+i.get_reg_value("rax")              # get a register value at an instruction  @dataflow  <https://api.binary.ninja/binaryninja.mediumlevelil-module.html#binaryninja.mediumlevelil.MediumLevelILInstruction.get_reg_value>
+i.get_possible_reg_values_after("rax")  # get the possible values of a register after an instruction  @range  <https://api.binary.ninja/binaryninja.mediumlevelil-module.html#binaryninja.mediumlevelil.MediumLevelILInstruction.get_possible_reg_values_after>
+i.get_stack_contents(OFFSET, SIZE)  # get the value of a stack slot at an instruction  <https://api.binary.ninja/binaryninja.mediumlevelil-module.html#binaryninja.mediumlevelil.MediumLevelILInstruction.get_stack_contents>
+i.get_flag_value("z")               # get a flag value at an LLIL/MLIL instruction  @flags  <https://api.binary.ninja/binaryninja.lowlevelil-module.html#binaryninja.lowlevelil.LowLevelILInstruction.get_flag_value>
+i.branch_dependence                 # get which branch sides must be taken to reach an MLIL instruction  @control-dependence  <https://api.binary.ninja/binaryninja.mediumlevelil-module.html#binaryninja.mediumlevelil.MediumLevelILInstruction.branch_dependence>
+PossibleValueSet.constant(5)        # make a constant value set (also unsigned_range_value, in_set_of_values...)  @create  <https://api.binary.ninja/binaryninja.variable-module.html#binaryninja.variable.PossibleValueSet.constant>
+bv.parse_possiblevalueset("[0x10, 0x20]", RegisterValueType.UnsignedRangeValue)  # build a value set from text  <https://api.binary.ninja/binaryninja.binaryview-module.html#binaryninja.binaryview.BinaryView.parse_possiblevalueset>
 
 ## llil specifics
-isinstance(i, LowLevelILSetReg)           # test for "reg = expr"; i.dest register, i.src value  @assign @register  <https://api.binary.ninja/binaryninja.lowlevelil-module.html#binaryninja.lowlevelil.LowLevelILSetReg>
-i.get_flag_value("z")                     # get the known flag value before this instruction  @flags @zf  <https://api.binary.ninja/binaryninja.lowlevelil-module.html#binaryninja.lowlevelil.LowLevelILInstruction.get_flag_value>
-il.regs                                   # list registers used in the LLIL function  @register  <https://api.binary.ninja/binaryninja.lowlevelil-module.html#binaryninja.lowlevelil.LowLevelILFunction.regs>
-il.get_instructions_at(ADDR)              # list LLIL instructions for a native address  <https://api.binary.ninja/binaryninja.lowlevelil-module.html#binaryninja.lowlevelil.LowLevelILFunction.get_instructions_at>
-bv.arch.get_low_level_il_from_bytes(DATA, ADDR)  # lift raw bytes to LLIL without a function  @lift  <https://api.binary.ninja/binaryninja.architecture-module.html#binaryninja.architecture.Architecture.get_low_level_il_from_bytes>
+llil.regs / llil.flags             # list registers / flags used in an LLIL function  <https://api.binary.ninja/binaryninja.lowlevelil-module.html#binaryninja.lowlevelil.LowLevelILFunction.regs>
+llil.ssa_regs                      # list SSA registers with versions  <https://api.binary.ninja/binaryninja.lowlevelil-module.html#binaryninja.lowlevelil.LowLevelILFunction.ssa_regs>
+ILRegister.name / ILRegister.temp  # get a register's name and whether it is an IL temp  <https://api.binary.ninja/binaryninja.lowlevelil-module.html#binaryninja.lowlevelil.ILRegister>
+i.flags                            # get the flag write type of an LLIL instruction (which flags it sets)  <https://api.binary.ninja/binaryninja.lowlevelil-module.html#binaryninja.lowlevelil.LowLevelILInstruction.flags>
+LowLevelILFlagCondition.LLFC_E     # name a flag condition (E, NE, SLT, ULT, ...) in LLIL_FLAG_COND  @flags  <https://api.binary.ninja/binaryninja.enums-module.html>
+llil.get_exits_for_instr(N)        # list exit points for an LLIL instruction index  @flow  <https://api.binary.ninja/binaryninja.lowlevelil-module.html#binaryninja.lowlevelil.LowLevelILFunction.get_exits_for_instr>
 
-## modify il (in workflows)
-il.replace_expr(OLD, NEW)              # swap an expression for another one  @patch @rewrite  <https://api.binary.ninja/binaryninja.mediumlevelil-module.html#binaryninja.mediumlevelil.MediumLevelILFunction.replace_expr>
-il.copy_expr(EXPR)                     # copy an expression into this IL function  <https://api.binary.ninja/binaryninja.mediumlevelil-module.html#binaryninja.mediumlevelil.MediumLevelILFunction.copy_expr>
-il.translate(FN)                       # build a new IL function by mapping each expression through FN  @rewrite @transform  <https://api.binary.ninja/binaryninja.mediumlevelil-module.html#binaryninja.mediumlevelil.MediumLevelILFunction.translate>
-il.finalize(); il.generate_ssa_form()  # finish editing and rebuild SSA  @rewrite  <https://api.binary.ninja/binaryninja.mediumlevelil-module.html#binaryninja.mediumlevelil.MediumLevelILFunction.finalize>
-il.create_graph()                      # build a FlowGraph of the IL  @cfg @render  <https://api.binary.ninja/binaryninja.mediumlevelil-module.html#binaryninja.mediumlevelil.MediumLevelILFunction.create_graph>
+## graphs
+il.create_graph()  # build a FlowGraph of the IL function  @cfg  <https://api.binary.ninja/binaryninja.mediumlevelil-module.html#binaryninja.mediumlevelil.MediumLevelILFunction.create_graph>
+show_graph_report("MLIL", f.mlil.create_graph())  # show an IL graph in a new tab  @ui  <https://api.binary.ninja/binaryninja.interaction-module.html#binaryninja.interaction.show_graph_report>
+f.create_graph(FunctionGraphType.HighLevelILFunctionGraph)  # build a FlowGraph for a chosen IL view  <https://api.binary.ninja/binaryninja.function-module.html#binaryninja.function.Function.create_graph>

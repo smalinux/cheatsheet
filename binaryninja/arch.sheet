@@ -1,70 +1,122 @@
-title: binary ninja architecture and platform
+title: binary ninja architecture, platform, calling convention
 url:   https://api.binary.ninja/binaryninja.architecture-module.html
-tags:  binaryninja binja bn arch architecture platform cpu os callingconvention abi python api
+tags:  binaryninja binja bn python api arch architecture cpu isa platform os abi calling-convention disassemble assemble registers
 
-; arch = Architecture, plat = Platform. Names in UPPERCASE are placeholders.
+; arch = Architecture, plat = Platform, cc = CallingConvention. UPPERCASE words are placeholders.
 
-## architecture
-Architecture["x86_64"]    # get an architecture by name (x86, armv7, thumb2, aarch64, mips32...)  @cpu @isa  <https://api.binary.ninja/binaryninja.architecture-module.html#binaryninja.architecture.Architecture>
-list(Architecture)        # list all architectures  @cpu  <https://api.binary.ninja/binaryninja.architecture-module.html#binaryninja.architecture.Architecture>
-bv.arch                   # get the architecture of a view  <https://api.binary.ninja/binaryninja.binaryview-module.html#binaryninja.binaryview.BinaryView.arch>
-arch.name                 # get the architecture name  <https://api.binary.ninja/binaryninja.architecture-module.html#binaryninja.architecture.Architecture>
-arch.address_size         # get the pointer size in bytes  @bits  <https://api.binary.ninja/binaryninja.architecture-module.html#binaryninja.architecture.Architecture>
-arch.endianness           # get the byte order  @endian  <https://api.binary.ninja/binaryninja.architecture-module.html#binaryninja.architecture.Architecture>
-arch.max_instr_length     # get the longest possible instruction in bytes  <https://api.binary.ninja/binaryninja.architecture-module.html#binaryninja.architecture.Architecture>
-arch.regs                 # get a dict of register name to RegisterInfo (size, full-width reg)  @registers  <https://api.binary.ninja/binaryninja.architecture-module.html#binaryninja.architecture.Architecture>
-arch.full_width_regs      # list the full-size registers only (rax, not eax)  @registers  <https://api.binary.ninja/binaryninja.architecture-module.html#binaryninja.architecture.Architecture.full_width_regs>
-arch.stack_pointer        # get the stack pointer register name  @sp @rsp  <https://api.binary.ninja/binaryninja.architecture-module.html#binaryninja.architecture.Architecture>
-arch.link_reg             # get the link register name (lr on ARM)  @return-address  <https://api.binary.ninja/binaryninja.architecture-module.html#binaryninja.architecture.Architecture>
-arch.flags                # list the flag names  @eflags @cpsr  <https://api.binary.ninja/binaryninja.architecture-module.html#binaryninja.architecture.Architecture>
-arch.intrinsics           # get a dict of intrinsic name to info (special instructions)  @builtin  <https://api.binary.ninja/binaryninja.architecture-module.html#binaryninja.architecture.Architecture>
-arch.calling_conventions  # get a dict of calling conventions for the arch  @abi  <https://api.binary.ninja/binaryninja.architecture-module.html#binaryninja.architecture.Architecture.calling_conventions>
-arch.standalone_platform  # get the OS-less platform for the arch  @baremetal @firmware  <https://api.binary.ninja/binaryninja.architecture-module.html#binaryninja.architecture.Architecture.standalone_platform>
+## find architectures and platforms
+Architecture["x86_64"]           # get an architecture by name (x86, x86_64, armv7, thumb2, aarch64, mips32, ppc...)  @cpu  <https://api.binary.ninja/binaryninja.architecture-module.html#binaryninja.architecture.Architecture>
+list(Architecture)               # list all registered architectures  @cpu  <https://api.binary.ninja/binaryninja.architecture-module.html#binaryninja.architecture.Architecture>
+"aarch64" in Architecture        # check whether an architecture is available  @exists  <https://api.binary.ninja/binaryninja.architecture-module.html#binaryninja.architecture.Architecture>
+Platform["linux-x86_64"]         # get a platform (OS + arch) by name  @abi @lookup  <https://api.binary.ninja/binaryninja.platform-module.html#binaryninja.platform.Platform>
+list(Platform)                   # list all registered platforms  @os  <https://api.binary.ninja/binaryninja.platform-module.html#binaryninja.platform.Platform>
+Platform.get_list(os="windows")  # list platforms for one OS (or arch=ARCH)  @filter  <https://api.binary.ninja/binaryninja.platform-module.html#binaryninja.platform.Platform.get_list>
+arch.standalone_platform         # get the OS-less platform of an architecture  @baremetal @firmware  <https://api.binary.ninja/binaryninja.architecture-module.html#binaryninja.architecture.Architecture.standalone_platform>
+bv.arch / bv.platform / f.arch / f.platform  # get the architecture and platform of a view or function  @current  <https://api.binary.ninja/binaryninja.binaryview-module.html#binaryninja.binaryview.BinaryView.platform>
+bv.platform = Platform["linux-armv7"]  # set the default platform of a view  @change @retarget  <https://api.binary.ninja/binaryninja.binaryview-module.html#binaryninja.binaryview.BinaryView.platform>
+plat.get_related_platform(Architecture["thumb2"])  # get the matching platform for another arch (ARM <-> Thumb)  @interworking  <https://api.binary.ninja/binaryninja.platform-module.html#binaryninja.platform.Platform.get_related_platform>
+bv.create_user_function(ADDR, plat=Platform["linux-thumb2"])  # make a function using a specific platform (e.g. Thumb)  @mixed  <https://api.binary.ninja/binaryninja.binaryview-module.html#binaryninja.binaryview.BinaryView.create_user_function>
 
-## disassemble and assemble
-arch.get_instruction_text(DATA, ADDR)     # disassemble bytes to (tokens, length)  @disasm @decode  <https://api.binary.ninja/binaryninja.architecture-module.html#binaryninja.architecture.Architecture.get_instruction_text>
-"".join(str(t) for t in arch.get_instruction_text(DATA, ADDR)[0])  # disassemble bytes to one text line  @disasm @print  <https://api.binary.ninja/binaryninja.architecture-module.html#binaryninja.architecture.Architecture.get_instruction_text>
-arch.get_instruction_info(DATA, ADDR)     # get length and branch targets of an instruction  @branch @decode  <https://api.binary.ninja/binaryninja.architecture-module.html#binaryninja.architecture.Architecture.get_instruction_info>
-arch.get_instruction_low_level_il(DATA, ADDR, il)  # lift one instruction into an LLIL function  @lift  <https://api.binary.ninja/binaryninja.architecture-module.html#binaryninja.architecture.Architecture.get_instruction_low_level_il>
-arch.get_low_level_il_from_bytes(DATA, ADDR)  # lift bytes to an LLIL instruction without a view  @lift  <https://api.binary.ninja/binaryninja.architecture-module.html#binaryninja.architecture.Architecture.get_low_level_il_from_bytes>
-arch.assemble("mov eax, 1", ADDR)         # assemble text to bytes  @asm @patch @keystone  <https://api.binary.ninja/binaryninja.architecture-module.html#binaryninja.architecture.Architecture.assemble>
-arch.can_assemble                         # check if the arch has an assembler  <https://api.binary.ninja/binaryninja.architecture-module.html#binaryninja.architecture.Architecture.can_assemble>
-arch.convert_to_nop(DATA, ADDR)           # get NOP bytes that replace an instruction  @patch  <https://api.binary.ninja/binaryninja.architecture-module.html#binaryninja.architecture.Architecture.convert_to_nop>
-arch.get_reg_index("rax")                 # turn a register name into its index  <https://api.binary.ninja/binaryninja.architecture-module.html#binaryninja.architecture.Architecture.get_reg_index>
-arch.get_reg_name(INDEX)                  # turn a register index into its name  <https://api.binary.ninja/binaryninja.architecture-module.html#binaryninja.architecture.Architecture.get_reg_name>
+## architecture facts
+arch.name                           # get the architecture name  @id  <https://api.binary.ninja/binaryninja.architecture-module.html#binaryninja.architecture.Architecture>
+arch.address_size / arch.default_int_size  # get pointer size and default int size in bytes  @bits @width  <https://api.binary.ninja/binaryninja.architecture-module.html#binaryninja.architecture.Architecture>
+arch.endianness                     # get the byte order  @endian  <https://api.binary.ninja/binaryninja.architecture-module.html#binaryninja.architecture.Architecture>
+arch.max_instr_length / arch.instr_alignment  # get the longest instruction size and instruction alignment  @align  <https://api.binary.ninja/binaryninja.architecture-module.html#binaryninja.architecture.Architecture>
+arch.regs                           # get a dict name -> RegisterInfo (full_width_reg, size, offset)  @registers @list  <https://api.binary.ninja/binaryninja.architecture-module.html#binaryninja.architecture.Architecture>
+arch.full_width_regs                # list full-width register names (rax, not eax)  @registers  <https://api.binary.ninja/binaryninja.architecture-module.html#binaryninja.architecture.Architecture.full_width_regs>
+arch.stack_pointer / arch.link_reg  # get the stack pointer and link register names  @sp @lr @registers  <https://api.binary.ninja/binaryninja.architecture-module.html#binaryninja.architecture.Architecture>
+arch.flags / arch.flag_roles        # list flag names and what each flag means  @eflags @cpsr  <https://api.binary.ninja/binaryninja.architecture-module.html#binaryninja.architecture.Architecture>
+arch.intrinsics                     # get a dict of CPU intrinsics with input/output types  @intrinsic @builtin  <https://api.binary.ninja/binaryninja.architecture-module.html#binaryninja.architecture.Architecture>
+arch.reg_stacks                     # get register stacks (x87 FPU stack)  <https://api.binary.ninja/binaryninja.architecture-module.html#binaryninja.architecture.Architecture>
+arch.get_reg_name(INDEX) / arch.get_reg_index("rax")  # convert between register index and name  @registers @id  <https://api.binary.ninja/binaryninja.architecture-module.html#binaryninja.architecture.Architecture.get_reg_name>
+arch.get_modified_regs_on_write("eax")  # list registers changed when one is written (eax -> rax)  @alias @subregister  <https://api.binary.ninja/binaryninja.architecture-module.html#binaryninja.architecture.Architecture.get_modified_regs_on_write>
+arch.calling_conventions            # get a dict name -> CallingConvention for the arch  @cc @abi  <https://api.binary.ninja/binaryninja.architecture-module.html#binaryninja.architecture.Architecture.calling_conventions>
+arch.can_assemble                   # check whether the arch can assemble text  @assembler  <https://api.binary.ninja/binaryninja.architecture-module.html#binaryninja.architecture.Architecture.can_assemble>
+arch.type_libraries                 # list type libraries for the architecture  @typelib  <https://api.binary.ninja/binaryninja.architecture-module.html#binaryninja.architecture.Architecture.type_libraries>
+
+## disassemble and assemble bytes
+arch.get_instruction_text(DATA, ADDR)  # disassemble bytes, returns (tokens, length)  @decode @asm  <https://api.binary.ninja/binaryninja.architecture-module.html#binaryninja.architecture.Architecture.get_instruction_text>
+"".join(str(t) for t in arch.get_instruction_text(DATA, ADDR)[0])  # turn decoded tokens into one text line  @disassemble  <https://api.binary.ninja/binaryninja.architecture-module.html#binaryninja.architecture.InstructionTextToken>
+arch.get_instruction_info(DATA, ADDR)  # get an InstructionInfo with .length and .branches  @decode @branch  <https://api.binary.ninja/binaryninja.architecture-module.html#binaryninja.architecture.Architecture.get_instruction_info>
+info.branches                    # list InstructionBranch (type, target) of a decoded instruction  @branch  <https://api.binary.ninja/binaryninja.architecture-module.html#binaryninja.architecture.InstructionInfo>
+arch.get_low_level_il_from_bytes(DATA, ADDR)  # lift one instruction from bytes to LLIL  <https://api.binary.ninja/binaryninja.architecture-module.html#binaryninja.architecture.Architecture.get_low_level_il_from_bytes>
+arch.assemble("mov eax, 1; ret", ADDR)  # assemble text to bytes  @asm @patch  <https://api.binary.ninja/binaryninja.architecture-module.html#binaryninja.architecture.Architecture.assemble>
+arch.convert_to_nop(DATA, ADDR)  # get nop bytes the same length as an instruction  @patch  <https://api.binary.ninja/binaryninja.architecture-module.html#binaryninja.architecture.Architecture.convert_to_nop>
+arch.invert_branch(DATA, ADDR)   # get bytes for the inverted branch  @patch @flip  <https://api.binary.ninja/binaryninja.architecture-module.html#binaryninja.architecture.Architecture.invert_branch>
+arch.always_branch(DATA, ADDR)   # get bytes for an unconditional version of a branch  @patch  <https://api.binary.ninja/binaryninja.architecture-module.html#binaryninja.architecture.Architecture.always_branch>
+bv.get_disassembly(ADDR)         # disassemble the instruction at an address in a view  <https://api.binary.ninja/binaryninja.binaryview-module.html#binaryninja.binaryview.BinaryView.get_disassembly>
+InstructionTextToken(InstructionTextTokenType.RegisterToken, "eax")  # make one disassembly text token  @render  <https://api.binary.ninja/binaryninja.architecture-module.html#binaryninja.architecture.InstructionTextToken>
+tok.type / tok.text / tok.value  # read a token's kind (RegisterToken, IntegerToken...), text and value  <https://api.binary.ninja/binaryninja.architecture-module.html#binaryninja.architecture.InstructionTextToken>
 
 ## platform
-Platform["linux-x86_64"]                  # get a platform by name (windows-x86, mac-aarch64, linux-armv7...)  @os  <https://api.binary.ninja/binaryninja.platform-module.html#binaryninja.platform.Platform>
-list(Platform)                            # list all platforms  @os  <https://api.binary.ninja/binaryninja.platform-module.html#binaryninja.platform.Platform>
-Platform.get_list(os="linux")             # list platforms for one OS or arch  @os  <https://api.binary.ninja/binaryninja.platform-module.html#binaryninja.platform.Platform.get_list>
-bv.platform                               # get the platform of a view  <https://api.binary.ninja/binaryninja.binaryview-module.html#binaryninja.binaryview.BinaryView.platform>
-plat.name, plat.arch                      # get the platform name and its architecture  <https://api.binary.ninja/binaryninja.platform-module.html#binaryninja.platform.Platform.name>
-plat.default_calling_convention           # get the default calling convention  @abi @cdecl  <https://api.binary.ninja/binaryninja.platform-module.html#binaryninja.platform.Platform.default_calling_convention>
-plat.system_call_convention               # get the syscall calling convention  @syscall  <https://api.binary.ninja/binaryninja.platform-module.html#binaryninja.platform.Platform.system_call_convention>
-plat.system_calls                         # get a dict of syscall number to (name, type)  @syscall  <https://api.binary.ninja/binaryninja.platform-module.html#binaryninja.platform.Platform.system_calls>
-plat.get_system_call_name(NUM)            # get a syscall name by number  @syscall  <https://api.binary.ninja/binaryninja.platform-module.html#binaryninja.platform.Platform.get_system_call_name>
-plat.types                                # get a dict of the platform's built-in types (libc, Win32)  @headers  <https://api.binary.ninja/binaryninja.platform-module.html#binaryninja.platform.Platform.types>
-plat.get_type_by_name(NAME)               # get a platform type by name  <https://api.binary.ninja/binaryninja.platform-module.html#binaryninja.platform.Platform.get_type_by_name>
-plat.get_function_by_name(NAME)           # get a known API prototype from the platform  @signature @import  <https://api.binary.ninja/binaryninja.platform-module.html#binaryninja.platform.Platform.get_function_by_name>
-plat.get_related_platform(Architecture["thumb2"])  # get the sister platform for another arch (ARM/Thumb)  @interworking  <https://api.binary.ninja/binaryninja.platform-module.html#binaryninja.platform.Platform.get_related_platform>
-plat.type_libraries                       # list type libraries for the platform  @bntl  <https://api.binary.ninja/binaryninja.platform-module.html#binaryninja.platform.Platform.type_libraries>
+plat.name / plat.arch                # get the platform name and architecture  @os  <https://api.binary.ninja/binaryninja.platform-module.html#binaryninja.platform.Platform.name>
+plat.default_calling_convention      # get the default calling convention  @cc @abi  <https://api.binary.ninja/binaryninja.platform-module.html#binaryninja.platform.Platform.default_calling_convention>
+plat.cdecl_calling_convention (also stdcall_, fastcall_)  # get a named calling convention  @cc  <https://api.binary.ninja/binaryninja.platform-module.html#binaryninja.platform.Platform.cdecl_calling_convention>
+plat.system_call_convention          # get the calling convention for syscalls  @syscall  <https://api.binary.ninja/binaryninja.platform-module.html#binaryninja.platform.Platform.system_call_convention>
+plat.calling_conventions             # list all calling conventions of the platform  @cc  <https://api.binary.ninja/binaryninja.platform-module.html#binaryninja.platform.Platform.calling_conventions>
+plat.types                           # get a dict of types that come with the platform  @builtin  <https://api.binary.ninja/binaryninja.platform-module.html#binaryninja.platform.Platform.types>
+plat.get_type_by_name("FILE")        # get a platform type by name  @types @lookup  <https://api.binary.ninja/binaryninja.platform-module.html#binaryninja.platform.Platform.get_type_by_name>
+plat.get_function_by_name("printf")  # get a platform function prototype by name  @libc  <https://api.binary.ninja/binaryninja.platform-module.html#binaryninja.platform.Platform.get_function_by_name>
+plat.system_calls                    # get a dict number -> syscall prototype  <https://api.binary.ninja/binaryninja.platform-module.html#binaryninja.platform.Platform.system_calls>
+plat.get_system_call_name(N)         # get the name of syscall number N  @lookup  <https://api.binary.ninja/binaryninja.platform-module.html#binaryninja.platform.Platform.get_system_call_name>
+plat.get_system_call_type(N)         # get the prototype of syscall number N  <https://api.binary.ninja/binaryninja.platform-module.html#binaryninja.platform.Platform.get_system_call_type>
+plat.type_libraries                  # list type libraries the platform can use  @typelib  <https://api.binary.ninja/binaryninja.platform-module.html#binaryninja.platform.Platform.type_libraries>
+plat.parse_types_from_source(C_SRC)  # parse C for this platform (sizes, ABI)  @header  <https://api.binary.ninja/binaryninja.platform-module.html#binaryninja.platform.Platform.parse_types_from_source>
+plat.os_list                         # list OS names the platform is registered for  <https://api.binary.ninja/binaryninja.platform-module.html#binaryninja.platform.Platform.os_list>
 
 ## calling conventions
-plat.calling_conventions   # list the platform's calling conventions  @abi  <https://api.binary.ninja/binaryninja.platform-module.html#binaryninja.platform.Platform.calling_conventions>
-cc.name                    # get the convention name (cdecl, sysv, win64...)  <https://api.binary.ninja/binaryninja.callingconvention-module.html#binaryninja.callingconvention.CallingConvention>
-cc.int_arg_regs            # list registers used for integer arguments  @args @abi  <https://api.binary.ninja/binaryninja.callingconvention-module.html#binaryninja.callingconvention.CallingConvention>
-cc.int_return_reg          # get the integer return register  @ret @abi  <https://api.binary.ninja/binaryninja.callingconvention-module.html#binaryninja.callingconvention.CallingConvention>
-cc.callee_saved_regs       # list callee-saved registers  @nonvolatile  <https://api.binary.ninja/binaryninja.callingconvention-module.html#binaryninja.callingconvention.CallingConvention>
-cc.caller_saved_regs       # list caller-saved registers  @volatile @clobber  <https://api.binary.ninja/binaryninja.callingconvention-module.html#binaryninja.callingconvention.CallingConvention>
-f.calling_convention = cc  # set a function's calling convention  <https://api.binary.ninja/binaryninja.function-module.html#binaryninja.function.Function.calling_convention>
+cc.name                               # get the calling convention name  <https://api.binary.ninja/binaryninja.callingconvention-module.html#binaryninja.callingconvention.CallingConvention>
+cc.int_arg_regs / cc.float_arg_regs   # list registers used for integer / float arguments  @args @abi  <https://api.binary.ninja/binaryninja.callingconvention-module.html#binaryninja.callingconvention.CallingConvention>
+cc.int_return_reg / cc.float_return_reg  # get the register holding the return value  @abi  <https://api.binary.ninja/binaryninja.callingconvention-module.html#binaryninja.callingconvention.CallingConvention>
+cc.caller_saved_regs / cc.callee_saved_regs  # list volatile / preserved registers  @clobber @abi  <https://api.binary.ninja/binaryninja.callingconvention-module.html#binaryninja.callingconvention.CallingConvention>
+cc.stack_adjusted_on_return           # check whether the callee pops the stack args  @stdcall @cleanup  <https://api.binary.ninja/binaryninja.callingconvention-module.html#binaryninja.callingconvention.CallingConvention>
+f.calling_convention = bv.platform.calling_conventions[N]  # change a function's calling convention  @set  <https://api.binary.ninja/binaryninja.function-module.html#binaryninja.function.Function.calling_convention>
+arch.register_calling_convention(cc)  # add your own calling convention to an architecture  @custom  <https://api.binary.ninja/binaryninja.architecture-module.html#binaryninja.architecture.Architecture.register_calling_convention>
 
-## custom architecture (plugin)
-class MyArch(Architecture):               # write a new architecture: set name, regs, override 3 methods  @plugin @processor  <https://docs.binary.ninja/dev/archplatform-architecture.html>
-    def get_instruction_info(self, data, addr) -> InstructionInfo  # length and branches
-    def get_instruction_text(self, data, addr) -> (tokens, length)  # disassembly
-    def get_instruction_low_level_il(self, data, addr, il) -> length  # lifting
-MyArch.register()                         # make a custom architecture available  @plugin  <https://api.binary.ninja/binaryninja.architecture-module.html#binaryninja.architecture.Architecture.register>
-InstructionInfo().add_branch(BranchType.TrueBranch, TARGET)  # report a branch target from get_instruction_info  @plugin @cfg  <https://api.binary.ninja/binaryninja.architecture-module.html#binaryninja.architecture.InstructionInfo.add_branch>
-InstructionTextToken(InstructionTextTokenType.RegisterToken, "eax")  # make one disassembly token  @plugin @render  <https://api.binary.ninja/binaryninja.architecture-module.html#binaryninja.architecture.InstructionTextToken>
-RegisterInfo("rax", 8)                    # describe a register for a custom arch  @plugin  <https://api.binary.ninja/binaryninja.architecture-module.html#binaryninja.architecture.RegisterInfo>
-BinaryViewType["ELF"].register_arch(ID, Endianness.LittleEndian, arch)  # map an ELF machine id to an arch  @plugin @loader  <https://api.binary.ninja/binaryninja.binaryview-module.html#binaryninja.binaryview.BinaryViewType.register_arch>
+## write a new architecture
+class MyArch(Architecture):        # start a CPU plugin; set name, address_size, regs, stack_pointer, flags...  @custom  <https://api.binary.ninja/binaryninja.architecture-module.html#binaryninja.architecture.Architecture>
+    class MyArch(Architecture):
+        name = "myarch"; address_size = 4; default_int_size = 4; max_instr_length = 4
+        regs = {"r0": RegisterInfo("r0", 4), "sp": RegisterInfo("sp", 4)}
+        stack_pointer = "sp"
+        def get_instruction_info(self, data, addr):
+            info = InstructionInfo(); info.length = 4; return info
+        def get_instruction_text(self, data, addr):
+            return [InstructionTextToken(InstructionTextTokenType.InstructionToken, "nop")], 4
+        def get_instruction_low_level_il(self, data, addr, il):
+            il.append(il.nop()); return 4
+    MyArch.register()
+get_instruction_info(self, data, addr)  # decode length and branches, return InstructionInfo  @required  <https://api.binary.ninja/binaryninja.architecture-module.html#binaryninja.architecture.Architecture.get_instruction_info>
+info.add_branch(BranchType.TrueBranch, TARGET)  # say where an instruction can go (TrueBranch, CallDestination, FunctionReturn...)  @cfg  <https://api.binary.ninja/binaryninja.architecture-module.html#binaryninja.architecture.InstructionInfo.add_branch>
+get_instruction_text(self, data, addr)  # return (list of InstructionTextToken, length)  @render @required  <https://api.binary.ninja/binaryninja.architecture-module.html#binaryninja.architecture.Architecture.get_instruction_text>
+get_instruction_low_level_il(self, data, addr, il)  # append LLIL for one instruction and return its length  @lift  <https://api.binary.ninja/binaryninja.architecture-module.html#binaryninja.architecture.Architecture.get_instruction_low_level_il>
+RegisterInfo("eax", 4, 0, ImplicitRegisterExtend.ZeroExtendToFullWidth)  # describe a sub-register: full reg, size, offset  @registers  <https://api.binary.ninja/binaryninja.architecture-module.html#binaryninja.architecture.RegisterInfo>
+flag_write_types / flags_written_by_flag_write_type  # say which flags each "flags=" group sets  <https://api.binary.ninja/binaryninja.architecture-module.html#binaryninja.architecture.Architecture>
+flag_roles = {"z": FlagRole.ZeroFlagRole}  # say what each flag means so conditions can be built  @flags  <https://api.binary.ninja/binaryninja.architecture-module.html#binaryninja.architecture.Architecture>
+flags_required_for_flag_condition  # say which flags each LowLevelILFlagCondition reads  <https://api.binary.ninja/binaryninja.architecture-module.html#binaryninja.architecture.Architecture>
+assemble(self, code, addr)         # implement text -> bytes for patching  @assembler  <https://api.binary.ninja/binaryninja.architecture-module.html#binaryninja.architecture.Architecture.assemble>
+analyze_basic_blocks(self, func, context)  # replace the core block discovery for odd CPUs (delay slots, VLIW)  @advanced  <https://api.binary.ninja/binaryninja.architecture-module.html#binaryninja.architecture.Architecture.analyze_basic_blocks>
+MyArch.register()                  # make the architecture available  <https://api.binary.ninja/binaryninja.architecture-module.html#binaryninja.architecture.Architecture.register>
+arch.standalone_platform.default_calling_convention = cc  # set the default cc used for bare files  <https://api.binary.ninja/binaryninja.platform-module.html#binaryninja.platform.Platform.default_calling_convention>
+
+## hook an existing architecture
+class Hook(ArchitectureHook):         # wrap a built-in architecture to change some instructions  @patch @override  <https://api.binary.ninja/binaryninja.architecture-module.html#binaryninja.architecture.ArchitectureHook>
+    class RetHook(ArchitectureHook):
+        def get_instruction_text(self, data, addr):
+            toks, n = super().get_instruction_text(data, addr)
+            if toks and toks[0].text == "retn": toks[0].text = "ret"
+            return toks, n
+    RetHook(Architecture["x86"]).register()
+Hook(Architecture["x86"]).register()  # install an architecture hook  <https://api.binary.ninja/binaryninja.architecture-module.html#binaryninja.architecture.ArchitectureHook.register>
+
+## custom platform and calling convention
+class MyCC(CallingConvention):  # define a calling convention (name, int_arg_regs, int_return_reg...)  @cc @abi @custom  <https://api.binary.ninja/binaryninja.callingconvention-module.html#binaryninja.callingconvention.CallingConvention>
+    class MyCC(CallingConvention):
+        name = "mycc"; int_arg_regs = ["r0", "r1", "r2"]; int_return_reg = "r0"
+        caller_saved_regs = ["r0", "r1", "r2", "r3"]
+    arch.register_calling_convention(MyCC(arch, "mycc"))
+class MyPlat(Platform):         # define a platform: name and arch; register it for an OS  @custom  <https://api.binary.ninja/binaryninja.platform-module.html#binaryninja.platform.Platform>
+MyPlat(arch).register("linux")  # register a platform for an OS name  <https://api.binary.ninja/binaryninja.platform-module.html#binaryninja.platform.Platform.register>
+BinaryViewType["ELF"].register_arch(MACHINE_ID, Endianness.LittleEndian, arch)  # map an ELF e_machine number to your arch  @loader  <https://api.binary.ninja/binaryninja.binaryview-module.html#binaryninja.binaryview.BinaryViewType.register_arch>
+BinaryViewType["ELF"].register_platform(OS_ID, arch, plat)  # map an ELF OS ABI id to your platform  @loader  <https://api.binary.ninja/binaryninja.binaryview-module.html#binaryninja.binaryview.BinaryViewType.register_platform>
+BinaryViewType["Mapped"].register_default_platform(arch, plat)  # choose the platform used when opening raw files with this arch  <https://api.binary.ninja/binaryninja.binaryview-module.html#binaryninja.binaryview.BinaryViewType.register_default_platform>

@@ -1,0 +1,87 @@
+title: qt widgets (pyside6)
+url:   https://doc.qt.io/qt-6/qtwidgets-index.html
+tags:  qt qt6 pyside pyside6 python widget label button input text dialog menu window
+
+; Python only (PySide6). Every visible thing is a QWidget. For tables/trees/lists see qt/model-view.sheet.
+
+## any widget
+w.show() / w.hide() / w.setVisible(B)  # show or hide a widget  @visible  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QWidget.html>
+w.setEnabled(False)                 # grey out a widget so the user cannot use it  @disable  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QWidget.html#PySide6.QtWidgets.QWidget.setEnabled>
+w.setToolTip("TEXT")                # show text when the mouse hovers  @hover @hint  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QWidget.html#PySide6.QtWidgets.QWidget.setToolTip>
+w.setWindowTitle("TITLE")           # set the title of a top-level window  @caption
+w.setFocus()                        # give keyboard focus to a widget  @focus
+w.resize(W, H)                      # set the size of a window  @size
+w.setFont(FONT)                     # change the font of a widget  @text
+class MyWidget(QWidget)             # build your own widget: call super().__init__(parent), then add a layout  @custom @subclass  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QWidget.html>
+    class MyWidget(QWidget):
+        def __init__(self, parent=None):
+            super().__init__(parent)
+            layout = QVBoxLayout(self)
+            self.label = QLabel("hi")
+            layout.addWidget(self.label)
+
+## text display
+QLabel("TEXT")                      # show read-only text or an image  @text @static  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QLabel.html>
+label.setText("TEXT")               # change label text  @update
+QLabel("<b>bold</b> <a href='x'>link</a>")  # labels render simple HTML (rich text)  @html @richtext
+label.setTextInteractionFlags(Qt.TextInteractionFlag.TextSelectableByMouse)  # let the user select and copy label text  @copy @select  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QLabel.html#PySide6.QtWidgets.QLabel.setTextInteractionFlags>
+label.linkActivated.connect(FN)     # run FN(url) when a link in the label is clicked  @link @href
+label.setWordWrap(True)             # wrap long label text onto several lines  @wrap
+QPlainTextEdit(); te.setReadOnly(True)  # show a lot of plain text, fast (logs, disassembly dumps)  @log @output @textarea  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QPlainTextEdit.html>
+te.appendPlainText("LINE")          # add a line to the end of a QPlainTextEdit  @append @log
+te.setPlainText(TEXT) / te.toPlainText()  # replace or read all text of a text box  @get @set
+QTextEdit / QTextBrowser            # text box with rich text (HTML); QTextBrowser follows links  @html  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QTextBrowser.html>
+
+## input
+QLineEdit()                         # one-line text input  @input @textbox @field  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QLineEdit.html>
+edit.text() / edit.setText(S)       # read or set the input text  @value
+edit.setPlaceholderText("Search...")  # show grey hint text when empty  @hint
+edit.setClearButtonEnabled(True)    # add an x button that clears the input  @clear
+QPushButton("TEXT")                 # clickable button; connect .clicked  @button  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QPushButton.html>
+QToolButton()                       # small icon button for toolbars  @icon @button  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QToolButton.html>
+QCheckBox("TEXT"); cb.isChecked()   # on/off box  @bool @toggle  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QCheckBox.html>
+QRadioButton("TEXT")                # pick one of several; group them with QButtonGroup  @option  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QRadioButton.html>
+QComboBox(); cb.addItems([...])     # drop-down list  @select @dropdown @choice  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QComboBox.html>
+cb.currentText() / cb.currentIndex()  # read the selected combo box item  @value
+cb.addItem("TEXT", USERDATA); cb.currentData()  # attach a hidden value to each combo item  @data
+QSpinBox(); sb.setRange(0, 100)     # integer input with up/down arrows  @number @int  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QSpinBox.html>
+QSpinBox.setDisplayIntegerBase(16)  # show a spin box value in hex  @hex
+QSlider(Qt.Orientation.Horizontal)  # slider for a number  @range  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QSlider.html>
+QProgressBar(); pb.setValue(N)      # show progress  @percent @busy  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QProgressBar.html>
+
+## dialogs
+QMessageBox.information(self, "TITLE", "TEXT")  # show a message with OK  @alert @popup @info  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QMessageBox.html>
+QMessageBox.warning(self, "TITLE", "TEXT")  # show a warning message  @alert @error
+QMessageBox.question(self, "TITLE", "TEXT") == QMessageBox.StandardButton.Yes  # ask yes/no  @confirm
+QInputDialog.getText(self, "TITLE", "LABEL")  # ask for one line of text; returns (text, ok)  @prompt  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QInputDialog.html>
+QInputDialog.getInt(self, "TITLE", "LABEL")  # ask for a number; returns (value, ok)  @prompt @number
+QInputDialog.getItem(self, "TITLE", "LABEL", ITEMS)  # ask the user to pick from a list; returns (item, ok)  @choice
+QFileDialog.getOpenFileName(self, "TITLE", DIR, "JSON (*.json)")  # pick a file to open; returns (path, filter)  @browse @file  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QFileDialog.html>
+QFileDialog.getSaveFileName(self, "TITLE")  # pick a file to save to; returns (path, filter)  @save
+QFileDialog.getExistingDirectory(self, "TITLE")  # pick a folder  @dir
+class D(QDialog)                    # your own dialog; dlg.exec() blocks and returns Accepted/Rejected  @modal @custom  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QDialog.html>
+QDialogButtonBox(QDialogButtonBox.StandardButton.Ok | QDialogButtonBox.StandardButton.Cancel)  # OK/Cancel buttons in OS order  @ok @cancel  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QDialogButtonBox.html>
+    bb.accepted.connect(self.accept)
+    bb.rejected.connect(self.reject)
+if dlg.exec() == QDialog.DialogCode.Accepted:  # check if the user pressed OK  @result
+dlg.show()                          # open a dialog without blocking (non-modal); keep a reference  @modeless
+
+## menus and actions
+QAction("TEXT", self)               # a command for menus and toolbars (in QtGui)  @command  <https://doc.qt.io/qtforpython-6/PySide6/QtGui/QAction.html>
+act.triggered.connect(FN)           # run FN when the action is chosen  @click
+act.setShortcut(QKeySequence("Ctrl+K"))  # give an action a key shortcut  @hotkey  <https://doc.qt.io/qtforpython-6/PySide6/QtGui/QKeySequence.html>
+QMenu(); menu.addAction("TEXT", FN)  # build a pop-up menu  @menu  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QMenu.html>
+menu.exec(self.mapToGlobal(pos))    # show a menu at a widget position and wait for a choice  @popup @rightclick
+w.setContextMenuPolicy(Qt.ContextMenuPolicy.CustomContextMenu)  # enable customContextMenuRequested for right-click menus  @rightclick  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QWidget.html#PySide6.QtWidgets.QWidget.setContextMenuPolicy>
+    view.setContextMenuPolicy(Qt.ContextMenuPolicy.CustomContextMenu)
+    view.customContextMenuRequested.connect(self.on_menu)
+    def on_menu(self, pos):
+        m = QMenu(self); m.addAction("Copy", self.copy)
+        m.exec(self.view.viewport().mapToGlobal(pos))
+QShortcut(QKeySequence("Ctrl+F"), self, FN)  # key shortcut that works inside one widget  @hotkey  <https://doc.qt.io/qtforpython-6/PySide6/QtGui/QShortcut.html>
+
+## windows
+QMainWindow                         # window with menu bar, toolbars, dock widgets and a central widget  @app @window  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QMainWindow.html>
+win.setCentralWidget(W)             # set the main content of a QMainWindow  @content
+QDockWidget("TITLE")                # movable side panel in a QMainWindow  @panel @dock  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QDockWidget.html>
+win.statusBar().showMessage("TEXT", MS)  # show a short message in the status bar  @status
