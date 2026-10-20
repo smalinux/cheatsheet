@@ -1,0 +1,47 @@
+title: qt testing: QTest, QSignalSpy, model tester, headless runs (pyside6)
+url:   https://doc.qt.io/qtforpython-6/PySide6/QtTest/QTest.html
+tags:  qt pyside6 qttest test unittest pytest qtest qsignalspy simulate click key headless offscreen ci gui-test
+
+## setup
+from PySide6.QtTest import QTest, QSignalSpy  # import the Qt test helpers  @import  <https://doc.qt.io/qtforpython-6/PySide6/QtTest/index.html>
+app = QApplication.instance() or QApplication([])  # make one app for the whole test run (unittest setUpClass / pytest fixture)  @fixture @setup  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/QCoreApplication.html#PySide6.QtCore.QCoreApplication.instance>
+QT_QPA_PLATFORM=offscreen python -m pytest  # run GUI tests without a display (CI)  @headless @ci
+QStandardPaths.setTestModeEnabled(True)  # write settings and data to test folders, not the real ones  @isolation  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/QStandardPaths.html#PySide6.QtCore.QStandardPaths.setTestModeEnabled>
+w.show(); QTest.qWaitForWindowExposed(w)  # show a widget and wait until it is really on screen  @show @wait  <https://doc.qt.io/qtforpython-6/PySide6/QtTest/QTest.html#PySide6.QtTest.QTest.qWaitForWindowExposed>
+QTest.qWaitForWindowActive(w)       # wait until a window is active (has focus)  @focus  <https://doc.qt.io/qtforpython-6/PySide6/QtTest/QTest.html#PySide6.QtTest.QTest.qWaitForWindowActive>
+
+## simulate input
+QTest.mouseClick(btn, Qt.MouseButton.LeftButton)  # click a widget (center)  @click @mouse  <https://doc.qt.io/qtforpython-6/PySide6/QtTest/QTest.html#PySide6.QtTest.QTest.mouseClick>
+QTest.mouseClick(w, Qt.MouseButton.LeftButton, Qt.KeyboardModifier.ShiftModifier, QPoint(5, 5))  # click with Shift at a point  @click @modifier  <https://doc.qt.io/qtforpython-6/PySide6/QtTest/QTest.html#PySide6.QtTest.QTest.mouseClick>
+QTest.mouseDClick(w, Qt.MouseButton.LeftButton)  # double click  @doubleclick  <https://doc.qt.io/qtforpython-6/PySide6/QtTest/QTest.html#PySide6.QtTest.QTest.mouseDClick>
+QTest.mousePress(w, BTN) / QTest.mouseMove(w, POS) / QTest.mouseRelease(w, BTN)  # drag step by step  @drag  <https://doc.qt.io/qtforpython-6/PySide6/QtTest/QTest.html#PySide6.QtTest.QTest.mouseMove>
+QTest.keyClicks(edit, "hello")      # type text into a widget  @type @keyboard  <https://doc.qt.io/qtforpython-6/PySide6/QtTest/QTest.html#PySide6.QtTest.QTest.keyClicks>
+QTest.keyClick(w, Qt.Key.Key_Return)  # press and release one key  @key  <https://doc.qt.io/qtforpython-6/PySide6/QtTest/QTest.html#PySide6.QtTest.QTest.keyClick>
+QTest.keyClick(w, Qt.Key.Key_A, Qt.KeyboardModifier.ControlModifier)  # press Ctrl+A  @shortcut  <https://doc.qt.io/qtforpython-6/PySide6/QtTest/QTest.html#PySide6.QtTest.QTest.keyClick>
+QTest.keySequence(w, QKeySequence("Ctrl+S"))  # send a whole shortcut  @shortcut  <https://doc.qt.io/qtforpython-6/PySide6/QtTest/QTest.html#PySide6.QtTest.QTest.keySequence>
+QTest.keyPress(w, KEY) / QTest.keyRelease(w, KEY)  # press / release separately  @key  <https://doc.qt.io/qtforpython-6/PySide6/QtTest/QTest.html#PySide6.QtTest.QTest.keyPress>
+QTest.wheelEvent(w.windowHandle(), QPointF(10, 10), QPoint(0, 120))  # scroll one notch; takes a QWindow, not a widget  @wheel @scroll  <https://doc.qt.io/qtforpython-6/PySide6/QtTest/QTest.html#PySide6.QtTest.QTest.wheelEvent>
+QTest.touchEvent(w, DEVICE).press(0, P).release(0, P)  # simulate touch (device from QTest.createTouchDevice())  @touch  <https://doc.qt.io/qtforpython-6/PySide6/QtTest/QTest.html#PySide6.QtTest.QTest.touchEvent>
+
+## wait and signals
+QTest.qWait(MS)                     # wait MS ms while still processing events (timers, repaints)  @sleep @wait  <https://doc.qt.io/qtforpython-6/PySide6/QtTest/QTest.html#PySide6.QtTest.QTest.qWait>
+spy = QSignalSpy(obj.someSignal)    # record every emission of a signal  @spy @signal @assert  <https://doc.qt.io/qtforpython-6/PySide6/QtTest/QSignalSpy.html>
+spy.count()                         # get how many times it fired  @count  <https://doc.qt.io/qtforpython-6/PySide6/QtTest/QSignalSpy.html#PySide6.QtTest.QSignalSpy.count>
+spy.at(I)                           # get the arguments of emission I as a list  @args  <https://doc.qt.io/qtforpython-6/PySide6/QtTest/QSignalSpy.html#PySide6.QtTest.QSignalSpy.at>
+spy.wait(MS)                        # wait until the signal fires (True) or the timeout passes (False)  @wait @async  <https://doc.qt.io/qtforpython-6/PySide6/QtTest/QSignalSpy.html#PySide6.QtTest.QSignalSpy.wait>
+spy.isValid()                       # check the spy is attached to a real signal  @check  <https://doc.qt.io/qtforpython-6/PySide6/QtTest/QSignalSpy.html#PySide6.QtTest.QSignalSpy.isValid>
+    def test_click(self):
+        btn = QPushButton("go")
+        spy = QSignalSpy(btn.clicked)
+        QTest.mouseClick(btn, Qt.MouseButton.LeftButton)
+        self.assertEqual(spy.count(), 1)
+
+## models and misc
+QAbstractItemModelTester(model)     # check a custom model for broken rules (wrong rowCount, bad parent(), missing signals)  @model @validate  <https://doc.qt.io/qtforpython-6/PySide6/QtTest/QAbstractItemModelTester.html>
+QAbstractItemModelTester(model, QAbstractItemModelTester.FailureReportingMode.Fatal)  # stop at the first problem  @strict  <https://doc.qt.io/qtforpython-6/PySide6/QtTest/QAbstractItemModelTester.html#PySide6.QtTest.QAbstractItemModelTester.FailureReportingMode>
+QTest.ignoreMessage(QtMsgType.QtWarningMsg, "text")  # expect a Qt warning and keep it out of the output  @warning  <https://doc.qt.io/qtforpython-6/PySide6/QtTest/QTest.html#PySide6.QtTest.QTest.ignoreMessage>
+QTest.failOnWarning("regex")        # make the test fail when a matching warning is printed  @warning  <https://doc.qt.io/qtforpython-6/PySide6/QtTest/QTest.html#PySide6.QtTest.QTest.failOnWarning>
+w.grab().save("fail.png")           # save a screenshot when a GUI test fails  @screenshot  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QWidget.html#PySide6.QtWidgets.QWidget.grab>
+QTimer.singleShot(0, dialog.accept)  # close a modal dialog that a tested function opens with exec()  @modal @dialog  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/QTimer.html#PySide6.QtCore.QTimer.singleShot>
+QApplication.activeModalWidget()    # find the modal dialog that is open right now  @modal  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QApplication.html#PySide6.QtWidgets.QApplication.activeModalWidget>
+QTest.qSleep(MS)                    # sleep without processing events (rarely what you want)  @sleep  <https://doc.qt.io/qtforpython-6/PySide6/QtTest/QTest.html#PySide6.QtTest.QTest.qSleep>

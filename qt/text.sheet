@@ -1,0 +1,137 @@
+title: qt text: QTextEdit, QPlainTextEdit, QTextDocument, QTextCursor, formats, syntax highlighting (pyside6)
+url:   https://doc.qt.io/qtforpython-6/PySide6/QtGui/QTextDocument.html
+tags:  qt pyside6 text editor qtextedit qplaintextedit qtextbrowser qtextdocument qtextcursor format highlight syntax markdown html find replace code-editor
+
+## pick the widget
+QPlainTextEdit                      # plain text, fast for big files, logs, code editors  @plain @code @log  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QPlainTextEdit.html>
+QTextEdit                           # rich text: HTML subset, Markdown, images, tables, lists  @rich @html  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QTextEdit.html>
+QTextBrowser                        # read-only QTextEdit with clickable links and back/forward history (help viewers)  @browser @help  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QTextBrowser.html>
+QLabel                              # short static rich text; no scrolling or editing  @label  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QLabel.html>
+
+## content
+te.setPlainText(S) / te.toPlainText()  # set / get plain text  @text @value  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QTextEdit.html#PySide6.QtWidgets.QTextEdit.setPlainText>
+te.setHtml(H) / te.toHtml()         # set / get HTML (Qt supports a subset of HTML 4 + CSS)  @html  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QTextEdit.html#PySide6.QtWidgets.QTextEdit.setHtml>
+te.setMarkdown(M) / te.toMarkdown()  # set / get Markdown (CommonMark + GitHub tables/tasks)  @markdown  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QTextEdit.html#PySide6.QtWidgets.QTextEdit.setMarkdown>
+te.append("line")                   # add a paragraph at the end (rich text aware)  @append @log  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QTextEdit.html#PySide6.QtWidgets.QTextEdit.append>
+te.insertPlainText(S) / te.insertHtml(H)  # insert at the cursor  @insert  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QTextEdit.html#PySide6.QtWidgets.QTextEdit.insertPlainText>
+te.clear()                          # remove all content  @clear  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QTextEdit.html#PySide6.QtWidgets.QTextEdit.clear>
+te.setPlaceholderText("Type here...")  # grey hint text while empty  @placeholder  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QTextEdit.html#PySide6.QtWidgets.QTextEdit.setPlaceholderText>
+te.setReadOnly(True)                # make a viewer  @readonly  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QTextEdit.html#PySide6.QtWidgets.QTextEdit.setReadOnly>
+te.setAcceptRichText(False)         # paste only plain text into a QTextEdit  @paste  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QTextEdit.html#PySide6.QtWidgets.QTextEdit.setAcceptRichText>
+te.setLineWrapMode(QTextEdit.LineWrapMode.NoWrap)  # turn off wrapping (WidgetWidth default, FixedColumnWidth)  @wrap  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QTextEdit.html#PySide6.QtWidgets.QTextEdit.setLineWrapMode>
+te.setWordWrapMode(QTextOption.WrapMode.WrapAnywhere)  # wrap inside long words too  @wrap  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QTextEdit.html#PySide6.QtWidgets.QTextEdit.setWordWrapMode>
+te.setTabStopDistance(QFontMetricsF(te.font()).horizontalAdvance(" ") * 4)  # set tab width to 4 spaces  @tab @indent  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QTextEdit.html#PySide6.QtWidgets.QTextEdit.setTabStopDistance>
+te.setTabChangesFocus(True)         # make Tab move focus instead of inserting a tab  @tab  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QTextEdit.html#PySide6.QtWidgets.QTextEdit.setTabChangesFocus>
+te.zoomIn(N) / te.zoomOut(N)        # change the font size  @zoom  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QTextEdit.html#PySide6.QtWidgets.QTextEdit.zoomIn>
+te.setUndoRedoEnabled(False)        # turn off undo (saves memory for logs)  @undo  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QTextEdit.html#PySide6.QtWidgets.QTextEdit.setUndoRedoEnabled>
+te.undo() / te.redo() / te.copy() / te.cut() / te.paste() / te.selectAll()  # edit commands  @edit  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QTextEdit.html#PySide6.QtWidgets.QTextEdit.undo>
+te.textChanged / cursorPositionChanged / selectionChanged / undoAvailable / copyAvailable  # editor signals  @signal  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QTextEdit.html#PySide6.QtWidgets.QTextEdit.cursorPositionChanged>
+te.document().setModified(False); te.document().modificationChanged.connect(self.setWindowModified)  # track unsaved changes  @dirty @modified  <https://doc.qt.io/qtforpython-6/PySide6/QtGui/QTextDocument.html#PySide6.QtGui.QTextDocument.modificationChanged>
+pte.appendPlainText(LINE) / pte.setMaximumBlockCount(N)  # fast log view that keeps the last N lines  @log  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QPlainTextEdit.html#PySide6.QtWidgets.QPlainTextEdit.appendPlainText>
+pte.blockCount()                    # get the number of lines (blocks)  @lines  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QPlainTextEdit.html#PySide6.QtWidgets.QPlainTextEdit.blockCount>
+pte.centerCursor() / pte.ensureCursorVisible()  # scroll to the cursor  @scroll  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QPlainTextEdit.html#PySide6.QtWidgets.QPlainTextEdit.ensureCursorVisible>
+
+## rich text formatting (QTextEdit)
+te.setFontWeight(QFont.Weight.Bold) / te.setFontItalic(True) / te.setFontUnderline(True)  # format the selection or what is typed next  @bold @italic  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QTextEdit.html#PySide6.QtWidgets.QTextEdit.setFontWeight>
+te.setTextColor(QColor("red")) / te.setTextBackgroundColor(C)  # color the selection  @color  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QTextEdit.html#PySide6.QtWidgets.QTextEdit.setTextColor>
+te.setFontFamily("Serif") / te.setFontPointSize(14) / te.setCurrentFont(F)  # change font for the selection  @font  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QTextEdit.html#PySide6.QtWidgets.QTextEdit.setFontPointSize>
+te.setAlignment(Qt.AlignmentFlag.AlignCenter)  # align the current paragraph  @align  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QTextEdit.html#PySide6.QtWidgets.QTextEdit.setAlignment>
+te.currentCharFormatChanged.connect(FN)  # update Bold/Italic buttons when the cursor moves  @toolbar  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QTextEdit.html#PySide6.QtWidgets.QTextEdit.currentCharFormatChanged>
+te.mergeCurrentCharFormat(FMT)      # add format properties to the selection  @format  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QTextEdit.html#PySide6.QtWidgets.QTextEdit.mergeCurrentCharFormat>
+fmt = QTextCharFormat(); fmt.setFontWeight(QFont.Weight.Bold); fmt.setForeground(QColor("blue"))  # build a character format  @format  <https://doc.qt.io/qtforpython-6/PySide6/QtGui/QTextCharFormat.html>
+fmt.setUnderlineStyle(QTextCharFormat.UnderlineStyle.WaveUnderline); fmt.setUnderlineColor(QColor("red"))  # spell-check squiggle  @squiggle @error  <https://doc.qt.io/qtforpython-6/PySide6/QtGui/QTextCharFormat.html#PySide6.QtGui.QTextCharFormat.setUnderlineStyle>
+fmt.setAnchor(True); fmt.setAnchorHref(URL)  # make text a link  @link  <https://doc.qt.io/qtforpython-6/PySide6/QtGui/QTextCharFormat.html#PySide6.QtGui.QTextCharFormat.setAnchorHref>
+fmt.setToolTip("TEXT")              # show a tooltip over formatted text  @tooltip  <https://doc.qt.io/qtforpython-6/PySide6/QtGui/QTextCharFormat.html#PySide6.QtGui.QTextCharFormat.setToolTip>
+bfmt = QTextBlockFormat(); bfmt.setLineHeight(150, QTextBlockFormat.LineHeightTypes.ProportionalHeight.value)  # set line spacing 150%  @spacing  <https://doc.qt.io/qtforpython-6/PySide6/QtGui/QTextBlockFormat.html#PySide6.QtGui.QTextBlockFormat.setLineHeight>
+bfmt.setHeadingLevel(1) / bfmt.setIndent(1) / bfmt.setTopMargin(8) / bfmt.setAlignment(...)  # paragraph formats  @paragraph  <https://doc.qt.io/qtforpython-6/PySide6/QtGui/QTextBlockFormat.html>
+bfmt.setMarker(QTextBlockFormat.MarkerType.Checked)  # show a task-list check box  @checkbox @todo  <https://doc.qt.io/qtforpython-6/PySide6/QtGui/QTextBlockFormat.html#PySide6.QtGui.QTextBlockFormat.setMarker>
+
+## QTextCursor (edit from code)
+c = te.textCursor()                 # get a copy of the editor's cursor  @cursor  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QTextEdit.html#PySide6.QtWidgets.QTextEdit.textCursor>
+te.setTextCursor(c)                 # apply a cursor (move the caret, set the selection)  @apply  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QTextEdit.html#PySide6.QtWidgets.QTextEdit.setTextCursor>
+c.insertText("TEXT") / c.insertText("TEXT", FMT)  # insert text, optionally formatted  @insert  <https://doc.qt.io/qtforpython-6/PySide6/QtGui/QTextCursor.html#PySide6.QtGui.QTextCursor.insertText>
+c.insertHtml(H) / c.insertMarkdown(M) / c.insertImage(PATH) / c.insertBlock()  # insert rich parts / a new paragraph  @insert  <https://doc.qt.io/qtforpython-6/PySide6/QtGui/QTextCursor.html#PySide6.QtGui.QTextCursor.insertImage>
+c.insertTable(ROWS, COLS) / c.insertList(QTextListFormat.Style.ListDisc)  # insert a table / bullet list  @table @list  <https://doc.qt.io/qtforpython-6/PySide6/QtGui/QTextCursor.html#PySide6.QtGui.QTextCursor.insertTable>
+c.movePosition(QTextCursor.MoveOperation.End)  # move the cursor (Start, End, StartOfLine, NextWord, NextBlock...)  @move  <https://doc.qt.io/qtforpython-6/PySide6/QtGui/QTextCursor.html#PySide6.QtGui.QTextCursor.movePosition>
+c.movePosition(QTextCursor.MoveOperation.EndOfWord, QTextCursor.MoveMode.KeepAnchor)  # move while selecting  @select  <https://doc.qt.io/qtforpython-6/PySide6/QtGui/QTextCursor.html#PySide6.QtGui.QTextCursor.MoveMode>
+c.select(QTextCursor.SelectionType.LineUnderCursor)  # select the word / line / block / document under the cursor  @select  <https://doc.qt.io/qtforpython-6/PySide6/QtGui/QTextCursor.html#PySide6.QtGui.QTextCursor.select>
+c.setPosition(START); c.setPosition(END, QTextCursor.MoveMode.KeepAnchor)  # select a range by positions  @select @range  <https://doc.qt.io/qtforpython-6/PySide6/QtGui/QTextCursor.html#PySide6.QtGui.QTextCursor.setPosition>
+c.selectedText() / c.hasSelection() / c.selectionStart() / c.selectionEnd()  # read the selection (
+ is the paragraph separator) @selection <py:QtGui.QTextCursor.selectedText>
+c.removeSelectedText() / c.deleteChar() / c.deletePreviousChar()  # delete text  @delete  <https://doc.qt.io/qtforpython-6/PySide6/QtGui/QTextCursor.html#PySide6.QtGui.QTextCursor.removeSelectedText>
+c.position() / c.blockNumber() / c.columnNumber()  # get the position, line and column (0-based)  @position @line  <https://doc.qt.io/qtforpython-6/PySide6/QtGui/QTextCursor.html#PySide6.QtGui.QTextCursor.blockNumber>
+c.mergeCharFormat(FMT) / c.setCharFormat(FMT) / c.setBlockFormat(BFMT)  # format the selection / paragraph  @format  <https://doc.qt.io/qtforpython-6/PySide6/QtGui/QTextCursor.html#PySide6.QtGui.QTextCursor.mergeCharFormat>
+c.beginEditBlock(); ...; c.endEditBlock()  # make many edits one undo step  @undo @group  <https://doc.qt.io/qtforpython-6/PySide6/QtGui/QTextCursor.html#PySide6.QtGui.QTextCursor.beginEditBlock>
+c.block().text()                    # get the text of the current line / paragraph  @line  <https://doc.qt.io/qtforpython-6/PySide6/QtGui/QTextCursor.html#PySide6.QtGui.QTextCursor.block>
+te.moveCursor(QTextCursor.MoveOperation.End)  # move the caret and scroll (e.g. after append)  @scroll @end  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QTextEdit.html#PySide6.QtWidgets.QTextEdit.moveCursor>
+te.cursorForPosition(POINT)         # get the text cursor under a mouse point  @hit-test  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QTextEdit.html#PySide6.QtWidgets.QTextEdit.cursorForPosition>
+te.cursorRect(c)                    # get where the caret is drawn (to place a popup)  @popup  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QTextEdit.html#PySide6.QtWidgets.QTextEdit.cursorRect>
+
+## find and replace
+te.find("word")                     # find the next match and select it; returns False if none  @search @find  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QTextEdit.html#PySide6.QtWidgets.QTextEdit.find>
+te.find("word", QTextDocument.FindFlag.FindBackward | QTextDocument.FindFlag.FindCaseSensitively)  # search backwards / case / whole words (FindWholeWords)  @search @flags  <https://doc.qt.io/qtforpython-6/PySide6/QtGui/QTextDocument.html#PySide6.QtGui.QTextDocument.FindFlag>
+te.find(QRegularExpression(r"\bTODO\b"))  # find with a regex  @regex  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QTextEdit.html#PySide6.QtWidgets.QTextEdit.find>
+c = doc.find("word", c)             # find from a cursor in the document (returns a cursor; c.isNull() when not found)  @search @all  <https://doc.qt.io/qtforpython-6/PySide6/QtGui/QTextDocument.html#PySide6.QtGui.QTextDocument.find>
+    c = QTextCursor(doc)
+    while True:
+        c = doc.find("foo", c)
+        if c.isNull(): break
+        c.insertText("bar")          # replace all
+te.setExtraSelections([SEL])        # highlight ranges without changing the text (search hits, current line)  @highlight @marks  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QTextEdit.html#PySide6.QtWidgets.QTextEdit.setExtraSelections>
+    sel = QTextEdit.ExtraSelection()
+    sel.format.setBackground(QColor("#3a3a00"))
+    sel.format.setProperty(QTextFormat.Property.FullWidthSelection, True)
+    sel.cursor = editor.textCursor(); sel.cursor.clearSelection()
+    editor.setExtraSelections([sel])            # highlight the current line
+
+## QTextDocument
+doc = te.document()                 # get the document behind an editor  @document  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QTextEdit.html#PySide6.QtWidgets.QTextEdit.document>
+QTextDocument("text")               # make a document without a widget (render to PDF, measure text)  @offscreen  <https://doc.qt.io/qtforpython-6/PySide6/QtGui/QTextDocument.html>
+doc.setDefaultFont(F) / doc.setDefaultStyleSheet("p { margin: 0 }")  # default font / CSS for HTML  @css @font  <https://doc.qt.io/qtforpython-6/PySide6/QtGui/QTextDocument.html#PySide6.QtGui.QTextDocument.setDefaultStyleSheet>
+doc.setDocumentMargin(PX)           # set the inner margin  @padding  <https://doc.qt.io/qtforpython-6/PySide6/QtGui/QTextDocument.html#PySide6.QtGui.QTextDocument.setDocumentMargin>
+doc.blockCount() / doc.characterCount() / doc.lineCount()  # count paragraphs / characters / visual lines  @count  <https://doc.qt.io/qtforpython-6/PySide6/QtGui/QTextDocument.html#PySide6.QtGui.QTextDocument.blockCount>
+doc.findBlockByNumber(N) / doc.findBlockByLineNumber(N)  # get a paragraph / visual line  @line  <https://doc.qt.io/qtforpython-6/PySide6/QtGui/QTextDocument.html#PySide6.QtGui.QTextDocument.findBlockByNumber>
+b = doc.firstBlock(); while b.isValid(): b.text(); b = b.next()  # walk all paragraphs  @iterate @lines  <https://doc.qt.io/qtforpython-6/PySide6/QtGui/QTextDocument.html#PySide6.QtGui.QTextDocument.firstBlock>
+doc.addResource(QTextDocument.ResourceType.ImageResource, QUrl("img://x"), IMG)  # add an image to use as <img src="img://x">  @image @resource  <https://doc.qt.io/qtforpython-6/PySide6/QtGui/QTextDocument.html#PySide6.QtGui.QTextDocument.addResource>
+doc.setTextWidth(W); doc.size()     # lay out at a width and get the needed size  @measure @height  <https://doc.qt.io/qtforpython-6/PySide6/QtGui/QTextDocument.html#PySide6.QtGui.QTextDocument.size>
+doc.drawContents(PAINTER)           # paint the document anywhere (delegates, custom widgets)  @paint  <https://doc.qt.io/qtforpython-6/PySide6/QtGui/QTextDocument.html#PySide6.QtGui.QTextDocument.drawContents>
+doc.print_(PRINTER)                 # print or export to PDF (with QPrinter in PdfFormat)  @print @pdf  <https://doc.qt.io/qtforpython-6/PySide6/QtGui/QTextDocument.html#PySide6.QtGui.QTextDocument.print_>
+QTextDocumentWriter("out.odt").write(doc)  # save as ODF, HTML, Markdown or plain text  @export @odt  <https://doc.qt.io/qtforpython-6/PySide6/QtGui/QTextDocumentWriter.html>
+doc.contentsChange.connect(lambda pos, removed, added: ...)  # know exactly what changed  @signal @diff  <https://doc.qt.io/qtforpython-6/PySide6/QtGui/QTextDocument.html#PySide6.QtGui.QTextDocument.contentsChange>
+doc.setUndoRedoEnabled(False) / doc.clearUndoRedoStacks()  # control undo history  @undo  <https://doc.qt.io/qtforpython-6/PySide6/QtGui/QTextDocument.html#PySide6.QtGui.QTextDocument.clearUndoRedoStacks>
+doc.setMaximumBlockCount(N)         # drop the oldest paragraphs past N (logs)  @log  <https://doc.qt.io/qtforpython-6/PySide6/QtGui/QTextDocument.html#PySide6.QtGui.QTextDocument.setMaximumBlockCount>
+doc.toRawText()                     # get the text with special characters kept  @raw  <https://doc.qt.io/qtforpython-6/PySide6/QtGui/QTextDocument.html#PySide6.QtGui.QTextDocument.toRawText>
+doc.setMetaInformation(QTextDocument.MetaInformation.DocumentTitle, "T")  # set the document title  @title  <https://doc.qt.io/qtforpython-6/PySide6/QtGui/QTextDocument.html#PySide6.QtGui.QTextDocument.setMetaInformation>
+
+## QSyntaxHighlighter
+class Hl(QSyntaxHighlighter): def highlightBlock(self, text): ...  # color text as it is typed (code, logs)  @highlight @syntax @code  <https://doc.qt.io/qtforpython-6/PySide6/QtGui/QSyntaxHighlighter.html>
+    class PyHighlighter(QSyntaxHighlighter):
+        def __init__(self, doc):
+            super().__init__(doc)
+            self.kw = QTextCharFormat(); self.kw.setForeground(QColor("#c678dd"))
+            self.re = QRegularExpression(r"\b(def|class|return|if|else|import)\b")
+        def highlightBlock(self, text):
+            it = self.re.globalMatch(text)
+            while it.hasNext():
+                m = it.next()
+                self.setFormat(m.capturedStart(), m.capturedLength(), self.kw)
+    self.hl = PyHighlighter(editor.document())    # keep a reference
+self.setFormat(START, LENGTH, FMT)  # color part of the current line inside highlightBlock  @color  <https://doc.qt.io/qtforpython-6/PySide6/QtGui/QSyntaxHighlighter.html#PySide6.QtGui.QSyntaxHighlighter.setFormat>
+self.setCurrentBlockState(N) / self.previousBlockState()  # carry state to the next line (multi-line comments, strings)  @multiline @state  <https://doc.qt.io/qtforpython-6/PySide6/QtGui/QSyntaxHighlighter.html#PySide6.QtGui.QSyntaxHighlighter.setCurrentBlockState>
+self.rehighlight()                  # re-run highlighting for the whole document (after theme change)  @refresh  <https://doc.qt.io/qtforpython-6/PySide6/QtGui/QSyntaxHighlighter.html#PySide6.QtGui.QSyntaxHighlighter.rehighlight>
+self.setCurrentBlockUserData(QTextBlockUserData())  # attach your own data to a line (e.g. bracket positions)  @data  <https://doc.qt.io/qtforpython-6/PySide6/QtGui/QSyntaxHighlighter.html#PySide6.QtGui.QSyntaxHighlighter.setCurrentBlockUserData>
+
+## code editor tricks (QPlainTextEdit)
+pte.firstVisibleBlock() / pte.blockBoundingGeometry(B).translated(pte.contentOffset())  # find where each visible line is drawn (line number area)  @line-numbers @gutter  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QPlainTextEdit.html#PySide6.QtWidgets.QPlainTextEdit.blockBoundingGeometry>
+pte.updateRequest.connect(lambda rect, dy: ...)  # repaint / scroll a side gutter with the editor  @gutter @scroll  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QPlainTextEdit.html#PySide6.QtWidgets.QPlainTextEdit.updateRequest>
+pte.setViewportMargins(LEFT, 0, 0, 0)  # make room on the left for a gutter widget  @gutter  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QAbstractScrollArea.html#PySide6.QtWidgets.QAbstractScrollArea.setViewportMargins>
+pte.blockCountChanged.connect(FN)   # resize the gutter when the line count changes  @line-numbers  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QPlainTextEdit.html#PySide6.QtWidgets.QPlainTextEdit.blockCountChanged>
+doc.qt.io/qt-6/qtwidgets-widgets-codeeditor-example.html  # read the full line-number code editor example  @example  <https://doc.qt.io/qt-6/qtwidgets-widgets-codeeditor-example.html>
+pte.setFont(QFontDatabase.systemFont(QFontDatabase.SystemFont.FixedFont))  # use a monospace font  @monospace  <https://doc.qt.io/qtforpython-6/PySide6/QtGui/QFontDatabase.html#PySide6.QtGui.QFontDatabase.systemFont>
+
+## QTextBrowser
+tb.setSource(QUrl.fromLocalFile("help/index.html"))  # load an HTML or Markdown file; relative links work  @load @help  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QTextBrowser.html#PySide6.QtWidgets.QTextBrowser.setSource>
+tb.setOpenExternalLinks(True)       # open http links in the browser  @link  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QTextBrowser.html#PySide6.QtWidgets.QTextBrowser.setOpenExternalLinks>
+tb.setOpenLinks(False); tb.anchorClicked.connect(FN)  # handle every link click yourself  @link  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QTextBrowser.html#PySide6.QtWidgets.QTextBrowser.anchorClicked>
+tb.backward() / tb.forward() / tb.home() / tb.reload()  # navigate the history  @history  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QTextBrowser.html#PySide6.QtWidgets.QTextBrowser.backward>
+tb.setSearchPaths([DIR])            # where to look for relative files and images  @path  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QTextBrowser.html#PySide6.QtWidgets.QTextBrowser.setSearchPaths>

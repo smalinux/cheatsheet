@@ -1,0 +1,123 @@
+title: qt styling: styles, palettes, style sheets (QSS), dark mode (pyside6)
+url:   https://doc.qt.io/qt-6/stylesheet-reference.html
+tags:  qt pyside6 style qstyle fusion theme palette qpalette stylesheet qss css color dark-mode light-mode look skin font
+
+## styles (QStyle)
+QStyleFactory.keys()                # list the available styles, e.g. ["Windows", "Fusion"] (+ native ones)  @list @theme  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QStyleFactory.html#PySide6.QtWidgets.QStyleFactory.keys>
+app.setStyle("Fusion")              # use the Fusion style: same look on all platforms, follows dark mode  @fusion @theme  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QApplication.html#PySide6.QtWidgets.QApplication.setStyle>
+app.setStyle(QStyleFactory.create("Windows"))  # set a style object  @style  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QStyleFactory.html#PySide6.QtWidgets.QStyleFactory.create>
+app.style().name()                  # get the current style name  @current  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QStyle.html#PySide6.QtWidgets.QStyle.name>
+python app.py -style fusion         # pick the style from the command line  @cli
+QT_STYLE_OVERRIDE=fusion python app.py  # pick the style from the environment  @env
+w.setStyle(STYLE)                   # use another style for one widget  @widget  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QWidget.html#PySide6.QtWidgets.QWidget.setStyle>
+class MyStyle(QProxyStyle):         # change one thing of a style and keep the rest  @custom  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QProxyStyle.html>
+    class MyStyle(QProxyStyle):
+        def pixelMetric(self, metric, option=None, widget=None):
+            if metric == QStyle.PixelMetric.PM_SmallIconSize: return 20
+            return super().pixelMetric(metric, option, widget)
+    app.setStyle(MyStyle("Fusion"))
+def styleHint(self, hint, opt, w, ret)  # change behaviour hints (QStyle.StyleHint.SH_...) in a QProxyStyle  @hint  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QProxyStyle.html#PySide6.QtWidgets.QProxyStyle.styleHint>
+style.pixelMetric(QStyle.PixelMetric.PM_ScrollBarExtent)  # get a size the style uses (scroll bar width...)  @metric  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QStyle.html#PySide6.QtWidgets.QStyle.pixelMetric>
+style.standardIcon(QStyle.StandardPixmap.SP_DialogOkButton)  # get a built-in icon of the style  @icon  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QStyle.html#PySide6.QtWidgets.QStyle.standardIcon>
+w.style().unpolish(w); w.style().polish(w)  # re-apply a style sheet after changing a dynamic property  @refresh @property  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QStyle.html#PySide6.QtWidgets.QStyle.polish>
+QStylePainter(self).drawControl(QStyle.ControlElement.CE_PushButton, opt)  # draw standard controls in your own paintEvent  @custom-widget  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QStylePainter.html>
+
+## dark and light mode
+QGuiApplication.styleHints().colorScheme()  # get Qt.ColorScheme.Dark, Light or Unknown  @dark @system  <https://doc.qt.io/qtforpython-6/PySide6/QtGui/QStyleHints.html#PySide6.QtGui.QStyleHints.colorScheme>
+QGuiApplication.styleHints().colorSchemeChanged.connect(FN)  # react when the system theme changes  @dark @signal  <https://doc.qt.io/qtforpython-6/PySide6/QtGui/QStyleHints.html#PySide6.QtGui.QStyleHints.colorSchemeChanged>
+QGuiApplication.styleHints().setColorScheme(Qt.ColorScheme.Dark)  # force dark (or Light) for this app; Fusion and native styles follow  @dark @force  <https://doc.qt.io/qtforpython-6/PySide6/QtGui/QStyleHints.html#PySide6.QtGui.QStyleHints.setColorScheme>
+QGuiApplication.styleHints().unsetColorScheme()  # follow the system again  @system  <https://doc.qt.io/qtforpython-6/PySide6/QtGui/QStyleHints.html#PySide6.QtGui.QStyleHints.unsetColorScheme>
+QGuiApplication.paletteChanged      # old signal; use changeEvent with QEvent.Type.PaletteChange or ApplicationPaletteChange  @deprecated @palette
+
+## QPalette (colors by role)
+pal = app.palette()                 # get a copy of the app palette  @palette @colors  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QApplication.html#PySide6.QtWidgets.QApplication.palette>
+pal.setColor(QPalette.ColorRole.Window, QColor("#2b2b2b"))  # set a color role for all groups  @set  <https://doc.qt.io/qtforpython-6/PySide6/QtGui/QPalette.html#PySide6.QtGui.QPalette.setColor>
+pal.setColor(QPalette.ColorGroup.Disabled, QPalette.ColorRole.Text, QColor("gray"))  # set a color only for disabled widgets  @disabled  <https://doc.qt.io/qtforpython-6/PySide6/QtGui/QPalette.html#PySide6.QtGui.QPalette.setColor>
+app.setPalette(pal) / w.setPalette(pal)  # apply to the whole app / one widget (children inherit)  @apply  <https://doc.qt.io/qtforpython-6/PySide6/QtGui/QGuiApplication.html#PySide6.QtGui.QGuiApplication.setPalette>
+QPalette.ColorRole.Window / WindowText  # background and text of windows  @roles  <https://doc.qt.io/qtforpython-6/PySide6/QtGui/QPalette.html#PySide6.QtGui.QPalette.ColorRole>
+QPalette.ColorRole.Base / Text / AlternateBase / PlaceholderText  # background and text of inputs and lists  @roles  <https://doc.qt.io/qtforpython-6/PySide6/QtGui/QPalette.html#PySide6.QtGui.QPalette.ColorRole>
+QPalette.ColorRole.Button / ButtonText  # button background and text  @roles  <https://doc.qt.io/qtforpython-6/PySide6/QtGui/QPalette.html#PySide6.QtGui.QPalette.ColorRole>
+QPalette.ColorRole.Highlight / HighlightedText  # selection colors  @selection  <https://doc.qt.io/qtforpython-6/PySide6/QtGui/QPalette.html#PySide6.QtGui.QPalette.ColorRole>
+QPalette.ColorRole.ToolTipBase / ToolTipText / Link / LinkVisited / BrightText / Accent  # other roles  @roles  <https://doc.qt.io/qtforpython-6/PySide6/QtGui/QPalette.html#PySide6.QtGui.QPalette.ColorRole>
+QPalette.ColorRole.Light / Midlight / Mid / Dark / Shadow  # 3D bevel shades  @roles  <https://doc.qt.io/qtforpython-6/PySide6/QtGui/QPalette.html#PySide6.QtGui.QPalette.ColorRole>
+QPalette.ColorGroup.Active / Inactive / Disabled  # palettes for focused, unfocused, disabled widgets  @groups  <https://doc.qt.io/qtforpython-6/PySide6/QtGui/QPalette.html#PySide6.QtGui.QPalette.ColorGroup>
+w.palette().color(QPalette.ColorRole.Highlight)  # read a palette color (use in paintEvent to respect the theme)  @read  <https://doc.qt.io/qtforpython-6/PySide6/QtGui/QPalette.html#PySide6.QtGui.QPalette.color>
+w.setAutoFillBackground(True)       # needed so a plain widget paints its palette Window color  @background  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QWidget.html#PySide6.QtWidgets.QWidget.setAutoFillBackground>
+w.setBackgroundRole(QPalette.ColorRole.Base) / w.setForegroundRole(...)  # choose which roles the widget uses  @role  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QWidget.html#PySide6.QtWidgets.QWidget.setBackgroundRole>
+palette and style sheet             # a style sheet on a widget overrides its palette; do not mix both on the same widget  @gotcha
+
+## style sheets (QSS) basics
+app.setStyleSheet("QPushButton { color: white; background: #0078d4; }")  # style the whole app with CSS-like rules  @css @qss @theme  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QApplication.html#PySide6.QtWidgets.QApplication.setStyleSheet>
+w.setStyleSheet("color: red;")      # style one widget (and its children); no selector needed  @widget  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QWidget.html#PySide6.QtWidgets.QWidget.setStyleSheet>
+f = QFile(":/style.qss"); f.open(QIODevice.OpenModeFlag.ReadOnly); app.setStyleSheet(f.readAll().data().decode())  # load a .qss file from resources  @file @load
+app.setStyleSheet(pathlib.Path("style.qss").read_text())  # load a .qss file from disk  @file
+app.setStyleSheet("")               # remove all style sheet rules  @reset
+w.styleSheet()                      # get the current style sheet text  @read  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QWidget.html#PySide6.QtWidgets.QWidget.styleSheet>
+doc.qt.io/qt-6/stylesheet-reference.html  # list every QSS property, sub-control and pseudo-state  @reference @docs  <https://doc.qt.io/qt-6/stylesheet-reference.html>
+doc.qt.io/qt-6/stylesheet-examples.html  # see QSS examples for every widget  @examples  <https://doc.qt.io/qt-6/stylesheet-examples.html>
+
+## QSS selectors
+QPushButton { }                     # match QPushButton and subclasses  @type @selector
+.QPushButton { }                    # match only QPushButton, not subclasses  @class @exact
+#okButton { }                       # match the widget with objectName "okButton"  @id @name
+QPushButton#okButton { }            # match a type with a given objectName  @id
+QDialog QPushButton { }             # match buttons anywhere inside a QDialog  @descendant
+QDialog > QPushButton { }           # match buttons that are direct children of a QDialog  @child
+QPushButton[flat="true"] { }        # match by Qt property value  @property @attribute
+QLabel[status="error"] { color: red; }  # style by your own dynamic property (setProperty("status", "error"), then unpolish/polish)  @dynamic @state
+* { font-size: 11pt; }              # match every widget  @all
+QWidget#Main, QFrame#Side { }       # several selectors share one rule  @group
+MyWidget { }                        # match your own Python class by its class name (needs WA_StyledBackground for backgrounds)  @custom
+
+## QSS pseudo-states
+QPushButton:hover { }               # mouse is over it  @hover
+QPushButton:pressed { }             # mouse button is down on it  @pressed @active
+QPushButton:checked { } / :unchecked  # a checkable button is on / off  @toggle
+QLineEdit:focus { }                 # it has keyboard focus  @focus
+QWidget:disabled { } / :enabled     # disabled / enabled widgets  @disabled
+QLineEdit:read-only { }             # read-only inputs  @readonly
+QCheckBox:indeterminate { }         # a tristate box in the middle state  @tristate
+QTabBar::tab:selected { }           # the current tab  @tab @selected
+QTreeView::item:selected:!active { }  # selected item in an unfocused view (! negates)  @not @selected
+QComboBox:editable { } / QComboBox:on  # editable combo / popup open  @combo
+QAbstractItemView::item:alternate { }  # the alternate (zebra) rows  @alternating
+QMenu::item:selected { }            # highlighted menu entry  @menu
+
+## QSS sub-controls
+QComboBox::drop-down { } / QComboBox::down-arrow { image: url(:/arrow.png); }  # style the combo arrow area  @combo @arrow
+QScrollBar:vertical { width: 10px; } QScrollBar::handle:vertical { background: #888; border-radius: 5px; }  # thin round scroll bars  @scrollbar
+QScrollBar::add-line, QScrollBar::sub-line { height: 0; }  # hide the scroll bar arrow buttons  @scrollbar
+QSlider::groove:horizontal { } QSlider::handle:horizontal { }  # style slider track and knob  @slider
+QProgressBar::chunk { background: #4caf50; }  # style the filled part of a progress bar  @progress
+QTabWidget::pane { } QTabBar::tab { padding: 6px 12px; }  # style the tab page frame and tabs  @tabs
+QHeaderView::section { background: #333; color: white; }  # style table/tree headers  @header
+QCheckBox::indicator { width: 16px; height: 16px; } QCheckBox::indicator:checked { image: url(:/check.svg); }  # style the check mark box  @checkbox
+QGroupBox::title { subcontrol-origin: margin; left: 8px; }  # move the group box title  @groupbox
+QToolTip { color: black; background: #ffffdd; border: 1px solid gray; }  # style all tooltips  @tooltip
+QMenu::separator { height: 1px; background: #555; }  # style menu separators  @menu
+QSpinBox::up-button / ::down-button  # style spin box arrows  @spinbox
+QSplitter::handle { background: #444; }  # style splitter dividers  @splitter
+QTreeView::branch { }               # style tree arrows and lines  @tree
+
+## QSS properties
+color: #eee; background-color: #222;  # text and background colors  @color
+background: qlineargradient(x1:0, y1:0, x2:0, y2:1, stop:0 #555, stop:1 #222);  # gradient background  @gradient
+border: 1px solid #555; border-radius: 6px;  # border and round corners  @border @rounded
+padding: 4px 8px; margin: 2px;      # inner / outer spacing  @padding @margin
+min-width: 80px; max-height: 30px;  # size limits  @size
+font: bold 12pt "Sans"; / font-size: 11pt; font-weight: 600;  # fonts  @font
+image: url(:/icons/x.svg); / icon-size: 16px;  # images on sub-controls / icon size  @image
+selection-background-color: #0078d4; selection-color: white;  # selection colors in inputs and views  @selection
+qproperty-iconSize: 24px;           # set a Qt property from a style sheet (qproperty-NAME)  @property
+palette(highlight)                  # use a palette color inside QSS, follows the theme  @palette @theme
+alternate-background-color: #2a2a2a;  # zebra row color for views with alternatingRowColors  @alternating
+outline: none;                      # remove the dotted focus outline  @focus
+spacing: 6px;                       # gap between a check box and its text, menu items...  @gap
+
+## fonts and DPI
+app.setFont(QFont("Inter", 10))     # set the default font for all widgets  @font @global  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QApplication.html#PySide6.QtWidgets.QApplication.setFont>
+QFontDatabase.addApplicationFont(":/fonts/Inter.ttf")  # bundle a font with the app  @ttf  <https://doc.qt.io/qtforpython-6/PySide6/QtGui/QFontDatabase.html#PySide6.QtGui.QFontDatabase.addApplicationFont>
+w.devicePixelRatioF()               # get the scale factor (2.0 on a 200% screen)  @hidpi  <https://doc.qt.io/qtforpython-6/PySide6/QtGui/QPaintDevice.html#PySide6.QtGui.QPaintDevice.devicePixelRatioF>
+QIcon with SVG files                # stays sharp on every scale factor  @hidpi @svg
+QT_SCALE_FACTOR=1.25 / QT_SCREEN_SCALE_FACTORS="1;2"  # override scaling from the environment  @hidpi @env
+QT_ENABLE_HIGHDPI_SCALING=0         # turn high-DPI scaling off (not recommended)  @hidpi @env

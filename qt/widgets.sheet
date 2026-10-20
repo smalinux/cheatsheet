@@ -1,87 +1,156 @@
-title: qt widgets (pyside6)
-url:   https://doc.qt.io/qt-6/qtwidgets-index.html
-tags:  qt qt6 pyside pyside6 python widget label button input text dialog menu window
+title: qt QWidget basics: windows, size, visibility, focus, flags (pyside6)
+url:   https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QWidget.html
+tags:  qt pyside6 qwidget window show hide resize size geometry move title icon focus cursor tooltip flags attribute fullscreen modal
 
-; Python only (PySide6). Every visible thing is a QWidget. For tables/trees/lists see qt/model-view.sheet.
-
-## any widget
-w.show() / w.hide() / w.setVisible(B)  # show or hide a widget  @visible  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QWidget.html>
-w.setEnabled(False)                 # grey out a widget so the user cannot use it  @disable  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QWidget.html#PySide6.QtWidgets.QWidget.setEnabled>
-w.setToolTip("TEXT")                # show text when the mouse hovers  @hover @hint  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QWidget.html#PySide6.QtWidgets.QWidget.setToolTip>
-w.setWindowTitle("TITLE")           # set the title of a top-level window  @caption
-w.setFocus()                        # give keyboard focus to a widget  @focus
-w.resize(W, H)                      # set the size of a window  @size
-w.setFont(FONT)                     # change the font of a widget  @text
-class MyWidget(QWidget)             # build your own widget: call super().__init__(parent), then add a layout  @custom @subclass  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QWidget.html>
-    class MyWidget(QWidget):
-        def __init__(self, parent=None):
-            super().__init__(parent)
+## make a window
+class Window(QWidget): def __init__(self): super().__init__()  # subclass QWidget for your own window or component  @subclass @window
+    class Window(QWidget):
+        def __init__(self):
+            super().__init__()
+            self.setWindowTitle("Demo")
             layout = QVBoxLayout(self)
-            self.label = QLabel("hi")
-            layout.addWidget(self.label)
+            layout.addWidget(QLabel("Hello"))
+w.show()                            # show a window or widget (windows are hidden until shown)  @show @open  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QWidget.html#PySide6.QtWidgets.QWidget.show>
+w.hide()                            # hide it (same as setVisible(False))  @hide  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QWidget.html#PySide6.QtWidgets.QWidget.hide>
+w.setVisible(BOOL)                  # show or hide  @visible  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QWidget.html#PySide6.QtWidgets.QWidget.setVisible>
+w.close()                           # close the window (sends closeEvent; deletes it if WA_DeleteOnClose)  @close  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QWidget.html#PySide6.QtWidgets.QWidget.close>
+w.showMaximized() / w.showMinimized() / w.showFullScreen() / w.showNormal()  # change the window state  @maximize @fullscreen  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QWidget.html#PySide6.QtWidgets.QWidget.showMaximized>
+w.isVisible() / w.isHidden()        # check visibility (isHidden = hidden by hand)  @visible  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QWidget.html#PySide6.QtWidgets.QWidget.isVisible>
+w.isWindow()                        # check if the widget is a top-level window  @toplevel  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QWidget.html#PySide6.QtWidgets.QWidget.isWindow>
+w.window()                          # get the window that holds this widget  @toplevel  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QWidget.html#PySide6.QtWidgets.QWidget.window>
+w.raise_()                          # bring the window to the front (raise_ because raise is a keyword)  @front  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QWidget.html#PySide6.QtWidgets.QWidget.raise_>
+w.activateWindow()                  # give the window keyboard focus  @focus @front  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QWidget.html#PySide6.QtWidgets.QWidget.activateWindow>
+w.lower()                           # send the widget behind its siblings  @back  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QWidget.html#PySide6.QtWidgets.QWidget.lower>
+w.setWindowTitle("TEXT")            # set the title bar text  @title  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QWidget.html#PySide6.QtWidgets.QWidget.setWindowTitle>
+w.setWindowTitle("Doc[*]"); w.setWindowModified(True)  # show a * in the title for unsaved changes  @modified @dirty  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QWidget.html#PySide6.QtWidgets.QWidget.setWindowModified>
+w.setWindowIcon(QIcon("icon.png"))  # set the window icon  @icon  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QWidget.html#PySide6.QtWidgets.QWidget.setWindowIcon>
+w.setWindowOpacity(0.8)             # make the whole window see-through  @opacity @transparent  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QWidget.html#PySide6.QtWidgets.QWidget.setWindowOpacity>
+w.setWindowFilePath(PATH)           # set the file the window shows (title + macOS proxy icon)  @file  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QWidget.html#PySide6.QtWidgets.QWidget.setWindowFilePath>
+w.windowHandle()                    # get the QWindow under a top-level widget  @qwindow  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QWidget.html#PySide6.QtWidgets.QWidget.windowHandle>
+w.screen()                          # get the screen the widget is on  @monitor  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QWidget.html#PySide6.QtWidgets.QWidget.screen>
+w.winId()                           # get the native window id (X11 window, HWND)  @native @xid  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QWidget.html#PySide6.QtWidgets.QWidget.winId>
 
-## text display
-QLabel("TEXT")                      # show read-only text or an image  @text @static  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QLabel.html>
-label.setText("TEXT")               # change label text  @update
-QLabel("<b>bold</b> <a href='x'>link</a>")  # labels render simple HTML (rich text)  @html @richtext
-label.setTextInteractionFlags(Qt.TextInteractionFlag.TextSelectableByMouse)  # let the user select and copy label text  @copy @select  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QLabel.html#PySide6.QtWidgets.QLabel.setTextInteractionFlags>
-label.linkActivated.connect(FN)     # run FN(url) when a link in the label is clicked  @link @href
-label.setWordWrap(True)             # wrap long label text onto several lines  @wrap
-QPlainTextEdit(); te.setReadOnly(True)  # show a lot of plain text, fast (logs, disassembly dumps)  @log @output @textarea  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QPlainTextEdit.html>
-te.appendPlainText("LINE")          # add a line to the end of a QPlainTextEdit  @append @log
-te.setPlainText(TEXT) / te.toPlainText()  # replace or read all text of a text box  @get @set
-QTextEdit / QTextBrowser            # text box with rich text (HTML); QTextBrowser follows links  @html  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QTextBrowser.html>
+## size and position
+w.resize(800, 600)                  # set the size (inside the frame)  @size @width @height  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QWidget.html#PySide6.QtWidgets.QWidget.resize>
+w.move(X, Y)                        # move the window (or a child inside its parent)  @position  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QWidget.html#PySide6.QtWidgets.QWidget.move>
+w.setGeometry(X, Y, W, H)           # set position and size at once  @geometry  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QWidget.html#PySide6.QtWidgets.QWidget.setGeometry>
+w.size() / w.width() / w.height()   # get the current size  @size  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QWidget.html#PySide6.QtWidgets.QWidget.size>
+w.pos() / w.x() / w.y()             # get the position (includes the frame for windows)  @position  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QWidget.html#PySide6.QtWidgets.QWidget.pos>
+w.geometry()                        # get the rect inside the frame, relative to the parent  @geometry  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QWidget.html#PySide6.QtWidgets.QWidget.geometry>
+w.frameGeometry()                   # get the rect including the window frame  @frame  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QWidget.html#PySide6.QtWidgets.QWidget.frameGeometry>
+w.rect()                            # get QRect(0, 0, width, height)  @rect  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QWidget.html#PySide6.QtWidgets.QWidget.rect>
+w.setFixedSize(W, H)                # stop resizing: min = max = size  @fixed @noresize  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QWidget.html#PySide6.QtWidgets.QWidget.setFixedSize>
+w.setFixedWidth(W) / w.setFixedHeight(H)  # fix only one direction  @fixed  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QWidget.html#PySide6.QtWidgets.QWidget.setFixedWidth>
+w.setMinimumSize(W, H) / w.setMaximumSize(W, H)  # limit how small / big the widget can get  @min @max  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QWidget.html#PySide6.QtWidgets.QWidget.setMinimumSize>
+w.setMinimumWidth(W) / w.setMaximumHeight(H)  # limit one direction  @min @max  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QWidget.html#PySide6.QtWidgets.QWidget.setMinimumWidth>
+w.sizeHint()                        # get the size the widget would like (layouts use it)  @preferred  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QWidget.html#PySide6.QtWidgets.QWidget.sizeHint>
+def sizeHint(self): return QSize(400, 300)  # override to choose your widget's preferred size  @custom  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QWidget.html#PySide6.QtWidgets.QWidget.sizeHint>
+w.minimumSizeHint()                 # get the smallest sensible size  @min  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QWidget.html#PySide6.QtWidgets.QWidget.minimumSizeHint>
+w.adjustSize()                      # shrink or grow to fit the contents  @fit  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QWidget.html#PySide6.QtWidgets.QWidget.adjustSize>
+w.updateGeometry()                  # tell the layout that sizeHint changed  @layout  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QWidget.html#PySide6.QtWidgets.QWidget.updateGeometry>
+w.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Fixed)  # say how the widget grows in a layout  @grow @stretch  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QWidget.html#PySide6.QtWidgets.QWidget.setSizePolicy>
+w.setContentsMargins(L, T, R, B)    # set space between the widget edge and its contents  @padding @margin  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QWidget.html#PySide6.QtWidgets.QWidget.setContentsMargins>
+w.contentsRect()                    # get the rect inside the margins  @padding  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QWidget.html#PySide6.QtWidgets.QWidget.contentsRect>
+w.move(w.screen().availableGeometry().center() - w.rect().center())  # center a window on its screen  @center
+w.mapToGlobal(QPoint(0, 0))         # convert a widget point to screen coordinates  @coordinates @screen  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QWidget.html#PySide6.QtWidgets.QWidget.mapToGlobal>
+w.mapFromGlobal(P) / w.mapTo(OTHER, P) / w.mapFromParent(P)  # convert points between coordinate systems  @coordinates  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QWidget.html#PySide6.QtWidgets.QWidget.mapFromGlobal>
+w.childAt(P)                        # get the child widget at a point  @hit-test  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QWidget.html#PySide6.QtWidgets.QWidget.childAt>
+w.saveGeometry() / w.restoreGeometry(BYTES)  # store and restore window size, position, maximized state  @remember @settings  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QWidget.html#PySide6.QtWidgets.QWidget.saveGeometry>
 
-## input
-QLineEdit()                         # one-line text input  @input @textbox @field  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QLineEdit.html>
-edit.text() / edit.setText(S)       # read or set the input text  @value
-edit.setPlaceholderText("Search...")  # show grey hint text when empty  @hint
-edit.setClearButtonEnabled(True)    # add an x button that clears the input  @clear
-QPushButton("TEXT")                 # clickable button; connect .clicked  @button  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QPushButton.html>
-QToolButton()                       # small icon button for toolbars  @icon @button  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QToolButton.html>
-QCheckBox("TEXT"); cb.isChecked()   # on/off box  @bool @toggle  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QCheckBox.html>
-QRadioButton("TEXT")                # pick one of several; group them with QButtonGroup  @option  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QRadioButton.html>
-QComboBox(); cb.addItems([...])     # drop-down list  @select @dropdown @choice  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QComboBox.html>
-cb.currentText() / cb.currentIndex()  # read the selected combo box item  @value
-cb.addItem("TEXT", USERDATA); cb.currentData()  # attach a hidden value to each combo item  @data
-QSpinBox(); sb.setRange(0, 100)     # integer input with up/down arrows  @number @int  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QSpinBox.html>
-QSpinBox.setDisplayIntegerBase(16)  # show a spin box value in hex  @hex
-QSlider(Qt.Orientation.Horizontal)  # slider for a number  @range  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QSlider.html>
-QProgressBar(); pb.setValue(N)      # show progress  @percent @busy  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QProgressBar.html>
+## window flags and states
+w.setWindowFlags(Qt.WindowType.Window | Qt.WindowType.FramelessWindowHint)  # make a window without a frame or title bar  @frameless @borderless  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/Qt.html#PySide6.QtCore.Qt.WindowType>
+w.setWindowFlag(Qt.WindowType.WindowStaysOnTopHint, True)  # turn one flag on (keep above others); call show() again after  @ontop @always-on-top  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QWidget.html#PySide6.QtWidgets.QWidget.setWindowFlag>
+Qt.WindowType.Tool                  # a small tool window, stays on its parent, no taskbar entry  @tool @palette  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/Qt.html#PySide6.QtCore.Qt.WindowType>
+Qt.WindowType.Dialog / Popup / SplashScreen / ToolTip / SubWindow  # other window kinds  @kind  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/Qt.html#PySide6.QtCore.Qt.WindowType>
+Qt.WindowType.CustomizeWindowHint | Qt.WindowType.WindowTitleHint  # show a title bar without min/max/close buttons  @buttons  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/Qt.html#PySide6.QtCore.Qt.WindowType>
+Qt.WindowType.WindowMinimizeButtonHint / WindowMaximizeButtonHint / WindowCloseButtonHint  # pick title bar buttons  @buttons  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/Qt.html#PySide6.QtCore.Qt.WindowType>
+Qt.WindowType.WindowTransparentForInput  # let mouse clicks pass through the window  @clickthrough @overlay  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/Qt.html#PySide6.QtCore.Qt.WindowType>
+Qt.WindowType.WindowDoesNotAcceptFocus  # never take keyboard focus (on-screen keyboards, overlays)  @focus  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/Qt.html#PySide6.QtCore.Qt.WindowType>
+Qt.WindowType.BypassWindowManagerHint  # skip the window manager entirely  @wm  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/Qt.html#PySide6.QtCore.Qt.WindowType>
+w.windowFlags()                     # get the current flags  @flags  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QWidget.html#PySide6.QtWidgets.QWidget.windowFlags>
+w.setWindowState(Qt.WindowState.WindowMaximized)  # set the state (WindowMinimized, WindowFullScreen, WindowNoState)  @state  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QWidget.html#PySide6.QtWidgets.QWidget.setWindowState>
+w.windowState() & Qt.WindowState.WindowMaximized  # check if maximized  @state  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/Qt.html#PySide6.QtCore.Qt.WindowState>
+w.isMaximized() / w.isMinimized() / w.isFullScreen() / w.isActiveWindow()  # check the window state  @state  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QWidget.html#PySide6.QtWidgets.QWidget.isMaximized>
+w.setWindowModality(Qt.WindowModality.ApplicationModal)  # block input to other windows while this one is open  @modal  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QWidget.html#PySide6.QtWidgets.QWidget.setWindowModality>
+Qt.WindowModality.WindowModal       # block only the parent window  @modal  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/Qt.html#PySide6.QtCore.Qt.WindowModality>
+w.windowHandle().startSystemMove()  # let the user drag a frameless window (call from mousePressEvent)  @drag @frameless  <https://doc.qt.io/qtforpython-6/PySide6/QtGui/QWindow.html#PySide6.QtGui.QWindow.startSystemMove>
+w.windowHandle().startSystemResize(Qt.Edge.RightEdge)  # let the user resize a frameless window from an edge  @resize @frameless  <https://doc.qt.io/qtforpython-6/PySide6/QtGui/QWindow.html#PySide6.QtGui.QWindow.startSystemResize>
 
-## dialogs
-QMessageBox.information(self, "TITLE", "TEXT")  # show a message with OK  @alert @popup @info  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QMessageBox.html>
-QMessageBox.warning(self, "TITLE", "TEXT")  # show a warning message  @alert @error
-QMessageBox.question(self, "TITLE", "TEXT") == QMessageBox.StandardButton.Yes  # ask yes/no  @confirm
-QInputDialog.getText(self, "TITLE", "LABEL")  # ask for one line of text; returns (text, ok)  @prompt  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QInputDialog.html>
-QInputDialog.getInt(self, "TITLE", "LABEL")  # ask for a number; returns (value, ok)  @prompt @number
-QInputDialog.getItem(self, "TITLE", "LABEL", ITEMS)  # ask the user to pick from a list; returns (item, ok)  @choice
-QFileDialog.getOpenFileName(self, "TITLE", DIR, "JSON (*.json)")  # pick a file to open; returns (path, filter)  @browse @file  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QFileDialog.html>
-QFileDialog.getSaveFileName(self, "TITLE")  # pick a file to save to; returns (path, filter)  @save
-QFileDialog.getExistingDirectory(self, "TITLE")  # pick a folder  @dir
-class D(QDialog)                    # your own dialog; dlg.exec() blocks and returns Accepted/Rejected  @modal @custom  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QDialog.html>
-QDialogButtonBox(QDialogButtonBox.StandardButton.Ok | QDialogButtonBox.StandardButton.Cancel)  # OK/Cancel buttons in OS order  @ok @cancel  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QDialogButtonBox.html>
-    bb.accepted.connect(self.accept)
-    bb.rejected.connect(self.reject)
-if dlg.exec() == QDialog.DialogCode.Accepted:  # check if the user pressed OK  @result
-dlg.show()                          # open a dialog without blocking (non-modal); keep a reference  @modeless
+## widget attributes
+w.setAttribute(Qt.WidgetAttribute.WA_DeleteOnClose)  # delete the widget when it is closed  @memory @close  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QWidget.html#PySide6.QtWidgets.QWidget.setAttribute>
+w.setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground)  # make the window background transparent (with FramelessWindowHint)  @transparent @rounded  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/Qt.html#PySide6.QtCore.Qt.WidgetAttribute>
+w.setAttribute(Qt.WidgetAttribute.WA_TransparentForMouseEvents)  # let clicks go to the widget below  @clickthrough  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/Qt.html#PySide6.QtCore.Qt.WidgetAttribute>
+w.setAttribute(Qt.WidgetAttribute.WA_StyledBackground)  # paint the stylesheet background on a plain QWidget subclass  @stylesheet @background  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/Qt.html#PySide6.QtCore.Qt.WidgetAttribute>
+w.setAttribute(Qt.WidgetAttribute.WA_ShowWithoutActivating)  # show a window without stealing focus  @focus  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/Qt.html#PySide6.QtCore.Qt.WidgetAttribute>
+w.setAttribute(Qt.WidgetAttribute.WA_Hover)  # get hover events and :hover styles  @hover  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/Qt.html#PySide6.QtCore.Qt.WidgetAttribute>
+w.setAttribute(Qt.WidgetAttribute.WA_OpaquePaintEvent)  # promise to paint every pixel (faster repaint)  @performance  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/Qt.html#PySide6.QtCore.Qt.WidgetAttribute>
+w.setAttribute(Qt.WidgetAttribute.WA_QuitOnClose, False)  # do not count this window for "quit on last window closed"  @quit  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/Qt.html#PySide6.QtCore.Qt.WidgetAttribute>
+w.setAttribute(Qt.WidgetAttribute.WA_AcceptTouchEvents)  # receive touch events  @touch  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/Qt.html#PySide6.QtCore.Qt.WidgetAttribute>
+w.testAttribute(ATTR)               # check an attribute  @check  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QWidget.html#PySide6.QtWidgets.QWidget.testAttribute>
 
-## menus and actions
-QAction("TEXT", self)               # a command for menus and toolbars (in QtGui)  @command  <https://doc.qt.io/qtforpython-6/PySide6/QtGui/QAction.html>
-act.triggered.connect(FN)           # run FN when the action is chosen  @click
-act.setShortcut(QKeySequence("Ctrl+K"))  # give an action a key shortcut  @hotkey  <https://doc.qt.io/qtforpython-6/PySide6/QtGui/QKeySequence.html>
-QMenu(); menu.addAction("TEXT", FN)  # build a pop-up menu  @menu  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QMenu.html>
-menu.exec(self.mapToGlobal(pos))    # show a menu at a widget position and wait for a choice  @popup @rightclick
-w.setContextMenuPolicy(Qt.ContextMenuPolicy.CustomContextMenu)  # enable customContextMenuRequested for right-click menus  @rightclick  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QWidget.html#PySide6.QtWidgets.QWidget.setContextMenuPolicy>
-    view.setContextMenuPolicy(Qt.ContextMenuPolicy.CustomContextMenu)
-    view.customContextMenuRequested.connect(self.on_menu)
-    def on_menu(self, pos):
-        m = QMenu(self); m.addAction("Copy", self.copy)
-        m.exec(self.view.viewport().mapToGlobal(pos))
-QShortcut(QKeySequence("Ctrl+F"), self, FN)  # key shortcut that works inside one widget  @hotkey  <https://doc.qt.io/qtforpython-6/PySide6/QtGui/QShortcut.html>
+## enable, focus, keyboard
+w.setEnabled(False) / w.setDisabled(True)  # grey out a widget and its children  @disable  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QWidget.html#PySide6.QtWidgets.QWidget.setEnabled>
+w.isEnabled()                       # check if enabled  @disable  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QWidget.html#PySide6.QtWidgets.QWidget.isEnabled>
+w.setFocus()                        # give keyboard focus to the widget  @focus  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QWidget.html#PySide6.QtWidgets.QWidget.setFocus>
+w.clearFocus() / w.hasFocus()       # take focus away / check focus  @focus  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QWidget.html#PySide6.QtWidgets.QWidget.hasFocus>
+w.setFocusPolicy(Qt.FocusPolicy.StrongFocus)  # take focus by Tab and click (NoFocus, TabFocus, ClickFocus, WheelFocus)  @tab  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QWidget.html#PySide6.QtWidgets.QWidget.setFocusPolicy>
+QWidget.setTabOrder(A, B)           # make Tab go from A to B  @tab-order  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QWidget.html#PySide6.QtWidgets.QWidget.setTabOrder>
+w.setFocusProxy(CHILD)              # pass focus on to a child widget  @focus  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QWidget.html#PySide6.QtWidgets.QWidget.setFocusProxy>
+w.focusWidget()                     # get the child that had focus last  @focus  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QWidget.html#PySide6.QtWidgets.QWidget.focusWidget>
+w.grabKeyboard() / w.releaseKeyboard()  # get all key events / stop  @grab  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QWidget.html#PySide6.QtWidgets.QWidget.grabKeyboard>
+w.grabMouse() / w.releaseMouse()    # get all mouse events / stop  @grab  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QWidget.html#PySide6.QtWidgets.QWidget.grabMouse>
+w.setMouseTracking(True)            # get mouseMoveEvent without a button held  @hover @mouse  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QWidget.html#PySide6.QtWidgets.QWidget.setMouseTracking>
+w.underMouse()                      # check if the mouse is over the widget  @hover  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QWidget.html#PySide6.QtWidgets.QWidget.underMouse>
+w.addAction(ACTION)                 # add an action (with shortcut) to a widget; also used for context menus  @shortcut  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QWidget.html#PySide6.QtWidgets.QWidget.addAction>
 
-## windows
-QMainWindow                         # window with menu bar, toolbars, dock widgets and a central widget  @app @window  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QMainWindow.html>
-win.setCentralWidget(W)             # set the main content of a QMainWindow  @content
-QDockWidget("TITLE")                # movable side panel in a QMainWindow  @panel @dock  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QDockWidget.html>
-win.statusBar().showMessage("TEXT", MS)  # show a short message in the status bar  @status
+## look and help
+w.setToolTip("TEXT")                # show text when the mouse rests on the widget (rich text allowed)  @hint @hover  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QWidget.html#PySide6.QtWidgets.QWidget.setToolTip>
+w.setToolTipDuration(MS)            # hide the tooltip after MS ms  @tooltip  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QWidget.html#PySide6.QtWidgets.QWidget.setToolTipDuration>
+w.setStatusTip("TEXT")              # show text in the main window status bar on hover  @statusbar  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QWidget.html#PySide6.QtWidgets.QWidget.setStatusTip>
+w.setWhatsThis("TEXT")              # set the Shift+F1 "What's this?" help  @help  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QWidget.html#PySide6.QtWidgets.QWidget.setWhatsThis>
+w.setCursor(Qt.CursorShape.PointingHandCursor)  # change the mouse cursor over the widget  @cursor  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QWidget.html#PySide6.QtWidgets.QWidget.setCursor>
+w.unsetCursor()                     # go back to the parent's cursor  @cursor  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QWidget.html#PySide6.QtWidgets.QWidget.unsetCursor>
+w.setFont(QFont("Monospace", 11))   # set the font of a widget and its children  @font  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QWidget.html#PySide6.QtWidgets.QWidget.setFont>
+w.font() / w.fontMetrics()          # get the font / measure text in it  @font @measure  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QWidget.html#PySide6.QtWidgets.QWidget.fontMetrics>
+w.setStyleSheet("background: #222; color: white;")  # style one widget with CSS-like rules  @css @qss  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QWidget.html#PySide6.QtWidgets.QWidget.setStyleSheet>
+w.setPalette(PAL)                   # set colors through a palette  @colors  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QWidget.html#PySide6.QtWidgets.QWidget.setPalette>
+w.setAutoFillBackground(True)       # fill the background with the palette Window color  @background  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QWidget.html#PySide6.QtWidgets.QWidget.setAutoFillBackground>
+w.setGraphicsEffect(QGraphicsDropShadowEffect())  # add a shadow, blur, opacity or color effect  @shadow @blur  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QWidget.html#PySide6.QtWidgets.QWidget.setGraphicsEffect>
+w.setLayoutDirection(Qt.LayoutDirection.RightToLeft)  # mirror the widget for RTL languages  @rtl  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QWidget.html#PySide6.QtWidgets.QWidget.setLayoutDirection>
+w.setMask(QRegion(...))             # cut the widget to a shape (non-rectangular window)  @shape  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QWidget.html#PySide6.QtWidgets.QWidget.setMask>
+
+## repaint and screenshots
+w.update()                          # schedule a repaint (merged, cheap); call after your data changed  @repaint @redraw  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QWidget.html#PySide6.QtWidgets.QWidget.update>
+w.repaint()                         # repaint at once (avoid; use update)  @repaint  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QWidget.html#PySide6.QtWidgets.QWidget.repaint>
+w.setUpdatesEnabled(False)          # stop repaints during many changes, then True again  @flicker @batch  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QWidget.html#PySide6.QtWidgets.QWidget.setUpdatesEnabled>
+w.grab()                            # take a screenshot of the widget as QPixmap  @screenshot  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QWidget.html#PySide6.QtWidgets.QWidget.grab>
+w.grab().save("shot.png")           # save a widget screenshot  @screenshot
+QApplication.primaryScreen().grabWindow(0)  # take a screenshot of the whole screen (not on Wayland)  @screenshot  <https://doc.qt.io/qtforpython-6/PySide6/QtGui/QScreen.html#PySide6.QtGui.QScreen.grabWindow>
+w.render(PAINTER_OR_DEVICE)         # draw the widget into another paint device (printer, image)  @print @render  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QWidget.html#PySide6.QtWidgets.QWidget.render>
+
+## parents and children
+QWidget(parent)                     # make a child; it is drawn inside the parent and deleted with it  @child @parent  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QWidget.html>
+w.setParent(NEW_PARENT)             # move a widget to another parent (call show() after)  @reparent  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QWidget.html#PySide6.QtWidgets.QWidget.setParent>
+w.setParent(None)                   # turn a child into a window (or remove it)  @detach @window  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QWidget.html#PySide6.QtWidgets.QWidget.setParent>
+w.parentWidget()                    # get the parent widget  @parent  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QWidget.html#PySide6.QtWidgets.QWidget.parentWidget>
+w.layout()                          # get the layout set on the widget  @layout  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QWidget.html#PySide6.QtWidgets.QWidget.layout>
+w.isAncestorOf(CHILD)               # check if CHILD is inside W  @tree  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QWidget.html#PySide6.QtWidgets.QWidget.isAncestorOf>
+w.findChildren(QWidget)             # list all descendant widgets  @tree  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/QObject.html#PySide6.QtCore.QObject.findChildren>
+QWidget.createWindowContainer(QWINDOW)  # put a QWindow (QQuickView, 3D, OpenGL) inside a widget layout  @embed @qwindow  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QWidget.html#PySide6.QtWidgets.QWidget.createWindowContainer>
+
+## event handlers to override (see events sheet)
+paintEvent(self, e)                 # draw the widget with QPainter  @paint  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QWidget.html#PySide6.QtWidgets.QWidget.paintEvent>
+resizeEvent(self, e)                # react to size changes: e.size(), e.oldSize()  @resize  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QWidget.html#PySide6.QtWidgets.QWidget.resizeEvent>
+closeEvent(self, e)                 # ask "save changes?"; e.ignore() keeps the window open  @close @quit  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QWidget.html#PySide6.QtWidgets.QWidget.closeEvent>
+showEvent(self, e) / hideEvent(self, e)  # react when shown / hidden  @show  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QWidget.html#PySide6.QtWidgets.QWidget.showEvent>
+mousePressEvent / mouseMoveEvent / mouseReleaseEvent / mouseDoubleClickEvent  # handle mouse input  @mouse  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QWidget.html#PySide6.QtWidgets.QWidget.mousePressEvent>
+keyPressEvent(self, e) / keyReleaseEvent(self, e)  # handle keyboard input  @keyboard  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QWidget.html#PySide6.QtWidgets.QWidget.keyPressEvent>
+wheelEvent(self, e)                 # handle the scroll wheel  @scroll  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QWidget.html#PySide6.QtWidgets.QWidget.wheelEvent>
+enterEvent(self, e) / leaveEvent(self, e)  # react when the mouse enters / leaves  @hover  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QWidget.html#PySide6.QtWidgets.QWidget.enterEvent>
+focusInEvent / focusOutEvent        # react to focus changes  @focus  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QWidget.html#PySide6.QtWidgets.QWidget.focusInEvent>
+contextMenuEvent(self, e)           # show a right-click menu at e.globalPos()  @rightclick @menu  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QWidget.html#PySide6.QtWidgets.QWidget.contextMenuEvent>
+changeEvent(self, e)                # react to font, palette, language, window state changes  @change  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QWidget.html#PySide6.QtWidgets.QWidget.changeEvent>
+dragEnterEvent / dragMoveEvent / dropEvent  # accept drag and drop (needs setAcceptDrops(True))  @dnd  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QWidget.html#PySide6.QtWidgets.QWidget.dropEvent>
+w.setContextMenuPolicy(Qt.ContextMenuPolicy.CustomContextMenu); w.customContextMenuRequested.connect(FN)  # get a signal for right-click instead of overriding  @rightclick  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QWidget.html#PySide6.QtWidgets.QWidget.customContextMenuRequested>
+w.setContextMenuPolicy(Qt.ContextMenuPolicy.ActionsContextMenu)  # show the widget's actions() as its right-click menu  @rightclick  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/Qt.html#PySide6.QtCore.Qt.ContextMenuPolicy>
+w.windowTitleChanged.connect(FN) / w.windowIconChanged.connect(FN)  # react to title / icon changes  @signal  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QWidget.html#PySide6.QtWidgets.QWidget.windowTitleChanged>

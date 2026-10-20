@@ -1,0 +1,231 @@
+title: qt core classes (pyside6): timers, settings, dates, urls, json, regex, locale, cli
+url:   https://doc.qt.io/qtforpython-6/PySide6/QtCore/index.html
+tags:  qt pyside6 qtcore timer qtimer settings qsettings date time datetime url json regex regular-expression locale command-line argparse uuid hash geometry
+
+## QTimer
+timer = QTimer(self)                # create a timer owned by SELF (stops when SELF is deleted)  @timer @create  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/QTimer.html>
+timer.timeout.connect(FN)           # run FN every time the timer fires  @tick @interval  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/QTimer.html#PySide6.QtCore.QTimer.timeout>
+timer.start(1000)                   # start firing every 1000 ms  @start @interval  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/QTimer.html#PySide6.QtCore.QTimer.start>
+timer.start()                       # (re)start with the interval set before  @start  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/QTimer.html#PySide6.QtCore.QTimer.start>
+timer.stop()                        # stop the timer  @stop  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/QTimer.html#PySide6.QtCore.QTimer.stop>
+timer.setInterval(MS)               # change the interval  @interval  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/QTimer.html#PySide6.QtCore.QTimer.setInterval>
+timer.setSingleShot(True)           # fire only once per start()  @once  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/QTimer.html#PySide6.QtCore.QTimer.setSingleShot>
+timer.isActive()                    # check if the timer is running  @running  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/QTimer.html#PySide6.QtCore.QTimer.isActive>
+timer.remainingTime()               # get ms left until the next timeout (-1 if stopped)  @countdown  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/QTimer.html#PySide6.QtCore.QTimer.remainingTime>
+timer.setTimerType(Qt.TimerType.PreciseTimer)  # ask for ms accuracy (CoarseTimer default, VeryCoarseTimer = 1 s)  @accuracy  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/QTimer.html#PySide6.QtCore.QTimer.setTimerType>
+timer.start(0)                      # fire whenever the event loop is idle (do work in small chunks)  @idle
+QTimer.singleShot(MS, FN)           # run FN once after MS milliseconds  @delay @once @settimeout  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/QTimer.html#PySide6.QtCore.QTimer.singleShot>
+QTimer.singleShot(MS, CONTEXT, FN)  # run FN once later, only if CONTEXT still exists, in CONTEXT's thread  @delay @safe  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/QTimer.html#PySide6.QtCore.QTimer.singleShot>
+obj.startTimer(MS)                  # start a low-level timer; returns an id, handle it in timerEvent()  @timerEvent  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/QObject.html#PySide6.QtCore.QObject.startTimer>
+def timerEvent(self, e): e.timerId()  # handle timers started with startTimer()  @timerEvent  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/QTimerEvent.html#PySide6.QtCore.QTimerEvent.timerId>
+obj.killTimer(ID)                   # stop a startTimer() timer  @stop  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/QObject.html#PySide6.QtCore.QObject.killTimer>
+QBasicTimer()                       # light timer object: start(MS, obj), stop(), isActive(), sends timerEvent  @timer  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/QBasicTimer.html>
+
+## measure time
+t = QElapsedTimer(); t.start()      # start a stopwatch  @stopwatch @benchmark @measure  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/QElapsedTimer.html>
+t.elapsed()                         # get ms since start()  @ms @stopwatch  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/QElapsedTimer.html#PySide6.QtCore.QElapsedTimer.elapsed>
+t.nsecsElapsed()                    # get ns since start()  @ns @precise  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/QElapsedTimer.html#PySide6.QtCore.QElapsedTimer.nsecsElapsed>
+t.restart()                         # get ms since start and restart the stopwatch  @lap  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/QElapsedTimer.html#PySide6.QtCore.QElapsedTimer.restart>
+t.hasExpired(MS)                    # check if more than MS ms have passed  @timeout  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/QElapsedTimer.html#PySide6.QtCore.QElapsedTimer.hasExpired>
+QDeadlineTimer(MS)                  # make a deadline MS from now (for wait() timeouts)  @deadline @timeout  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/QDeadlineTimer.html>
+dl.hasExpired() / dl.remainingTime()  # check a deadline  @deadline  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/QDeadlineTimer.html#PySide6.QtCore.QDeadlineTimer.remainingTime>
+QTimeLine(MS)                       # emit valueChanged(0..1) and frameChanged over MS ms (simple animations)  @animation @progress  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/QTimeLine.html>
+
+## QSettings (save options between runs)
+QSettings("ORG", "APP")             # open the settings store for an app (registry / plist / ~/.config/ORG/APP.conf)  @config @prefs  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/QSettings.html>
+QSettings()                         # open settings using app.setOrganizationName() and setApplicationName()  @config  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/QSettings.html>
+QSettings("file.ini", QSettings.Format.IniFormat)  # use an .ini file at a given path  @ini @file  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/QSettings.html#PySide6.QtCore.QSettings.Format>
+QSettings(QSettings.Format.IniFormat, QSettings.Scope.UserScope, "ORG", "APP")  # force .ini format in the user's config folder  @ini  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/QSettings.html>
+s.setValue("KEY", VALUE)            # save a value (str, int, bool, list, QByteArray, QColor, QSize...)  @save @write  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/QSettings.html#PySide6.QtCore.QSettings.setValue>
+s.value("KEY", DEFAULT)             # read a value, or DEFAULT if missing  @load @read  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/QSettings.html#PySide6.QtCore.QSettings.value>
+s.value("KEY", 0, type=int)         # read and convert to int (ini files store everything as text)  @type @int @bool
+s.value("KEY", False, type=bool)    # read a bool safely ("true"/"false" text in .ini files)  @bool
+s.value("KEY", [], type=list)       # read a list (a single item comes back as a str otherwise)  @list
+s.contains("KEY")                   # check if a key exists  @exists  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/QSettings.html#PySide6.QtCore.QSettings.contains>
+s.remove("KEY")                     # delete a key (or a whole group)  @delete  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/QSettings.html#PySide6.QtCore.QSettings.remove>
+s.remove("")                        # delete every key in the current group  @clear
+s.clear()                           # delete every key  @clear  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/QSettings.html#PySide6.QtCore.QSettings.clear>
+s.allKeys()                         # list all keys, with "group/key" paths  @list  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/QSettings.html#PySide6.QtCore.QSettings.allKeys>
+s.childKeys() / s.childGroups()     # list keys / groups at the current level  @list  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/QSettings.html#PySide6.QtCore.QSettings.childKeys>
+s.beginGroup("window"); ...; s.endGroup()  # put keys under a prefix "window/..."  @group @section  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/QSettings.html#PySide6.QtCore.QSettings.beginGroup>
+s.beginWriteArray("files"); s.setArrayIndex(I); ...; s.endArray()  # save a list of records  @array  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/QSettings.html#PySide6.QtCore.QSettings.beginWriteArray>
+n = s.beginReadArray("files"); s.setArrayIndex(I); ...; s.endArray()  # read a list of records  @array  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/QSettings.html#PySide6.QtCore.QSettings.beginReadArray>
+s.sync()                            # write changes to disk now (also done on delete and by the event loop)  @flush @save  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/QSettings.html#PySide6.QtCore.QSettings.sync>
+s.fileName()                        # get where the settings are stored  @path @where  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/QSettings.html#PySide6.QtCore.QSettings.fileName>
+s.status()                          # check for AccessError / FormatError after sync  @error  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/QSettings.html#PySide6.QtCore.QSettings.status>
+s.isWritable()                      # check if the settings can be saved  @readonly  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/QSettings.html#PySide6.QtCore.QSettings.isWritable>
+s.setValue("geometry", w.saveGeometry())  # remember window size and position  @window @geometry  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QWidget.html#PySide6.QtWidgets.QWidget.saveGeometry>
+w.restoreGeometry(s.value("geometry"))  # restore window size and position  @window @geometry  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QWidget.html#PySide6.QtWidgets.QWidget.restoreGeometry>
+s.setValue("state", mainwin.saveState())  # remember toolbar and dock positions  @dock @toolbar  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QMainWindow.html#PySide6.QtWidgets.QMainWindow.saveState>
+mainwin.restoreState(s.value("state"))  # restore toolbar and dock positions  @dock  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QMainWindow.html#PySide6.QtWidgets.QMainWindow.restoreState>
+
+## dates and times
+QDateTime.currentDateTime()         # get the local date and time now  @now @today  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/QDateTime.html#PySide6.QtCore.QDateTime.currentDateTime>
+QDateTime.currentDateTimeUtc()      # get the UTC date and time now  @utc @now  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/QDateTime.html#PySide6.QtCore.QDateTime.currentDateTimeUtc>
+QDateTime.currentMSecsSinceEpoch()  # get the Unix time in ms  @epoch @timestamp  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/QDateTime.html#PySide6.QtCore.QDateTime.currentMSecsSinceEpoch>
+QDateTime.currentSecsSinceEpoch()   # get the Unix time in seconds  @epoch @timestamp  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/QDateTime.html#PySide6.QtCore.QDateTime.currentSecsSinceEpoch>
+QDateTime.fromSecsSinceEpoch(SECS)  # make a date-time from a Unix timestamp  @epoch  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/QDateTime.html#PySide6.QtCore.QDateTime.fromSecsSinceEpoch>
+QDateTime.fromString("2026-10-20T12:00:00", Qt.DateFormat.ISODate)  # parse an ISO 8601 string  @parse  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/QDateTime.html#PySide6.QtCore.QDateTime.fromString>
+QDateTime.fromString(S, "dd.MM.yyyy hh:mm")  # parse with a format pattern  @parse @format  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/QDateTime.html#PySide6.QtCore.QDateTime.fromString>
+dt.toString("yyyy-MM-dd hh:mm:ss")  # format a date-time: yyyy MM dd hh mm ss zzz AP ddd MMM  @format @strftime  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/QDateTime.html#PySide6.QtCore.QDateTime.toString>
+dt.toString(Qt.DateFormat.ISODateWithMs)  # format as ISO 8601 with milliseconds  @iso  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/QDateTime.html#PySide6.QtCore.QDateTime.toString>
+dt.toSecsSinceEpoch() / dt.toMSecsSinceEpoch()  # turn into a Unix timestamp  @epoch  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/QDateTime.html#PySide6.QtCore.QDateTime.toSecsSinceEpoch>
+dt.addSecs(N) / addDays(N) / addMonths(N) / addYears(N)  # get a new date-time moved by N units  @add @shift  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/QDateTime.html#PySide6.QtCore.QDateTime.addSecs>
+dt.secsTo(OTHER) / dt.daysTo(OTHER) / dt.msecsTo(OTHER)  # get the difference to another date-time  @diff @between  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/QDateTime.html#PySide6.QtCore.QDateTime.secsTo>
+dt.toUTC() / dt.toLocalTime()       # convert between UTC and local time  @utc @timezone  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/QDateTime.html#PySide6.QtCore.QDateTime.toUTC>
+dt.toTimeZone(QTimeZone(b"Europe/Berlin"))  # convert to another time zone  @timezone  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/QDateTime.html#PySide6.QtCore.QDateTime.toTimeZone>
+dt.toPython()                       # convert to a Python datetime.datetime  @python @convert  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/QDateTime.html#PySide6.QtCore.QDateTime.toPython>
+QDateTime(datetime.datetime.now())  # build from a Python datetime (most Qt calls also accept datetime directly)  @python
+dt.date() / dt.time()               # split into QDate and QTime  @split  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/QDateTime.html#PySide6.QtCore.QDateTime.date>
+dt.isValid()                        # check the parse worked  @parse @error  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/QDateTime.html#PySide6.QtCore.QDateTime.isValid>
+QDate.currentDate()                 # get today's date  @today  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/QDate.html#PySide6.QtCore.QDate.currentDate>
+QDate(2026, 10, 20)                 # make a date  @create  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/QDate.html>
+d.dayOfWeek()                       # get 1 (Monday) .. 7 (Sunday)  @weekday  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/QDate.html#PySide6.QtCore.QDate.dayOfWeek>
+d.daysInMonth() / d.isLeapYear(YEAR)  # get the month length / check a leap year  @calendar  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/QDate.html#PySide6.QtCore.QDate.daysInMonth>
+d.weekNumber()                      # get (ISO week, year)  @week  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/QDate.html#PySide6.QtCore.QDate.weekNumber>
+d.startOfDay() / d.endOfDay()       # get the QDateTime at 00:00 / 23:59:59.999  @range  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/QDate.html#PySide6.QtCore.QDate.startOfDay>
+QTime.currentTime()                 # get the time of day now  @now  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/QTime.html#PySide6.QtCore.QTime.currentTime>
+QTime(13, 45, 0)                    # make a time  @create  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/QTime.html>
+t.msecsSinceStartOfDay()            # get ms since midnight  @ms  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/QTime.html#PySide6.QtCore.QTime.msecsSinceStartOfDay>
+QTimeZone.systemTimeZoneId()        # get the local IANA zone id, e.g. b"Europe/Berlin"  @timezone  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/QTimeZone.html#PySide6.QtCore.QTimeZone.systemTimeZoneId>
+QTimeZone.availableTimeZoneIds()    # list all known zone ids  @timezone @list  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/QTimeZone.html#PySide6.QtCore.QTimeZone.availableTimeZoneIds>
+QTimeZone.utc()                     # get the UTC zone  @utc  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/QTimeZone.html#PySide6.QtCore.QTimeZone.utc>
+QLocale().toString(dt, QLocale.FormatType.ShortFormat)  # format a date in the user's local style  @locale @format  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/QLocale.html#PySide6.QtCore.QLocale.toString>
+
+## QUrl
+QUrl("https://example.com/a?b=1#c")  # parse a URL  @url @parse  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/QUrl.html>
+QUrl.fromLocalFile("/tmp/a.txt")    # make a file:// URL from a path  @file @path  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/QUrl.html#PySide6.QtCore.QUrl.fromLocalFile>
+url.toLocalFile()                   # get the local path from a file:// URL  @file @path  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/QUrl.html#PySide6.QtCore.QUrl.toLocalFile>
+url.isLocalFile()                   # check for a file:// URL  @file  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/QUrl.html#PySide6.QtCore.QUrl.isLocalFile>
+QUrl.fromUserInput("example.com")   # guess a URL from what a user typed  @input @guess  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/QUrl.html#PySide6.QtCore.QUrl.fromUserInput>
+url.scheme() / host() / port() / path() / query() / fragment()  # read URL parts  @parts  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/QUrl.html#PySide6.QtCore.QUrl.host>
+url.setScheme() / setHost() / setPort() / setPath() / setQuery()  # change URL parts  @parts  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/QUrl.html#PySide6.QtCore.QUrl.setPath>
+url.fileName()                      # get the last path segment  @name  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/QUrl.html#PySide6.QtCore.QUrl.fileName>
+url.toString()                      # get the URL as text  @string  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/QUrl.html#PySide6.QtCore.QUrl.toString>
+url.toDisplayString()               # get the URL as text for humans (no password)  @display  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/QUrl.html#PySide6.QtCore.QUrl.toDisplayString>
+url.resolved(QUrl("../b"))          # resolve a relative URL against a base  @relative @join  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/QUrl.html#PySide6.QtCore.QUrl.resolved>
+url.setQuery(""); url.setFragment("")  # strip parts of a URL; in PySide6 6.12 url.adjusted(UrlFormattingOption) raises TypeError  @strip @remove  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/QUrl.html#PySide6.QtCore.QUrl.setQuery>
+url.isValid() / url.errorString()   # check if parsing worked  @error  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/QUrl.html#PySide6.QtCore.QUrl.isValid>
+QUrl.toPercentEncoding("a b&c")     # percent-encode text for a URL  @encode @escape  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/QUrl.html#PySide6.QtCore.QUrl.toPercentEncoding>
+QUrl.fromPercentEncoding(b"a%20b")  # decode percent-encoded text  @decode  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/QUrl.html#PySide6.QtCore.QUrl.fromPercentEncoding>
+q = QUrlQuery(); q.addQueryItem("k", "v"); url.setQuery(q)  # build a ?k=v query string  @query @params  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/QUrlQuery.html>
+QUrlQuery(url).queryItemValue("k")  # read one query parameter  @query @params  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/QUrlQuery.html#PySide6.QtCore.QUrlQuery.queryItemValue>
+QUrlQuery(url).queryItems()         # list all (key, value) pairs  @query  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/QUrlQuery.html#PySide6.QtCore.QUrlQuery.queryItems>
+
+## JSON
+QJsonDocument.fromJson(BYTES)       # parse JSON bytes (e.g. reply.readAll())  @parse @load  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/QJsonDocument.html#PySide6.QtCore.QJsonDocument.fromJson>
+doc.object()                        # get the top-level JSON object as a Python dict  @dict  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/QJsonDocument.html#PySide6.QtCore.QJsonDocument.object>
+doc.array()                         # get the top-level JSON array  @list  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/QJsonDocument.html#PySide6.QtCore.QJsonDocument.array>
+doc.isObject() / doc.isArray() / doc.isNull()  # check what was parsed (isNull = parse error)  @check  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/QJsonDocument.html#PySide6.QtCore.QJsonDocument.isNull>
+QJsonDocument(DICT).toJson()        # turn a dict into JSON bytes (indented)  @dump @write  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/QJsonDocument.html#PySide6.QtCore.QJsonDocument.toJson>
+doc.toJson(QJsonDocument.JsonFormat.Compact)  # turn into one-line JSON  @compact @minify  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/QJsonDocument.html#PySide6.QtCore.QJsonDocument.JsonFormat>
+doc.toVariant()                     # get the whole document as Python data  @python  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/QJsonDocument.html#PySide6.QtCore.QJsonDocument.toVariant>
+QJsonValue(V).toString() / toInt() / toDouble() / toBool() / toArray() / toObject()  # read a JSON value as a type  @value  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/QJsonValue.html>
+QJsonArray                          # list-like JSON array: append, at, size, toVariantList  @array  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/QJsonArray.html>
+json.loads(bytes(reply.readAll()))  # or just use Python's json module on the bytes  @python
+
+## regular expressions
+re = QRegularExpression(r"(\d+)-(\w+)")  # compile a Perl-style regex  @regex @compile  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/QRegularExpression.html>
+m = re.match("12-ab")               # search the text (not anchored, like Python re.search)  @search  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/QRegularExpression.html#PySide6.QtCore.QRegularExpression.match>
+m.hasMatch()                        # check if it matched  @found  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/QRegularExpressionMatch.html#PySide6.QtCore.QRegularExpressionMatch.hasMatch>
+m.captured(1)                       # get group 1 text (0 = whole match)  @group  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/QRegularExpressionMatch.html#PySide6.QtCore.QRegularExpressionMatch.captured>
+m.captured("name")                  # get a named group (?<name>...)  @group @named  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/QRegularExpressionMatch.html#PySide6.QtCore.QRegularExpressionMatch.captured>
+m.capturedStart(1) / m.capturedEnd(1)  # get where a group starts and ends  @position  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/QRegularExpressionMatch.html#PySide6.QtCore.QRegularExpressionMatch.capturedStart>
+m.capturedTexts()                   # get all groups as a list  @groups  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/QRegularExpressionMatch.html#PySide6.QtCore.QRegularExpressionMatch.capturedTexts>
+it = re.globalMatch(TEXT); while it.hasNext(): m = it.next()  # loop over all matches  @findall @iterate  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/QRegularExpression.html#PySide6.QtCore.QRegularExpression.globalMatch>
+QRegularExpression(P, QRegularExpression.PatternOption.CaseInsensitiveOption)  # ignore case (also MultilineOption, DotMatchesEverythingOption)  @case @flags  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/QRegularExpression.html#PySide6.QtCore.QRegularExpression.PatternOption>
+re.isValid() / re.errorString() / re.patternErrorOffset()  # check a pattern for errors  @error  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/QRegularExpression.html#PySide6.QtCore.QRegularExpression.isValid>
+QRegularExpression.escape("a.b")    # escape special characters  @escape  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/QRegularExpression.html#PySide6.QtCore.QRegularExpression.escape>
+QRegularExpression.fromWildcard("*.txt")  # build a regex from a shell glob  @glob @wildcard  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/QRegularExpression.html#PySide6.QtCore.QRegularExpression.fromWildcard>
+QRegularExpression.anchoredPattern(P)  # wrap a pattern so it must match the whole text  @fullmatch  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/QRegularExpression.html#PySide6.QtCore.QRegularExpression.anchoredPattern>
+re.namedCaptureGroups()             # list the names of the groups  @named  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/QRegularExpression.html#PySide6.QtCore.QRegularExpression.namedCaptureGroups>
+
+## locale and numbers
+QLocale()                           # get the default locale (system unless changed)  @locale @i18n  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/QLocale.html>
+QLocale.system()                    # get the system locale  @locale  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/QLocale.html#PySide6.QtCore.QLocale.system>
+QLocale(QLocale.Language.German, QLocale.Country.Germany)  # make a specific locale  @locale  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/QLocale.html>
+QLocale.setDefault(QLocale("de_DE"))  # change the default locale for the app  @locale  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/QLocale.html#PySide6.QtCore.QLocale.setDefault>
+loc.name()                          # get the code, e.g. "de_DE"  @code  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/QLocale.html#PySide6.QtCore.QLocale.name>
+loc.toString(1234.5, "f", 2)        # format a number with local separators, e.g. "1.234,50"  @format @number  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/QLocale.html#PySide6.QtCore.QLocale.toString>
+loc.toDouble("1,5")                 # parse a localized number; returns (value, ok)  @parse  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/QLocale.html#PySide6.QtCore.QLocale.toDouble>
+loc.toCurrencyString(9.99)          # format money in local style  @currency @money  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/QLocale.html#PySide6.QtCore.QLocale.toCurrencyString>
+loc.formattedDataSize(BYTES)        # format a byte count, e.g. 1500000 -> "1.43 MiB"  @size @bytes  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/QLocale.html#PySide6.QtCore.QLocale.formattedDataSize>
+loc.monthName(1) / loc.dayName(1)   # get local month / weekday names  @calendar  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/QLocale.html#PySide6.QtCore.QLocale.monthName>
+loc.decimalPoint() / loc.groupSeparator()  # get the local separators  @separator  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/QLocale.html#PySide6.QtCore.QLocale.decimalPoint>
+loc.uiLanguages()                   # list the user's preferred UI languages  @language  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/QLocale.html#PySide6.QtCore.QLocale.uiLanguages>
+loc.textDirection()                 # check left-to-right or right-to-left  @rtl  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/QLocale.html#PySide6.QtCore.QLocale.textDirection>
+QCollator(loc).compare(A, B)        # compare strings the local way; setNumericMode(True) sorts "a2" before "a10"  @sort @natural  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/QCollator.html>
+
+## command line arguments (QCommandLineParser)
+p = QCommandLineParser()            # create a parser like argparse  @cli @argv @options  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/QCommandLineParser.html>
+p.setApplicationDescription("TEXT")  # set the text shown in --help  @help  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/QCommandLineParser.html#PySide6.QtCore.QCommandLineParser.setApplicationDescription>
+p.addHelpOption()                   # add -h / --help  @help  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/QCommandLineParser.html#PySide6.QtCore.QCommandLineParser.addHelpOption>
+p.addVersionOption()                # add -v / --version (uses applicationVersion)  @version  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/QCommandLineParser.html#PySide6.QtCore.QCommandLineParser.addVersionOption>
+opt = QCommandLineOption(["o", "output"], "Write to FILE.", "FILE")  # define an option with a value  @option  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/QCommandLineOption.html>
+opt = QCommandLineOption(["f", "force"], "Overwrite.")  # define a flag option  @flag  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/QCommandLineOption.html>
+p.addOption(opt)                    # register an option  @option  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/QCommandLineParser.html#PySide6.QtCore.QCommandLineParser.addOption>
+p.addPositionalArgument("source", "File to open.")  # describe a positional argument for --help  @positional  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/QCommandLineParser.html#PySide6.QtCore.QCommandLineParser.addPositionalArgument>
+p.process(app)                      # parse the app's arguments; exits on --help or error  @parse  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/QCommandLineParser.html#PySide6.QtCore.QCommandLineParser.process>
+p.isSet(opt)                        # check if a flag was given  @flag  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/QCommandLineParser.html#PySide6.QtCore.QCommandLineParser.isSet>
+p.value(opt)                        # get the value of an option  @value  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/QCommandLineParser.html#PySide6.QtCore.QCommandLineParser.value>
+p.positionalArguments()             # get the positional arguments  @positional  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/QCommandLineParser.html#PySide6.QtCore.QCommandLineParser.positionalArguments>
+
+## bytes, ids, hashes, random
+QByteArray(b"abc")                  # make a Qt byte array (most APIs also take Python bytes)  @bytes  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/QByteArray.html>
+bytes(ba) / ba.data()               # turn a QByteArray into Python bytes  @bytes @convert  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/QByteArray.html#PySide6.QtCore.QByteArray.data>
+ba.toHex() / QByteArray.fromHex(H)  # convert to/from hex text  @hex  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/QByteArray.html#PySide6.QtCore.QByteArray.toHex>
+ba.toBase64() / QByteArray.fromBase64(B)  # convert to/from base64  @base64  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/QByteArray.html#PySide6.QtCore.QByteArray.toBase64>
+ba.toStdString() / str(ba, "utf-8")  # decode bytes to text  @decode @utf8
+qCompress(DATA) / qUncompress(DATA)  # zlib-compress / decompress bytes  @zip @compress  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/index.html>
+QUuid.createUuid().toString(QUuid.StringFormat.WithoutBraces)  # make a random UUID string  @uuid @guid @id  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/QUuid.html#PySide6.QtCore.QUuid.createUuid>
+QUuid.createUuidV7()                # make a time-ordered UUID (v7)  @uuid  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/QUuid.html#PySide6.QtCore.QUuid.createUuidV7>
+QCryptographicHash.hash(DATA, QCryptographicHash.Algorithm.Sha256).toHex()  # hash bytes (Md5, Sha1, Sha256, Sha3_256, Blake2b_256...)  @sha256 @md5 @checksum  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/QCryptographicHash.html#PySide6.QtCore.QCryptographicHash.hash>
+h = QCryptographicHash(ALGO); h.addData(CHUNK); h.result()  # hash data in chunks  @stream  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/QCryptographicHash.html>
+QMessageAuthenticationCode.hash(MSG, KEY, ALGO)  # compute an HMAC  @hmac  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/QMessageAuthenticationCode.html#PySide6.QtCore.QMessageAuthenticationCode.hash>
+QRandomGenerator.global_().bounded(1, 7)  # get a random int in [1, 7)  @random @dice  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/QRandomGenerator.html#PySide6.QtCore.QRandomGenerator.bounded>
+QRandomGenerator.global_().generateDouble()  # get a random float in [0, 1)  @random  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/QRandomGenerator.html#PySide6.QtCore.QRandomGenerator.generateDouble>
+QRandomGenerator.system()           # get a cryptographically secure generator  @random @secure  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/QRandomGenerator.html#PySide6.QtCore.QRandomGenerator.system>
+QRandomGenerator(SEED)              # make a seeded, repeatable generator  @seed  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/QRandomGenerator.html>
+QVersionNumber.fromString("6.12.0")  # parse and compare version strings  @version @compare  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/QVersionNumber.html#PySide6.QtCore.QVersionNumber.fromString>
+
+## geometry value types
+QPoint(X, Y) / QPointF(X, Y)        # make an int / float point; p.x(), p.y(), p.toTuple()  @point @position  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/QPoint.html>
+QSize(W, H) / QSizeF(W, H)          # make a size; s.width(), s.height()  @size  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/QSize.html>
+size.scaled(QSize(100, 100), Qt.AspectRatioMode.KeepAspectRatio)  # fit a size into a box, keeping the ratio  @aspect @fit  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/QSize.html#PySide6.QtCore.QSize.scaled>
+size.expandedTo(OTHER) / size.boundedTo(OTHER)  # get the larger / smaller of two sizes  @max @min  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/QSize.html#PySide6.QtCore.QSize.expandedTo>
+QRect(X, Y, W, H) / QRectF(X, Y, W, H)  # make a rectangle  @rect  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/QRect.html>
+r.contains(POINT)                   # check if a point is inside  @hit-test  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/QRect.html#PySide6.QtCore.QRect.contains>
+r.intersects(OTHER) / r.intersected(OTHER) / r.united(OTHER)  # test / get overlap / get bounding union  @overlap  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/QRect.html#PySide6.QtCore.QRect.intersected>
+r.adjusted(DX1, DY1, DX2, DY2)      # get a copy with edges moved (grow/shrink)  @inset @padding  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/QRect.html#PySide6.QtCore.QRect.adjusted>
+r.center() / r.topLeft() / r.bottomRight()  # get points of a rectangle  @corner  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/QRect.html#PySide6.QtCore.QRect.center>
+r.moveCenter(P) / r.moveTo(P) / r.translated(DX, DY)  # move a rectangle  @move  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/QRect.html#PySide6.QtCore.QRect.moveCenter>
+r.normalized()                      # fix a rectangle with negative width or height  @fix  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/QRect.html#PySide6.QtCore.QRect.normalized>
+r.marginsRemoved(QMargins(L, T, R, B))  # shrink a rectangle by margins  @padding  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/QRect.html#PySide6.QtCore.QRect.marginsRemoved>
+rf.toRect() / rf.toAlignedRect()    # turn QRectF into QRect (rounded / covering)  @convert  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/QRectF.html#PySide6.QtCore.QRectF.toAlignedRect>
+QLineF(P1, P2).length() / .angle()  # get a line's length and angle (degrees)  @line @distance  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/QLineF.html#PySide6.QtCore.QLineF.length>
+QLineF.fromPolar(LEN, ANGLE)        # make a line from length and angle  @polar  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/QLineF.html#PySide6.QtCore.QLineF.fromPolar>
+QMargins(L, T, R, B)                # make margins for layouts and rect math  @padding  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/QMargins.html>
+
+## system information
+QSysInfo.prettyProductName()        # get the OS name and version, e.g. "Ubuntu 26.04"  @os @system  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/QSysInfo.html#PySide6.QtCore.QSysInfo.prettyProductName>
+QSysInfo.kernelType() / QSysInfo.kernelVersion()  # get "linux" and the kernel version  @kernel  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/QSysInfo.html#PySide6.QtCore.QSysInfo.kernelType>
+QSysInfo.currentCpuArchitecture()   # get the CPU architecture, e.g. "x86_64"  @cpu @arch  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/QSysInfo.html#PySide6.QtCore.QSysInfo.currentCpuArchitecture>
+QSysInfo.machineHostName()          # get the host name  @hostname  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/QSysInfo.html#PySide6.QtCore.QSysInfo.machineHostName>
+QSysInfo.machineUniqueId()          # get a stable machine id  @id  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/QSysInfo.html#PySide6.QtCore.QSysInfo.machineUniqueId>
+QSysInfo.productType()              # get "ubuntu", "windows", "macos"...  @os  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/QSysInfo.html#PySide6.QtCore.QSysInfo.productType>
+QOperatingSystemVersion.current()   # get the Windows/macOS/Android version to compare (>= QOperatingSystemVersion.Windows11); unknown on Linux  @os @version  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/QOperatingSystemVersion.html#PySide6.QtCore.QOperatingSystemVersion.current>
+QThread.idealThreadCount()          # get the number of CPU cores  @cpu @cores  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/QThread.html#PySide6.QtCore.QThread.idealThreadCount>
+
+## permissions (macOS, iOS, Android)
+app.checkPermission(QCameraPermission())  # check a permission: Qt.PermissionStatus.Granted/Denied/Undetermined  @permission @privacy  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/QCoreApplication.html#PySide6.QtCore.QCoreApplication.checkPermission>
+app.requestPermission(QMicrophonePermission(), self, FN)  # ask the user; FN(permission) runs with the answer  @permission  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/QCoreApplication.html#PySide6.QtCore.QCoreApplication.requestPermission>
+QCameraPermission / QMicrophonePermission / QLocationPermission / QBluetoothPermission / QCalendarPermission / QContactsPermission  # the permission types  @permission  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/QPermission.html>
+
+## XML streams (QtCore)
+r = QXmlStreamReader(DATA); while not r.atEnd(): r.readNext()  # read XML token by token (fast, low memory)  @xml @parse  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/QXmlStreamReader.html>
+r.isStartElement() / r.name() / r.attributes().value("id") / r.readElementText()  # inspect the current XML token  @xml  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/QXmlStreamReader.html#PySide6.QtCore.QXmlStreamReader.readElementText>
+r.readNextStartElement()            # move to the next child element  @xml  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/QXmlStreamReader.html#PySide6.QtCore.QXmlStreamReader.readNextStartElement>
+r.hasError() / r.errorString()      # check for XML errors  @xml @error  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/QXmlStreamReader.html#PySide6.QtCore.QXmlStreamReader.hasError>
+w = QXmlStreamWriter(DEVICE); w.setAutoFormatting(True)  # write indented XML to a file or buffer  @xml @write  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/QXmlStreamWriter.html>
+w.writeStartDocument(); w.writeStartElement("a"); w.writeAttribute("k", "v"); w.writeTextElement("b", "t"); w.writeEndElement(); w.writeEndDocument()  # write XML elements  @xml  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/QXmlStreamWriter.html#PySide6.QtCore.QXmlStreamWriter.writeStartElement>
+QCborValue.fromCbor(DATA) / QCborValue(V).toCbor()  # read / write CBOR binary data  @cbor @binary  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/QCborValue.html>

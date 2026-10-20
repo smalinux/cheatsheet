@@ -1,0 +1,77 @@
+title: qt animation: QPropertyAnimation, groups, easing curves, state machine (pyside6)
+url:   https://doc.qt.io/qtforpython-6/PySide6/QtCore/QPropertyAnimation.html
+tags:  qt pyside6 animation animate qpropertyanimation tween easing transition fade slide groups qstatemachine state timeline
+
+## QPropertyAnimation
+anim = QPropertyAnimation(widget, b"geometry", self)  # animate a Qt property of an object (name as bytes)  @animate @tween  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/QPropertyAnimation.html>
+    self.anim = QPropertyAnimation(self.box, b"pos")
+    self.anim.setDuration(400)
+    self.anim.setStartValue(QPoint(0, 0))
+    self.anim.setEndValue(QPoint(200, 0))
+    self.anim.setEasingCurve(QEasingCurve.Type.OutCubic)
+    self.anim.start()
+anim.setDuration(MS)                # set the length in milliseconds (default 250)  @duration  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/QVariantAnimation.html#PySide6.QtCore.QVariantAnimation.setDuration>
+anim.setStartValue(V) / anim.setEndValue(V)  # set where it starts / ends (default start = current value)  @values  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/QVariantAnimation.html#PySide6.QtCore.QVariantAnimation.setEndValue>
+anim.setKeyValueAt(0.5, V)          # add a keyframe in the middle (0..1)  @keyframe  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/QVariantAnimation.html#PySide6.QtCore.QVariantAnimation.setKeyValueAt>
+anim.setEasingCurve(QEasingCurve.Type.InOutQuad)  # change the speed curve  @easing  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/QVariantAnimation.html#PySide6.QtCore.QVariantAnimation.setEasingCurve>
+anim.start()                        # run it (keep a reference, e.g. self.anim, or it is garbage collected)  @start @gc  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/QAbstractAnimation.html#PySide6.QtCore.QAbstractAnimation.start>
+anim.start(QAbstractAnimation.DeletionPolicy.DeleteWhenStopped)  # delete the animation when it ends (fire and forget)  @cleanup  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/QAbstractAnimation.html#PySide6.QtCore.QAbstractAnimation.start>
+anim.stop() / anim.pause() / anim.resume()  # control a running animation  @control  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/QAbstractAnimation.html#PySide6.QtCore.QAbstractAnimation.stop>
+anim.setLoopCount(-1)               # loop forever (N for N times)  @loop @repeat  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/QAbstractAnimation.html#PySide6.QtCore.QAbstractAnimation.setLoopCount>
+anim.setDirection(QAbstractAnimation.Direction.Backward)  # run in reverse (toggle a panel open/closed)  @reverse  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/QAbstractAnimation.html#PySide6.QtCore.QAbstractAnimation.setDirection>
+anim.finished.connect(FN)           # run FN when it ends  @done @signal  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/QAbstractAnimation.html#PySide6.QtCore.QAbstractAnimation.finished>
+anim.valueChanged.connect(FN)       # run FN(value) on every frame  @frame  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/QVariantAnimation.html#PySide6.QtCore.QVariantAnimation.valueChanged>
+anim.state()                        # get Stopped, Paused or Running  @state  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/QAbstractAnimation.html#PySide6.QtCore.QAbstractAnimation.state>
+anim.setCurrentTime(MS)             # jump to a point in the animation  @seek  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/QAbstractAnimation.html#PySide6.QtCore.QAbstractAnimation.setCurrentTime>
+b"pos" / b"size" / b"geometry" / b"minimumHeight" / b"maximumWidth" / b"windowOpacity"  # widget properties you can animate  @properties
+QPropertyAnimation(effect, b"opacity")  # fade a widget by animating a QGraphicsOpacityEffect  @fade
+QPropertyAnimation(widget, b"maximumHeight")  # slide a panel open / closed (collapsible section)  @collapse @expand
+Property(QColor, get, set)          # make your own animatable property (e.g. a color) with Property  @custom  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/Property.html>
+QVariantAnimation(); a.valueChanged.connect(FN)  # animate a value that is not a property (call FN with each value)  @value  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/QVariantAnimation.html>
+    a = QVariantAnimation(self); a.setStartValue(QColor("red")); a.setEndValue(QColor("blue"))
+    a.valueChanged.connect(lambda c: label.setStyleSheet(f"color: {c.name()}"))
+    a.setDuration(1000); a.start()
+supported value types               # int, float, QPoint(F), QSize(F), QRect(F), QLine(F), QColor, QQuaternion, QVector2D/3D/4D  @types
+
+## groups and pauses
+group = QParallelAnimationGroup(); group.addAnimation(A); group.addAnimation(B); group.start()  # run animations at the same time  @parallel  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/QParallelAnimationGroup.html>
+seq = QSequentialAnimationGroup(); seq.addAnimation(A); seq.addPause(200); seq.addAnimation(B); seq.start()  # run animations one after another  @sequence @chain  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/QSequentialAnimationGroup.html>
+seq.currentAnimationChanged.connect(FN)  # react when the next animation in a sequence starts  @signal  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/QSequentialAnimationGroup.html#PySide6.QtCore.QSequentialAnimationGroup.currentAnimationChanged>
+QPauseAnimation(MS)                 # a do-nothing step for groups  @delay  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/QPauseAnimation.html>
+
+## easing curves
+QEasingCurve.Type.Linear            # constant speed  @linear  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/QEasingCurve.html#PySide6.QtCore.QEasingCurve.Type>
+QEasingCurve.Type.InQuad / OutQuad / InOutQuad  # gentle acceleration / slow-down / both (also Cubic, Quart, Quint, Sine, Expo, Circ)  @smooth  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/QEasingCurve.html#PySide6.QtCore.QEasingCurve.Type>
+QEasingCurve.Type.OutBack           # overshoot a bit, then settle  @overshoot  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/QEasingCurve.html#PySide6.QtCore.QEasingCurve.Type>
+QEasingCurve.Type.OutElastic        # spring-like wobble at the end  @spring @bounce  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/QEasingCurve.html#PySide6.QtCore.QEasingCurve.Type>
+QEasingCurve.Type.OutBounce         # bounce at the end like a ball  @bounce  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/QEasingCurve.html#PySide6.QtCore.QEasingCurve.Type>
+curve = QEasingCurve(QEasingCurve.Type.OutElastic); curve.setAmplitude(1.2); curve.setPeriod(0.4)  # tune elastic curves  @tune  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/QEasingCurve.html#PySide6.QtCore.QEasingCurve.setPeriod>
+curve.setOvershoot(2.0)             # tune Back curves  @tune  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/QEasingCurve.html#PySide6.QtCore.QEasingCurve.setOvershoot>
+curve.addCubicBezierSegment(C1, C2, END)  # make a CSS-like cubic-bezier curve (Type.BezierSpline)  @bezier @css  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/QEasingCurve.html#PySide6.QtCore.QEasingCurve.addCubicBezierSegment>
+curve.setCustomType(FN)             # use your own function f(t) -> progress  @custom  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/QEasingCurve.html#PySide6.QtCore.QEasingCurve.setCustomType>
+curve.valueForProgress(T)           # get the curve value at time 0..1  @sample  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/QEasingCurve.html#PySide6.QtCore.QEasingCurve.valueForProgress>
+
+## QTimeLine (simple frame driver)
+tl = QTimeLine(1000, self); tl.setFrameRange(0, 100); tl.frameChanged.connect(FN); tl.start()  # call FN(frame) 0..100 over 1 s  @frames  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/QTimeLine.html>
+tl.valueChanged.connect(FN)         # get progress 0.0..1.0 (with easing)  @progress  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/QTimeLine.html#PySide6.QtCore.QTimeLine.valueChanged>
+tl.setEasingCurve(CURVE) / tl.setLoopCount(0) / tl.setDirection(QTimeLine.Direction.Backward)  # easing, loop forever, reverse  @options  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/QTimeLine.html#PySide6.QtCore.QTimeLine.setEasingCurve>
+
+## QStateMachine (QtStateMachine module)
+from PySide6.QtStateMachine import QStateMachine, QState  # import the state machine framework (moved out of QtCore in Qt 6)  @import @fsm  <https://doc.qt.io/qtforpython-6/PySide6/QtStateMachine/QStateMachine.html>
+    machine = QStateMachine()
+    off, on = QState(), QState()
+    off.assignProperty(button, "text", "Off")
+    on.assignProperty(button, "text", "On")
+    off.addTransition(button.clicked, on)
+    on.addTransition(button.clicked, off)
+    machine.addState(off); machine.addState(on)
+    machine.setInitialState(off); machine.start()
+state.assignProperty(OBJ, "prop", VALUE)  # set a property when the state is entered  @property  <https://doc.qt.io/qtforpython-6/PySide6/QtStateMachine/QState.html#PySide6.QtStateMachine.QState.assignProperty>
+state.addTransition(SIGNAL, TARGET)  # go to TARGET when the signal fires  @transition  <https://doc.qt.io/qtforpython-6/PySide6/QtStateMachine/QState.html#PySide6.QtStateMachine.QState.addTransition>
+state.entered.connect(FN) / state.exited.connect(FN)  # react to entering / leaving a state  @signal  <https://doc.qt.io/qtforpython-6/PySide6/QtStateMachine/QAbstractState.html#PySide6.QtStateMachine.QAbstractState.entered>
+machine.addDefaultAnimation(QPropertyAnimation(button, b"geometry"))  # animate assigned properties when states change  @animate  <https://doc.qt.io/qtforpython-6/PySide6/QtStateMachine/QStateMachine.html#PySide6.QtStateMachine.QStateMachine.addDefaultAnimation>
+QFinalState() / machine.finished    # an end state and the signal when it is reached  @final  <https://doc.qt.io/qtforpython-6/PySide6/QtStateMachine/QFinalState.html>
+QHistoryState(PARENT)               # return to the last active child state  @history  <https://doc.qt.io/qtforpython-6/PySide6/QtStateMachine/QHistoryState.html>
+QState(QState.ChildMode.ParallelStates)  # run child states in parallel  @parallel  <https://doc.qt.io/qtforpython-6/PySide6/QtStateMachine/QState.html#PySide6.QtStateMachine.QState.ChildMode>
+QKeyEventTransition / QMouseEventTransition / QEventTransition / QSignalTransition  # transitions on keys, mouse, any event, signals  @transition  <https://doc.qt.io/qtforpython-6/PySide6/QtStateMachine/QKeyEventTransition.html>
+QScxmlStateMachine.fromFile("machine.scxml")  # load a state machine from an SCXML file (QtScxml)  @scxml  <https://doc.qt.io/qtforpython-6/PySide6/QtScxml/QScxmlStateMachine.html#PySide6.QtScxml.QScxmlStateMachine.fromFile>

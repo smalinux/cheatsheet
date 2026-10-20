@@ -1,0 +1,190 @@
+title: qt files, folders, paths, processes (pyside6)
+url:   https://doc.qt.io/qtforpython-6/PySide6/QtCore/QFile.html
+tags:  qt pyside6 qtcore file read write open folder directory dir path qfile qdir qfileinfo qprocess subprocess standardpaths mime stream
+
+## QFile: open, read, write
+f = QFile("a.txt")                  # make a file object (nothing is opened yet)  @file @create  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/QFile.html>
+f.open(QIODevice.OpenModeFlag.ReadOnly)  # open for reading; returns False on error  @open @read  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/QFile.html#PySide6.QtCore.QFile.open>
+f.open(QIODevice.OpenModeFlag.WriteOnly | QIODevice.OpenModeFlag.Text)  # open for writing text (Text turns \n into native line ends)  @open @write  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/QIODeviceBase.html#PySide6.QtCore.QIODeviceBase.OpenModeFlag>
+QIODevice.OpenModeFlag.Append / ReadWrite / Truncate / NewOnly / ExistingOnly  # other open modes; NewOnly fails if the file exists  @mode  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/QIODeviceBase.html#PySide6.QtCore.QIODeviceBase.OpenModeFlag>
+if not f.open(MODE): print(f.errorString())  # show why open failed  @error  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/QIODevice.html#PySide6.QtCore.QIODevice.errorString>
+f.readAll()                         # read the whole file as QByteArray  @read @slurp  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/QIODevice.html#PySide6.QtCore.QIODevice.readAll>
+f.readAll().data().decode()         # read the whole file as str  @read @text
+f.readLine()                        # read one line, including \n, as QByteArray  @line  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/QIODevice.html#PySide6.QtCore.QIODevice.readLine>
+while not f.atEnd(): line = f.readLine()  # loop over the lines  @loop @lines  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/QIODevice.html#PySide6.QtCore.QIODevice.atEnd>
+f.read(N)                           # read up to N bytes  @chunk  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/QIODevice.html#PySide6.QtCore.QIODevice.read>
+f.peek(N)                           # look at the next N bytes without consuming them  @peek  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/QIODevice.html#PySide6.QtCore.QIODevice.peek>
+f.write(b"data")                    # write bytes; returns the count or -1  @write  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/QIODevice.html#PySide6.QtCore.QIODevice.write>
+f.flush()                           # push buffered data to disk  @flush  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/QFileDevice.html#PySide6.QtCore.QFileDevice.flush>
+f.close()                           # close the file  @close  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/QFileDevice.html#PySide6.QtCore.QFileDevice.close>
+f.seek(POS) / f.pos() / f.size()    # move / get the position / get the size in bytes  @seek  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/QFileDevice.html#PySide6.QtCore.QFileDevice.seek>
+f.error()                           # get the last error as QFileDevice.FileError  @error  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/QFileDevice.html#PySide6.QtCore.QFileDevice.error>
+f.map(0, f.size())                  # memory-map the file; returns a memoryview-like object; unmap() when done  @mmap  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/QFileDevice.html#PySide6.QtCore.QFileDevice.map>
+f.handle()                          # get the OS file descriptor  @fd  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/QFileDevice.html#PySide6.QtCore.QFileDevice.handle>
+QFile(":/data/x.json")              # open embedded resources like normal files (read only)  @qrc @resource
+
+## QFile static helpers
+QFile.exists(PATH)                  # check if a file exists  @exists  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/QFile.html#PySide6.QtCore.QFile.exists>
+QFile.remove(PATH)                  # delete a file  @delete @rm  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/QFile.html#PySide6.QtCore.QFile.remove>
+QFile.rename(OLD, NEW)              # rename or move a file (fails if NEW exists)  @move @mv  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/QFile.html#PySide6.QtCore.QFile.rename>
+QFile.copy(SRC, DST)                # copy a file (fails if DST exists)  @cp  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/QFile.html#PySide6.QtCore.QFile.copy>
+QFile.moveToTrash(PATH)             # move a file to the trash / recycle bin; returns True on success  @trash @delete  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/QFile.html#PySide6.QtCore.QFile.moveToTrash>
+QFile.link(TARGET, LINK)            # create a symlink (shortcut on Windows)  @symlink @ln  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/QFile.html#PySide6.QtCore.QFile.link>
+QFile.permissions(PATH)             # get the permission flags (ReadOwner, WriteOwner, ExeOwner...)  @chmod  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/QFile.html#PySide6.QtCore.QFile.permissions>
+QFile.setPermissions(PATH, FLAGS)   # change file permissions  @chmod  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/QFile.html#PySide6.QtCore.QFile.setPermissions>
+QFile.symLinkTarget(PATH)           # get where a symlink points  @symlink  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/QFile.html#PySide6.QtCore.QFile.symLinkTarget>
+QFile.resize(PATH, SIZE)            # truncate or extend a file  @truncate  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/QFile.html#PySide6.QtCore.QFile.resize>
+
+## safe and temporary files
+f = QSaveFile("a.txt"); f.open(QIODevice.OpenModeFlag.WriteOnly); f.write(DATA); f.commit()  # write to a temp file and replace the target only on commit (no half-written files)  @atomic @safe  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/QSaveFile.html>
+f.cancelWriting()                   # throw away the QSaveFile changes on commit  @atomic  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/QSaveFile.html#PySide6.QtCore.QSaveFile.cancelWriting>
+t = QTemporaryFile(); t.open(); t.fileName()  # create a unique temp file, deleted when t is deleted  @tmp @temp  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/QTemporaryFile.html>
+QTemporaryFile("/tmp/myapp-XXXXXX.txt")  # create a temp file from a name template  @tmp  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/QTemporaryFile.html>
+t.setAutoRemove(False)              # keep the temp file after the object is gone  @keep  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/QTemporaryFile.html#PySide6.QtCore.QTemporaryFile.setAutoRemove>
+d = QTemporaryDir(); d.isValid(); d.path()  # create a unique temp folder, removed with everything in it at the end  @tmp @folder  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/QTemporaryDir.html>
+d.filePath("x.txt")                 # get a path inside the temp folder  @path  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/QTemporaryDir.html#PySide6.QtCore.QTemporaryDir.filePath>
+lock = QLockFile("/tmp/app.lock"); lock.tryLock(100)  # allow only one running instance; stale locks of dead processes are cleaned  @single-instance @lock  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/QLockFile.html#PySide6.QtCore.QLockFile.tryLock>
+lock.unlock()                       # release the lock file  @lock  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/QLockFile.html#PySide6.QtCore.QLockFile.unlock>
+
+## text and binary streams
+ts = QTextStream(f)                 # read or write text on a device (UTF-8 by default)  @text @stream  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/QTextStream.html>
+ts.readAll()                        # read the rest as str  @read  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/QTextStream.html#PySide6.QtCore.QTextStream.readAll>
+ts.readLine()                       # read one line without \n  @line  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/QTextStream.html#PySide6.QtCore.QTextStream.readLine>
+while not ts.atEnd(): line = ts.readLine()  # loop over text lines  @loop  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/QTextStream.html#PySide6.QtCore.QTextStream.atEnd>
+ts << "text\n"                      # write text to the stream  @write  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/QTextStream.html>
+ts.flush()                          # write buffered text to the device  @flush  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/QTextStream.html#PySide6.QtCore.QTextStream.flush>
+ts.setEncoding(QStringConverter.Encoding.Latin1)  # read or write another encoding (Utf8, Utf16, Latin1, System)  @encoding @charset  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/QTextStream.html#PySide6.QtCore.QTextStream.setEncoding>
+QTextStream(STR)                    # not possible: QTextStream takes a device or QByteArray, not str; use io.StringIO  @string
+ba = QByteArray(DATA); ts = QTextStream(ba)  # read text from bytes; keep ba in a variable, QTextStream(QByteArray(...)) segfaults in 6.12  @crash @bytes  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/QTextStream.html>
+ds = QDataStream(f)                 # read or write Qt binary data (ints, strings, QVariant, QColor...)  @binary @serialize  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/QDataStream.html>
+ds.writeInt32(N) / ds.readInt32()   # write / read a 32-bit int (also Int8..Int64, UInt*, Double, Bool)  @int @binary  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/QDataStream.html#PySide6.QtCore.QDataStream.writeInt32>
+ds.writeQString(S) / ds.readQString()  # write / read a string  @string @binary  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/QDataStream.html#PySide6.QtCore.QDataStream.writeQString>
+ds.writeQVariant(V) / ds.readQVariant()  # write / read any QVariant-able value  @variant @binary  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/QDataStream.html#PySide6.QtCore.QDataStream.writeQVariant>
+ds.writeRawData(BYTES) / ds.readRawData(N)  # write / read raw bytes  @raw  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/QDataStream.html#PySide6.QtCore.QDataStream.writeRawData>
+ds.setVersion(QDataStream.Version.Qt_6_12)  # fix the format version so old files stay readable  @version @compat  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/QDataStream.html#PySide6.QtCore.QDataStream.setVersion>
+ds.setByteOrder(QDataStream.ByteOrder.LittleEndian)  # change the byte order (default big endian)  @endian  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/QDataStream.html#PySide6.QtCore.QDataStream.setByteOrder>
+ds.status()                         # check for ReadPastEnd / ReadCorruptData  @error  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/QDataStream.html#PySide6.QtCore.QDataStream.status>
+buf = QBuffer(); buf.open(QIODevice.OpenModeFlag.ReadWrite)  # use a QByteArray in memory as a file device  @memory @bytesio  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/QBuffer.html>
+buf.data()                          # get the bytes written to a QBuffer  @memory  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/QBuffer.html#PySide6.QtCore.QBuffer.data>
+
+## QFileInfo: facts about one path
+fi = QFileInfo(PATH)                # get facts about a file or folder  @stat @info  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/QFileInfo.html>
+fi.exists() / fi.isFile() / fi.isDir() / fi.isSymLink()  # check what the path is  @exists @type  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/QFileInfo.html#PySide6.QtCore.QFileInfo.isFile>
+fi.size()                           # get the size in bytes  @size  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/QFileInfo.html#PySide6.QtCore.QFileInfo.size>
+fi.fileName()                       # get "archive.tar.gz" from "/a/b/archive.tar.gz"  @name @basename  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/QFileInfo.html#PySide6.QtCore.QFileInfo.fileName>
+fi.baseName()                       # get "archive" (up to the first dot)  @stem  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/QFileInfo.html#PySide6.QtCore.QFileInfo.baseName>
+fi.completeBaseName()               # get "archive.tar" (up to the last dot)  @stem  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/QFileInfo.html#PySide6.QtCore.QFileInfo.completeBaseName>
+fi.suffix() / fi.completeSuffix()   # get "gz" / "tar.gz"  @extension  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/QFileInfo.html#PySide6.QtCore.QFileInfo.suffix>
+fi.path() / fi.absolutePath()       # get the folder part of the path  @dirname @parent  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/QFileInfo.html#PySide6.QtCore.QFileInfo.absolutePath>
+fi.absoluteFilePath()               # get the full absolute path  @abspath  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/QFileInfo.html#PySide6.QtCore.QFileInfo.absoluteFilePath>
+fi.canonicalFilePath()              # get the real path with symlinks and .. resolved ("" if missing)  @realpath  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/QFileInfo.html#PySide6.QtCore.QFileInfo.canonicalFilePath>
+fi.dir()                            # get the QDir that holds the file  @parent  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/QFileInfo.html#PySide6.QtCore.QFileInfo.dir>
+fi.lastModified() / fi.birthTime() / fi.lastRead()  # get file times as QDateTime  @mtime @date  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/QFileInfo.html#PySide6.QtCore.QFileInfo.lastModified>
+fi.isReadable() / fi.isWritable() / fi.isExecutable() / fi.isHidden()  # check access and hidden flag  @permission  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/QFileInfo.html#PySide6.QtCore.QFileInfo.isReadable>
+fi.owner() / fi.group()             # get the owner user and group names  @owner  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/QFileInfo.html#PySide6.QtCore.QFileInfo.owner>
+fi.symLinkTarget()                  # get where a symlink points  @symlink  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/QFileInfo.html#PySide6.QtCore.QFileInfo.symLinkTarget>
+fi.refresh()                        # re-read the facts (they are cached)  @cache  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/QFileInfo.html#PySide6.QtCore.QFileInfo.refresh>
+
+## QDir: folders and paths
+d = QDir(PATH)                      # make a folder object  @dir @folder  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/QDir.html>
+QDir.homePath() / QDir.tempPath() / QDir.currentPath() / QDir.rootPath()  # get special folder paths  @home @tmp @cwd  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/QDir.html#PySide6.QtCore.QDir.homePath>
+QDir.setCurrent(PATH)               # change the working directory  @cd @chdir  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/QDir.html#PySide6.QtCore.QDir.setCurrent>
+d.exists()                          # check if the folder exists  @exists  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/QDir.html#PySide6.QtCore.QDir.exists>
+d.mkdir("NAME")                     # create one sub folder  @create  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/QDir.html#PySide6.QtCore.QDir.mkdir>
+d.mkpath("a/b/c")                   # create a folder and all missing parents (mkdir -p)  @create @recursive  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/QDir.html#PySide6.QtCore.QDir.mkpath>
+d.rmdir("NAME")                     # remove an empty sub folder  @delete  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/QDir.html#PySide6.QtCore.QDir.rmdir>
+d.removeRecursively()               # delete the folder and everything inside (rm -rf)  @delete @recursive  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/QDir.html#PySide6.QtCore.QDir.removeRecursively>
+d.remove("FILE") / d.rename(OLD, NEW)  # delete / rename an entry inside the folder  @delete @rename  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/QDir.html#PySide6.QtCore.QDir.remove>
+d.entryList()                       # list names in the folder  @ls @list  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/QDir.html#PySide6.QtCore.QDir.entryList>
+d.entryList(["*.py", "*.ui"], QDir.Filter.Files, QDir.SortFlag.Name)  # list files matching patterns, sorted  @glob @filter  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/QDir.html#PySide6.QtCore.QDir.entryList>
+d.entryInfoList(QDir.Filter.Dirs | QDir.Filter.NoDotAndDotDot)  # list sub folders as QFileInfo (skip . and ..)  @subdirs  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/QDir.html#PySide6.QtCore.QDir.entryInfoList>
+QDir.Filter.Files / Dirs / Hidden / NoDotAndDotDot / AllEntries / Readable  # filter flags for listings  @filter  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/QDir.html#PySide6.QtCore.QDir.Filter>
+QDir.SortFlag.Name / Time / Size / Type / DirsFirst / IgnoreCase / Reversed  # sort flags for listings  @sort  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/QDir.html#PySide6.QtCore.QDir.SortFlag>
+d.setNameFilters(["*.png"]); d.setFilter(QDir.Filter.Files)  # set default filters for later listings  @filter  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/QDir.html#PySide6.QtCore.QDir.setNameFilters>
+d.count() / d.isEmpty()             # count entries / check if empty  @count  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/QDir.html#PySide6.QtCore.QDir.count>
+d.filePath("x.txt") / d.absoluteFilePath("x.txt")  # build a path inside the folder  @join  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/QDir.html#PySide6.QtCore.QDir.filePath>
+d.relativeFilePath(PATH)            # get PATH relative to the folder  @relpath  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/QDir.html#PySide6.QtCore.QDir.relativeFilePath>
+d.cd("sub") / d.cdUp()              # move the QDir into a sub folder / to the parent  @cd  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/QDir.html#PySide6.QtCore.QDir.cd>
+d.dirName() / d.absolutePath()      # get the folder name / its full path  @name  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/QDir.html#PySide6.QtCore.QDir.dirName>
+QDir.cleanPath("a//b/../c")         # tidy a path: "a/c"  @normpath @normalize  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/QDir.html#PySide6.QtCore.QDir.cleanPath>
+QDir.toNativeSeparators(P) / QDir.fromNativeSeparators(P)  # switch between / and \  @windows @separator  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/QDir.html#PySide6.QtCore.QDir.toNativeSeparators>
+QDir.separator() / QDir.listSeparator()  # get "/" and ":" (or "\" and ";" on Windows)  @separator  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/QDir.html#PySide6.QtCore.QDir.separator>
+QDir.isAbsolutePath(P)              # check if a path is absolute  @absolute  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/QDir.html#PySide6.QtCore.QDir.isAbsolutePath>
+QDir.match("*.txt", NAME)           # check a name against a wildcard  @glob @fnmatch  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/QDir.html#PySide6.QtCore.QDir.match>
+QDir.drives()                       # list root drives (C:\, D:\ on Windows; / elsewhere)  @drives  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/QDir.html#PySide6.QtCore.QDir.drives>
+QDir.addSearchPath("icons", DIR)    # make "icons:x.png" look in DIR  @prefix @search  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/QDir.html#PySide6.QtCore.QDir.addSearchPath>
+
+## walk folder trees
+dl = QDirListing(PATH, QDirListing.IteratorFlag.Recursive)  # list a folder tree fast (new API); keep it in a variable while looping  @walk @recursive @find  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/QDirListing.html>
+for it in dl: it.value().filePath()  # loop over a QDirListing; each item is an iterator, .value() gives the DirEntry  @walk @loop  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/QDirListingIterator.html#PySide6.QtCore.QDirListingIterator.value>
+    dl = QDirListing("/src", ["*.py"], QDirListing.IteratorFlag.Recursive | QDirListing.IteratorFlag.FilesOnly)
+    paths = []
+    for it in dl:
+        paths.append(it.value().filePath())
+for it in QDirListing(PATH, ...):   # crashes (segfault) in PySide6 6.12: the temporary listing is freed while you loop  @crash @segfault @gotcha
+QDirListing(PATH, ["*.py"], QDirListing.IteratorFlag.Recursive | QDirListing.IteratorFlag.FilesOnly)  # list only matching files  @glob @walk  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/QDirListing.html#PySide6.QtCore.QDirListing.IteratorFlag>
+QDirListing.IteratorFlag.IncludeHidden / FollowDirSymlinks / DirsOnly / ExcludeSpecial  # more QDirListing flags  @flags  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/QDirListing.html#PySide6.QtCore.QDirListing.IteratorFlag>
+e.fileName() / e.isDir() / e.size() / e.lastModified() / e.fileInfo()  # read one QDirListing.DirEntry (e = it.value())  @entry  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/QDirListing.html#PySide6.QtCore.QDirListing.DirEntry>
+it = QDirIterator(PATH, QDirIterator.IteratorFlag.Subdirectories); while it.hasNext(): it.next()  # walk a tree (older API)  @walk @recursive  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/QDirIterator.html>
+QDirIterator(PATH, ["*.txt"], QDir.Filter.Files, QDirIterator.IteratorFlag.Subdirectories)  # walk only matching files (older API)  @glob  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/QDirIterator.html>
+
+## watch files and folders
+w = QFileSystemWatcher([PATH])      # watch files or folders for changes  @watch @inotify @monitor  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/QFileSystemWatcher.html>
+w.fileChanged.connect(FN)           # run FN(path) when a watched file changes or is removed  @watch @modified  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/QFileSystemWatcher.html#PySide6.QtCore.QFileSystemWatcher.fileChanged>
+w.directoryChanged.connect(FN)      # run FN(path) when files are added/removed in a watched folder  @watch  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/QFileSystemWatcher.html#PySide6.QtCore.QFileSystemWatcher.directoryChanged>
+w.addPath(P) / w.removePath(P)      # start / stop watching a path  @watch  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/QFileSystemWatcher.html#PySide6.QtCore.QFileSystemWatcher.addPath>
+w.files() / w.directories()         # list what is watched  @watch  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/QFileSystemWatcher.html#PySide6.QtCore.QFileSystemWatcher.files>
+re-add the path in fileChanged      # editors replace files on save, which drops the watch  @watch @gotcha
+
+## standard locations (QStandardPaths)
+QStandardPaths.writableLocation(QStandardPaths.StandardLocation.AppDataLocation)  # get the folder to save app data (~/.local/share/ORG/APP)  @appdata @config  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/QStandardPaths.html#PySide6.QtCore.QStandardPaths.writableLocation>
+QStandardPaths.StandardLocation.AppConfigLocation  # folder for config files (~/.config/ORG/APP)  @config  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/QStandardPaths.html#PySide6.QtCore.QStandardPaths.StandardLocation>
+QStandardPaths.StandardLocation.CacheLocation  # folder for cache files (~/.cache/ORG/APP)  @cache  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/QStandardPaths.html#PySide6.QtCore.QStandardPaths.StandardLocation>
+QStandardPaths.StandardLocation.DocumentsLocation / DownloadLocation / DesktopLocation / PicturesLocation / HomeLocation / TempLocation  # user folders  @home @downloads  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/QStandardPaths.html#PySide6.QtCore.QStandardPaths.StandardLocation>
+QStandardPaths.StandardLocation.StateLocation / RuntimeLocation / FontsLocation / ApplicationsLocation  # other standard folders  @state  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/QStandardPaths.html#PySide6.QtCore.QStandardPaths.StandardLocation>
+QStandardPaths.standardLocations(LOC)  # list all folders for a location, most important first  @search  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/QStandardPaths.html#PySide6.QtCore.QStandardPaths.standardLocations>
+QStandardPaths.locate(LOC, "file.txt")  # find a file in the standard folders ("" if missing)  @find  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/QStandardPaths.html#PySide6.QtCore.QStandardPaths.locate>
+QStandardPaths.findExecutable("git")  # find a program on PATH (like which)  @which  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/QStandardPaths.html#PySide6.QtCore.QStandardPaths.findExecutable>
+QStandardPaths.displayName(LOC)     # get a human name like "Documents"  @name  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/QStandardPaths.html#PySide6.QtCore.QStandardPaths.displayName>
+QStandardPaths.setTestModeEnabled(True)  # use separate test folders (~/.qttest) in unit tests  @test  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/QStandardPaths.html#PySide6.QtCore.QStandardPaths.setTestModeEnabled>
+
+## disks and mime types
+QStorageInfo(PATH)                  # get facts about the disk / mount that holds PATH  @disk @df  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/QStorageInfo.html>
+si.bytesAvailable() / si.bytesTotal() / si.bytesFree()  # get free and total disk space  @df @space  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/QStorageInfo.html#PySide6.QtCore.QStorageInfo.bytesAvailable>
+si.rootPath() / si.device() / si.fileSystemType() / si.isReadOnly()  # get the mount point, device, fs type  @mount  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/QStorageInfo.html#PySide6.QtCore.QStorageInfo.rootPath>
+QStorageInfo.mountedVolumes()       # list all mounted volumes  @mount @list  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/QStorageInfo.html#PySide6.QtCore.QStorageInfo.mountedVolumes>
+QMimeDatabase().mimeTypeForFile(PATH)  # detect a file's type by name and content  @mime @filetype @magic  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/QMimeDatabase.html#PySide6.QtCore.QMimeDatabase.mimeTypeForFile>
+QMimeDatabase().mimeTypeForData(BYTES)  # detect a type from content only  @mime @magic  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/QMimeDatabase.html#PySide6.QtCore.QMimeDatabase.mimeTypeForData>
+QMimeDatabase().mimeTypeForName("image/png")  # look up a mime type by name  @mime  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/QMimeDatabase.html#PySide6.QtCore.QMimeDatabase.mimeTypeForName>
+mt.name() / mt.comment() / mt.suffixes() / mt.preferredSuffix() / mt.iconName()  # read a mime type ("image/png", "PNG image", ["png"])  @mime  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/QMimeType.html>
+mt.inherits("text/plain")           # check if a type is a kind of text, etc.  @mime  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/QMimeType.html#PySide6.QtCore.QMimeType.inherits>
+QDesktopServices.openUrl(QUrl.fromLocalFile(PATH))  # open a file with its default app (xdg-open)  @open @launch  <https://doc.qt.io/qtforpython-6/PySide6/QtGui/QDesktopServices.html#PySide6.QtGui.QDesktopServices.openUrl>
+QDesktopServices.openUrl(QUrl("https://example.com"))  # open a web page in the browser  @browser  <https://doc.qt.io/qtforpython-6/PySide6/QtGui/QDesktopServices.html#PySide6.QtGui.QDesktopServices.openUrl>
+
+## QProcess: run programs
+p = QProcess(self)                  # create a process object  @subprocess @run @exec  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/QProcess.html>
+p.start("git", ["status", "-s"])    # start a program with arguments (async; no shell)  @start @spawn  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/QProcess.html#PySide6.QtCore.QProcess.start>
+p.startCommand("git status -s")     # start a program from one command string (split like a shell, no shell features)  @start  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/QProcess.html#PySide6.QtCore.QProcess.startCommand>
+p.readyReadStandardOutput.connect(lambda: out(p.readAllStandardOutput()))  # read stdout as it arrives  @stdout @live  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/QProcess.html#PySide6.QtCore.QProcess.readyReadStandardOutput>
+p.readyReadStandardError.connect(FN)  # react to stderr output  @stderr  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/QProcess.html#PySide6.QtCore.QProcess.readyReadStandardError>
+p.readAllStandardOutput().data().decode()  # get all stdout so far as str  @stdout @output  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/QProcess.html#PySide6.QtCore.QProcess.readAllStandardOutput>
+p.readAllStandardError()            # get all stderr so far  @stderr  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/QProcess.html#PySide6.QtCore.QProcess.readAllStandardError>
+p.finished.connect(lambda code, status: ...)  # react when the process ends (exit code, NormalExit/CrashExit)  @exit @done  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/QProcess.html#PySide6.QtCore.QProcess.finished>
+p.errorOccurred.connect(FN)         # react to FailedToStart, Crashed, Timedout...  @error  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/QProcess.html#PySide6.QtCore.QProcess.errorOccurred>
+p.started.connect(FN) / p.stateChanged.connect(FN)  # react when it starts / changes state  @state  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/QProcess.html#PySide6.QtCore.QProcess.stateChanged>
+p.waitForFinished(MS)               # block until done (or -1 = forever); avoid in the GUI thread  @blocking @wait  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/QProcess.html#PySide6.QtCore.QProcess.waitForFinished>
+p.waitForStarted()                  # block until started; False if the program was not found  @blocking  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/QProcess.html#PySide6.QtCore.QProcess.waitForStarted>
+p.exitCode() / p.exitStatus()       # get the result after finished  @returncode  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/QProcess.html#PySide6.QtCore.QProcess.exitCode>
+p.write(b"input\n"); p.closeWriteChannel()  # send stdin data, then EOF  @stdin  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/QProcess.html#PySide6.QtCore.QProcess.closeWriteChannel>
+p.setProcessChannelMode(QProcess.ProcessChannelMode.MergedChannels)  # mix stderr into stdout >&1  @stderr @2  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/QProcess.html#PySide6.QtCore.QProcess.setProcessChannelMode>
+QProcess.ProcessChannelMode.ForwardedChannels  # pass output straight to this program's terminal  @inherit  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/QProcess.html#PySide6.QtCore.QProcess.ProcessChannelMode>
+p.setWorkingDirectory(DIR)          # set the cwd of the child  @cwd  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/QProcess.html#PySide6.QtCore.QProcess.setWorkingDirectory>
+env = QProcessEnvironment.systemEnvironment(); env.insert("K", "V"); p.setProcessEnvironment(env)  # set env vars for the child  @env @environment  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/QProcessEnvironment.html>
+p.setStandardOutputFile(PATH) / p.setStandardInputFile(PATH)  # redirect stdout / stdin to files  @redirect  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/QProcess.html#PySide6.QtCore.QProcess.setStandardOutputFile>
+p.setStandardOutputProcess(OTHER)   # pipe stdout into another QProcess (cmd1 | cmd2)  @pipe  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/QProcess.html#PySide6.QtCore.QProcess.setStandardOutputProcess>
+p.terminate() / p.kill()            # ask to stop (SIGTERM) / force stop (SIGKILL)  @stop @kill  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/QProcess.html#PySide6.QtCore.QProcess.terminate>
+p.processId()                       # get the child PID  @pid  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/QProcess.html#PySide6.QtCore.QProcess.processId>
+p.state()                           # get NotRunning, Starting or Running  @state  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/QProcess.html#PySide6.QtCore.QProcess.state>
+QProcess.execute("ls", ["-l"])      # run a program and wait; output goes to this terminal; returns the exit code  @blocking @system  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/QProcess.html#PySide6.QtCore.QProcess.execute>
+QProcess.startDetached("xdg-open", [PATH])  # start a program that keeps running on its own; returns (ok, pid)  @detach @background  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/QProcess.html#PySide6.QtCore.QProcess.startDetached>
+QProcess.splitCommand("git log -n 3")  # split a command line into a list like a shell  @shlex  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/QProcess.html#PySide6.QtCore.QProcess.splitCommand>

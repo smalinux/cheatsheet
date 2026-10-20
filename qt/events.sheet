@@ -1,0 +1,153 @@
+title: qt events: mouse, keyboard, wheel, resize, close, event filters, custom events, drag and drop, clipboard (pyside6)
+url:   https://doc.qt.io/qtforpython-6/PySide6/QtCore/QEvent.html
+tags:  qt pyside6 event qevent mouse click keyboard key press wheel scroll resize close eventfilter custom-event drag drop dnd clipboard copy paste mime
+
+## event basics
+def mousePressEvent(self, event):   # override an event handler in your widget subclass  @override @handler  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QWidget.html#PySide6.QtWidgets.QWidget.mousePressEvent>
+super().mousePressEvent(event)      # pass the event on to the default handler (keep normal behaviour)  @default @propagate
+event.accept()                      # mark the event as handled (stops it going to the parent)  @handled  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/QEvent.html#PySide6.QtCore.QEvent.accept>
+event.ignore()                      # mark it as not handled: it goes on to the parent widget  @propagate @bubble  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/QEvent.html#PySide6.QtCore.QEvent.ignore>
+event.type()                        # get the QEvent.Type, e.g. QEvent.Type.MouseButtonPress  @type  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/QEvent.html#PySide6.QtCore.QEvent.type>
+event.spontaneous()                 # check if the event came from the system (not from code)  @source  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/QEvent.html#PySide6.QtCore.QEvent.spontaneous>
+def event(self, e):                 # catch every event of an object before the specific handlers; return True if handled  @all @dispatch  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/QObject.html#PySide6.QtCore.QObject.event>
+    def event(self, e):
+        if e.type() == QEvent.Type.ToolTip:
+            QToolTip.showText(e.globalPos(), "dynamic tip"); return True
+        return super().event(e)
+QEvent.Type.Show / Hide / Close / Resize / Move / Paint / Enter / Leave / FocusIn / FocusOut / ToolTip / WindowStateChange / LanguageChange / PaletteChange  # common event types  @types  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/QEvent.html#PySide6.QtCore.QEvent.Type>
+doc.qt.io/qt-6/eventsandfilters.html  # read how events, handlers and event filters work  @guide  <https://doc.qt.io/qt-6/eventsandfilters.html>
+
+## mouse
+def mousePressEvent(self, e): e.button() == Qt.MouseButton.LeftButton  # check which button was pressed  @click @left  <https://doc.qt.io/qtforpython-6/PySide6/QtGui/QSinglePointEvent.html#PySide6.QtGui.QSinglePointEvent.button>
+e.buttons()                         # get all buttons held (use in mouseMoveEvent)  @drag @held  <https://doc.qt.io/qtforpython-6/PySide6/QtGui/QSinglePointEvent.html#PySide6.QtGui.QSinglePointEvent.buttons>
+e.position()                        # get the position in widget coordinates (QPointF)  @position @xy  <https://doc.qt.io/qtforpython-6/PySide6/QtGui/QSinglePointEvent.html#PySide6.QtGui.QSinglePointEvent.position>
+e.globalPosition()                  # get the position on the screen (QPointF)  @screen  <https://doc.qt.io/qtforpython-6/PySide6/QtGui/QSinglePointEvent.html#PySide6.QtGui.QSinglePointEvent.globalPosition>
+e.position().toPoint()              # convert QPointF to QPoint  @int  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/QPointF.html#PySide6.QtCore.QPointF.toPoint>
+e.pos() / e.globalPos() / e.x()     # old Qt 5 names, deprecated; use position() / globalPosition()  @qt5 @deprecated  <https://doc.qt.io/qtforpython-6/PySide6/QtGui/QMouseEvent.html#PySide6.QtGui.QMouseEvent.pos>
+e.modifiers() & Qt.KeyboardModifier.ControlModifier  # check for Ctrl+click  @modifier @ctrl  <https://doc.qt.io/qtforpython-6/PySide6/QtGui/QInputEvent.html#PySide6.QtGui.QInputEvent.modifiers>
+def mouseMoveEvent(self, e)         # react to movement; without setMouseTracking(True) only while a button is held  @move @hover  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QWidget.html#PySide6.QtWidgets.QWidget.mouseMoveEvent>
+def mouseReleaseEvent(self, e)      # react when the button is released (a "click" = press + release inside)  @release  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QWidget.html#PySide6.QtWidgets.QWidget.mouseReleaseEvent>
+def mouseDoubleClickEvent(self, e)  # react to a double click (a press event comes first)  @doubleclick  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QWidget.html#PySide6.QtWidgets.QWidget.mouseDoubleClickEvent>
+def enterEvent(self, e) / def leaveEvent(self, e)  # react when the mouse enters / leaves the widget  @hover  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QWidget.html#PySide6.QtWidgets.QWidget.enterEvent>
+QEvent.Type.HoverMove / HoverEnter / HoverLeave  # hover events, sent with WA_Hover  @hover  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/QEvent.html#PySide6.QtCore.QEvent.Type>
+def wheelEvent(self, e): e.angleDelta().y()  # scroll steps: 120 per notch, positive = away from the user  @scroll @zoom  <https://doc.qt.io/qtforpython-6/PySide6/QtGui/QWheelEvent.html#PySide6.QtGui.QWheelEvent.angleDelta>
+e.pixelDelta()                      # get smooth pixel scrolling from touchpads (may be null)  @touchpad  <https://doc.qt.io/qtforpython-6/PySide6/QtGui/QWheelEvent.html#PySide6.QtGui.QWheelEvent.pixelDelta>
+if e.modifiers() & Qt.KeyboardModifier.ControlModifier: zoom(e.angleDelta().y())  # Ctrl+wheel zoom  @zoom
+QCursor.pos()                       # get the mouse position on the screen at any time  @cursor @where  <https://doc.qt.io/qtforpython-6/PySide6/QtGui/QCursor.html#PySide6.QtGui.QCursor.pos>
+QCursor.setPos(X, Y)                # move the mouse pointer  @warp  <https://doc.qt.io/qtforpython-6/PySide6/QtGui/QCursor.html#PySide6.QtGui.QCursor.setPos>
+def contextMenuEvent(self, e): menu.exec(e.globalPos())  # right click (also the menu key)  @rightclick  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QWidget.html#PySide6.QtWidgets.QWidget.contextMenuEvent>
+
+## keyboard
+def keyPressEvent(self, e):         # react to key presses (widget needs focus)  @key @keyboard  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QWidget.html#PySide6.QtWidgets.QWidget.keyPressEvent>
+    def keyPressEvent(self, e):
+        if e.key() == Qt.Key.Key_Escape:
+            self.close()
+        elif e.key() == Qt.Key.Key_S and e.modifiers() & Qt.KeyboardModifier.ControlModifier:
+            self.save()
+        else:
+            super().keyPressEvent(e)
+e.key()                             # get the key as a Qt.Key value  @key  <https://doc.qt.io/qtforpython-6/PySide6/QtGui/QKeyEvent.html#PySide6.QtGui.QKeyEvent.key>
+e.text()                            # get the typed text ("a", "A", "" for arrows)  @char  <https://doc.qt.io/qtforpython-6/PySide6/QtGui/QKeyEvent.html#PySide6.QtGui.QKeyEvent.text>
+e.modifiers()                       # get Shift/Ctrl/Alt/Meta flags  @modifier  <https://doc.qt.io/qtforpython-6/PySide6/QtGui/QInputEvent.html#PySide6.QtGui.QInputEvent.modifiers>
+e.keyCombination()                  # get key + modifiers as one QKeyCombination  @combo  <https://doc.qt.io/qtforpython-6/PySide6/QtGui/QKeyEvent.html#PySide6.QtGui.QKeyEvent.keyCombination>
+e.matches(QKeySequence.StandardKey.Copy)  # check for a standard shortcut (Ctrl+C / Cmd+C)  @shortcut  <https://doc.qt.io/qtforpython-6/PySide6/QtGui/QKeyEvent.html#PySide6.QtGui.QKeyEvent.matches>
+e.isAutoRepeat()                    # check if the key is held down and repeating  @repeat  <https://doc.qt.io/qtforpython-6/PySide6/QtGui/QKeyEvent.html#PySide6.QtGui.QKeyEvent.isAutoRepeat>
+e.nativeScanCode() / e.nativeVirtualKey()  # get raw hardware codes  @raw  <https://doc.qt.io/qtforpython-6/PySide6/QtGui/QKeyEvent.html#PySide6.QtGui.QKeyEvent.nativeScanCode>
+def keyReleaseEvent(self, e)        # react when a key is released  @release  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QWidget.html#PySide6.QtWidgets.QWidget.keyReleaseEvent>
+w.setFocusPolicy(Qt.FocusPolicy.StrongFocus)  # needed for plain QWidgets to get key events at all  @focus
+Tab and Backtab                     # are eaten for focus moves; override focusNextPrevChild() or event() to get them  @tab  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QWidget.html#PySide6.QtWidgets.QWidget.focusNextPrevChild>
+
+## window and widget events
+def resizeEvent(self, e): e.size() / e.oldSize()  # react to resize  @resize  <https://doc.qt.io/qtforpython-6/PySide6/QtGui/QResizeEvent.html#PySide6.QtGui.QResizeEvent.size>
+def moveEvent(self, e): e.pos() / e.oldPos()  # react to move  @move  <https://doc.qt.io/qtforpython-6/PySide6/QtGui/QMoveEvent.html#PySide6.QtGui.QMoveEvent.pos>
+def closeEvent(self, e):            # confirm or stop closing the window  @close @quit @unsaved  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QWidget.html#PySide6.QtWidgets.QWidget.closeEvent>
+    def closeEvent(self, e):
+        if QMessageBox.question(self, "Quit", "Really quit?") == QMessageBox.StandardButton.Yes:
+            e.accept()
+        else:
+            e.ignore()
+def showEvent(self, e) / def hideEvent(self, e)  # react to show / hide (first show: load data)  @show  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QWidget.html#PySide6.QtWidgets.QWidget.showEvent>
+def focusInEvent(self, e) / def focusOutEvent(self, e): e.reason()  # react to focus changes; reason = Tab, Mouse, Popup...  @focus  <https://doc.qt.io/qtforpython-6/PySide6/QtGui/QFocusEvent.html#PySide6.QtGui.QFocusEvent.reason>
+def changeEvent(self, e): e.type() == QEvent.Type.WindowStateChange  # react to minimize / maximize  @state  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QWidget.html#PySide6.QtWidgets.QWidget.changeEvent>
+QEvent.Type.ActivationChange        # the window became active or inactive  @activate  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/QEvent.html#PySide6.QtCore.QEvent.Type>
+def timerEvent(self, e): e.timerId()  # handle startTimer() timers  @timer  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/QObject.html#PySide6.QtCore.QObject.timerEvent>
+def childEvent(self, e): e.added() / e.removed()  # react when children are added or removed  @child  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/QObject.html#PySide6.QtCore.QObject.childEvent>
+def tabletEvent(self, e)            # pen tablet input with pressure and tilt  @pen @stylus  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QWidget.html#PySide6.QtWidgets.QWidget.tabletEvent>
+QTouchEvent / e.points()            # multi-touch points (needs WA_AcceptTouchEvents)  @touch  <https://doc.qt.io/qtforpython-6/PySide6/QtGui/QTouchEvent.html>
+grabGesture(Qt.GestureType.PinchGesture)  # receive pinch / swipe / pan gestures as QGestureEvent  @gesture  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QWidget.html#PySide6.QtWidgets.QWidget.grabGesture>
+
+## event filters (watch events of other objects)
+obj.installEventFilter(self)        # send OBJ's events to self.eventFilter first  @filter @intercept @spy  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/QObject.html#PySide6.QtCore.QObject.installEventFilter>
+def eventFilter(self, obj, event):  # look at or swallow another object's events; return True to stop them  @filter @block  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/QObject.html#PySide6.QtCore.QObject.eventFilter>
+    class Watcher(QObject):
+        def eventFilter(self, obj, ev):
+            if ev.type() == QEvent.Type.KeyPress and ev.key() == Qt.Key.Key_Return:
+                print("enter in", obj.objectName()); return True   # swallow it
+            return super().eventFilter(obj, ev)
+    self.watcher = Watcher(); edit.installEventFilter(self.watcher)
+obj.removeEventFilter(self)         # stop filtering  @filter  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/QObject.html#PySide6.QtCore.QObject.removeEventFilter>
+app.installEventFilter(self)        # watch every event of the whole app (debugging, idle timers, global keys)  @global @filter  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/QObject.html#PySide6.QtCore.QObject.installEventFilter>
+viewport events                     # for scroll areas and item views install the filter on view.viewport() to get mouse events  @viewport @gotcha
+
+## send and post events, custom events
+QCoreApplication.postEvent(OBJ, EVENT)  # queue an event (thread safe; Qt takes ownership)  @post @async  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/QCoreApplication.html#PySide6.QtCore.QCoreApplication.postEvent>
+QCoreApplication.sendEvent(OBJ, EVENT)  # deliver an event now and get the result  @send @sync  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/QCoreApplication.html#PySide6.QtCore.QCoreApplication.sendEvent>
+QEvent.registerEventType()          # get a free event type number for your own events  @custom @register  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/QEvent.html#PySide6.QtCore.QEvent.registerEventType>
+    MY_TYPE = QEvent.Type(QEvent.registerEventType())
+    class MyEvent(QEvent):
+        def __init__(self, payload):
+            super().__init__(MY_TYPE); self.payload = payload
+    # in the receiver:
+    def customEvent(self, e):
+        if e.type() == MY_TYPE: print(e.payload)
+def customEvent(self, e)            # handle events of user types  @custom  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/QObject.html#PySide6.QtCore.QObject.customEvent>
+QCoreApplication.removePostedEvents(OBJ)  # drop queued events for an object  @cancel  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/QCoreApplication.html#PySide6.QtCore.QCoreApplication.removePostedEvents>
+QCoreApplication.sendPostedEvents()  # deliver queued events now  @flush  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/QCoreApplication.html#PySide6.QtCore.QCoreApplication.sendPostedEvents>
+QTest.mouseClick(W, Qt.MouseButton.LeftButton) / QTest.keyClicks(W, "text")  # fake input in tests (QtTest)  @test @simulate  <https://doc.qt.io/qtforpython-6/PySide6/QtTest/QTest.html#PySide6.QtTest.QTest.mouseClick>
+
+## drag and drop: receive
+w.setAcceptDrops(True)              # let a widget accept drops  @drop @dnd  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QWidget.html#PySide6.QtWidgets.QWidget.setAcceptDrops>
+def dragEnterEvent(self, e): if e.mimeData().hasUrls(): e.acceptProposedAction()  # accept files dragged in (else no drop is possible)  @files @dnd  <https://doc.qt.io/qtforpython-6/PySide6/QtGui/QDropEvent.html#PySide6.QtGui.QDropEvent.acceptProposedAction>
+def dragMoveEvent(self, e): e.acceptProposedAction()  # keep accepting while the drag moves (needed for item views and custom zones)  @dnd  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QWidget.html#PySide6.QtWidgets.QWidget.dragMoveEvent>
+def dropEvent(self, e): paths = [u.toLocalFile() for u in e.mimeData().urls()]  # get the dropped file paths  @files @drop  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QWidget.html#PySide6.QtWidgets.QWidget.dropEvent>
+    def dragEnterEvent(self, e):
+        if e.mimeData().hasUrls(): e.acceptProposedAction()
+    def dropEvent(self, e):
+        for url in e.mimeData().urls():
+            print(url.toLocalFile())
+        e.acceptProposedAction()
+e.mimeData().hasText() / e.mimeData().text()  # accept dragged text  @text  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/QMimeData.html#PySide6.QtCore.QMimeData.text>
+e.position()                        # get where the drop happens  @position  <https://doc.qt.io/qtforpython-6/PySide6/QtGui/QDropEvent.html#PySide6.QtGui.QDropEvent.position>
+e.setDropAction(Qt.DropAction.MoveAction); e.accept()  # choose move instead of copy (CopyAction, LinkAction)  @move @copy  <https://doc.qt.io/qtforpython-6/PySide6/QtGui/QDropEvent.html#PySide6.QtGui.QDropEvent.setDropAction>
+e.source()                          # get the source widget if the drag comes from this app  @source  <https://doc.qt.io/qtforpython-6/PySide6/QtGui/QDropEvent.html#PySide6.QtGui.QDropEvent.source>
+def dragLeaveEvent(self, e)         # remove drop highlights when the drag leaves  @leave  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QWidget.html#PySide6.QtWidgets.QWidget.dragLeaveEvent>
+
+## drag and drop: start a drag
+drag = QDrag(self); drag.setMimeData(MIME); drag.exec(Qt.DropAction.CopyAction | Qt.DropAction.MoveAction)  # start a drag; returns the action done  @drag @start  <https://doc.qt.io/qtforpython-6/PySide6/QtGui/QDrag.html#PySide6.QtGui.QDrag.exec>
+    def mouseMoveEvent(self, e):
+        if not (e.buttons() & Qt.MouseButton.LeftButton): return
+        if (e.position().toPoint() - self.press_pos).manhattanLength() < QApplication.startDragDistance(): return
+        mime = QMimeData(); mime.setText(self.text())
+        drag = QDrag(self); drag.setMimeData(mime); drag.setPixmap(self.grab())
+        drag.exec(Qt.DropAction.CopyAction)
+QApplication.startDragDistance()    # get how far the mouse must move before a drag starts  @threshold  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QApplication.html#PySide6.QtWidgets.QApplication.startDragDistance>
+drag.setPixmap(PM) / drag.setHotSpot(P)  # set the picture under the cursor while dragging  @preview  <https://doc.qt.io/qtforpython-6/PySide6/QtGui/QDrag.html#PySide6.QtGui.QDrag.setPixmap>
+item views                          # turn on dnd with setDragEnabled, setAcceptDrops, setDragDropMode(InternalMove) and model mimeData/dropMimeData  @model @view  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QAbstractItemView.html#PySide6.QtWidgets.QAbstractItemView.setDragDropMode>
+
+## QMimeData
+mime = QMimeData()                  # data container for drag and drop and the clipboard  @mime @data  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/QMimeData.html>
+mime.setText(T) / mime.setHtml(H) / mime.setUrls([QUrl.fromLocalFile(P)]) / mime.setImageData(IMG)  # put data of standard kinds  @set  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/QMimeData.html#PySide6.QtCore.QMimeData.setUrls>
+mime.setData("application/x-myapp", BYTES)  # put your own data type  @custom  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/QMimeData.html#PySide6.QtCore.QMimeData.setData>
+mime.hasFormat("application/x-myapp") / mime.data("application/x-myapp")  # check / read a custom type  @custom  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/QMimeData.html#PySide6.QtCore.QMimeData.hasFormat>
+mime.formats()                      # list all types in the data  @list  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/QMimeData.html#PySide6.QtCore.QMimeData.formats>
+mime.hasUrls() / mime.hasText() / mime.hasHtml() / mime.hasImage() / mime.hasColor()  # check standard kinds  @check  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/QMimeData.html#PySide6.QtCore.QMimeData.hasImage>
+
+## clipboard
+cb = QApplication.clipboard()       # get the system clipboard  @copy @paste  <https://doc.qt.io/qtforpython-6/PySide6/QtGui/QGuiApplication.html#PySide6.QtGui.QGuiApplication.clipboard>
+cb.setText("TEXT")                  # copy text  @copy  <https://doc.qt.io/qtforpython-6/PySide6/QtGui/QClipboard.html#PySide6.QtGui.QClipboard.setText>
+cb.text()                           # paste text  @paste  <https://doc.qt.io/qtforpython-6/PySide6/QtGui/QClipboard.html#PySide6.QtGui.QClipboard.text>
+cb.setImage(IMG) / cb.image() / cb.setPixmap(PM)  # copy / paste an image  @image  <https://doc.qt.io/qtforpython-6/PySide6/QtGui/QClipboard.html#PySide6.QtGui.QClipboard.setImage>
+cb.setMimeData(MIME) / cb.mimeData()  # copy / paste any data (html, files, custom)  @mime  <https://doc.qt.io/qtforpython-6/PySide6/QtGui/QClipboard.html#PySide6.QtGui.QClipboard.setMimeData>
+cb.dataChanged.connect(FN)          # react when the clipboard content changes  @watch  <https://doc.qt.io/qtforpython-6/PySide6/QtGui/QClipboard.html#PySide6.QtGui.QClipboard.dataChanged>
+cb.setText(T, QClipboard.Mode.Selection)  # set the X11 middle-click selection  @x11 @primary  <https://doc.qt.io/qtforpython-6/PySide6/QtGui/QClipboard.html#PySide6.QtGui.QClipboard.Mode>
+cb.clear()                          # empty the clipboard  @clear  <https://doc.qt.io/qtforpython-6/PySide6/QtGui/QClipboard.html#PySide6.QtGui.QClipboard.clear>

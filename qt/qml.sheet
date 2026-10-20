@@ -1,0 +1,134 @@
+title: qt qml and quick: engine, expose python to qml, QmlElement, properties, QQuickView, QQuickWidget (pyside6)
+url:   https://doc.qt.io/qtforpython-6/tutorials/qmlintegration/qmlintegration.html
+tags:  qt pyside6 qml quick qtquick qqmlapplicationengine qmlelement qquickview qquickwidget declarative ui javascript qtquickcontrols qtqmlfeatures
+
+## run a QML app
+app = QGuiApplication(sys.argv); engine = QQmlApplicationEngine(); engine.load("main.qml")  # load a QML file whose root is a Window / ApplicationWindow  @start @load  <https://doc.qt.io/qtforpython-6/PySide6/QtQml/QQmlApplicationEngine.html#PySide6.QtQml.QQmlApplicationEngine.load>
+    import sys
+    from PySide6.QtGui import QGuiApplication
+    from PySide6.QtQml import QQmlApplicationEngine
+    app = QGuiApplication(sys.argv)
+    engine = QQmlApplicationEngine()
+    engine.load("main.qml")
+    if not engine.rootObjects():
+        sys.exit(-1)
+    sys.exit(app.exec())
+if not engine.rootObjects(): sys.exit(-1)  # stop when the QML failed to load (errors are printed)  @error  <https://doc.qt.io/qtforpython-6/PySide6/QtQml/QQmlApplicationEngine.html#PySide6.QtQml.QQmlApplicationEngine.rootObjects>
+engine.loadFromModule("Main", "Main")  # load the type Main from QML module Main (pyside6-project new-quick layout)  @module  <https://doc.qt.io/qtforpython-6/PySide6/QtQml/QQmlApplicationEngine.html#PySide6.QtQml.QQmlApplicationEngine.loadFromModule>
+engine.loadData(b"import QtQuick; Window { visible: true }")  # load QML from bytes  @inline  <https://doc.qt.io/qtforpython-6/PySide6/QtQml/QQmlApplicationEngine.html#PySide6.QtQml.QQmlApplicationEngine.loadData>
+engine.load(QUrl("qrc:/main.qml"))  # load QML from Qt resources  @qrc  <https://doc.qt.io/qtforpython-6/PySide6/QtQml/QQmlApplicationEngine.html#PySide6.QtQml.QQmlApplicationEngine.load>
+engine.objectCreationFailed.connect(app.quit)  # quit when the root object could not be created  @error  <https://doc.qt.io/qtforpython-6/PySide6/QtQml/QQmlApplicationEngine.html#PySide6.QtQml.QQmlApplicationEngine.objectCreationFailed>
+engine.setInitialProperties({"title": "Demo"})  # set properties of the root object before it is created  @properties  <https://doc.qt.io/qtforpython-6/PySide6/QtQml/QQmlApplicationEngine.html#PySide6.QtQml.QQmlApplicationEngine.setInitialProperties>
+engine.addImportPath(DIR)           # add a folder with QML modules (qmldir files)  @import @path  <https://doc.qt.io/qtforpython-6/PySide6/QtQml/QQmlEngine.html#PySide6.QtQml.QQmlEngine.addImportPath>
+engine.rootObjects()[0]             # get the root QML object (QQuickWindow) from Python  @root  <https://doc.qt.io/qtforpython-6/PySide6/QtQml/QQmlApplicationEngine.html#PySide6.QtQml.QQmlApplicationEngine.rootObjects>
+root.findChild(QObject, "myButton")  # find a QML item by its objectName from Python  @find  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/QObject.html#PySide6.QtCore.QObject.findChild>
+item.setProperty("text", "x") / item.property("text")  # write / read a QML property from Python  @property  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/QObject.html#PySide6.QtCore.QObject.setProperty>
+QMetaObject.invokeMethod(item, "twice", Q_RETURN_ARG("QVariant"), Q_ARG("QVariant", 4))  # call a QML JavaScript function and get its result (QML args are QVariant)  @call @return  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/QMetaObject.html#PySide6.QtCore.QMetaObject.invokeMethod>
+engine.warnings.connect(FN)         # get QML warnings as a list of QQmlError  @debug  <https://doc.qt.io/qtforpython-6/PySide6/QtQml/QQmlEngine.html#PySide6.QtQml.QQmlEngine.warnings>
+engine.clearComponentCache()        # reload changed QML files (hot reload helpers)  @reload  <https://doc.qt.io/qtforpython-6/PySide6/QtQml/QQmlEngine.html#PySide6.QtQml.QQmlEngine.clearComponentCache>
+engine.retranslate()                # re-evaluate qsTr() bindings after installing a translator  @i18n  <https://doc.qt.io/qtforpython-6/PySide6/QtQml/QQmlEngine.html#PySide6.QtQml.QQmlEngine.retranslate>
+QQuickStyle.setStyle("Material")    # pick the Qt Quick Controls style (Basic, Fusion, Material, Universal, Imagine...) before loading  @style @controls  <https://doc.qt.io/qtforpython-6/PySide6/QtQuickControls2/QQuickStyle.html#PySide6.QtQuickControls2.QQuickStyle.setStyle>
+QT_QUICK_CONTROLS_STYLE=Material python main.py  # pick the controls style from the environment  @style @env
+pyside6-qml main.qml                # preview a QML file without writing Python  @preview
+
+## expose Python to QML: context properties
+engine.rootContext().setContextProperty("backend", backend)  # make a Python QObject visible to QML as a global name (set before load)  @context @global  <https://doc.qt.io/qtforpython-6/PySide6/QtQml/QQmlContext.html#PySide6.QtQml.QQmlContext.setContextProperty>
+    class Backend(QObject):
+        @Slot(str, result=str)
+        def echo(self, s): return s.upper()
+    backend = Backend()                          # keep a reference
+    engine.rootContext().setContextProperty("backend", backend)
+    # QML: Text { text: backend.echo("hi") }
+@Slot(str, result=int)              # a Python method QML can call; result= gives the return type  @slot @call  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/Slot.html>
+Signal(str, arguments=["message"])  # a signal QML can handle as onSomething: (message) => ...  @signal @handler  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/Signal.html>
+Connections { target: backend; function onDone(msg) { ... } }  # QML: handle a signal of a Python object  @connections @qml
+Property(str, fget, fset, notify=changed)  # a property QML can read, bind to, and write  @property @binding  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/Property.html>
+model property                      # a QAbstractListModel with roleNames() works as ListView { model: backend.model }  @model @listview  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/QAbstractItemModel.html#PySide6.QtCore.QAbstractItemModel.roleNames>
+
+## register Python types (QmlElement)
+QML_IMPORT_NAME = "com.example.app"  # module name QML imports; set in the Python module that has the classes  @import @register
+QML_IMPORT_MAJOR_VERSION = 1        # major version of that module (QML_IMPORT_MINOR_VERSION is optional)  @version
+@QmlElement                         # register the QObject class so QML can create it: import com.example.app; MyType { }  @register @decorator  <https://doc.qt.io/qtforpython-6/PySide6/QtQml/index.html>
+    from PySide6.QtQml import QmlElement
+    QML_IMPORT_NAME = "demo"
+    QML_IMPORT_MAJOR_VERSION = 1
+    @QmlElement
+    class Counter(QObject):
+        countChanged = Signal()
+        def __init__(self, parent=None):
+            super().__init__(parent); self._c = 0
+        @Property(int, notify=countChanged)
+        def count(self): return self._c
+        @Slot()
+        def inc(self): self._c += 1; self.countChanged.emit()
+    # QML: import demo;  Counter { id: c }  Button { onClicked: c.inc() }
+@QmlNamedElement("Other")           # register under another QML name  @register @name  <https://doc.qt.io/qtforpython-6/PySide6/QtQml/QmlNamedElement.html>
+@QmlSingleton                       # register one shared instance (put after ); QML uses it as TypeName.prop  @QmlElement @singleton  <https://doc.qt.io/qtforpython-6/PySide6/QtQml/index.html>
+@QmlUncreatable("reason")           # allow the type in QML (enums, attached) but not creating it  @uncreatable  <https://doc.qt.io/qtforpython-6/PySide6/QtQml/QmlUncreatable.html>
+@QmlAnonymous                       # register a type for use as property type only, without a QML name  @anonymous  <https://doc.qt.io/qtforpython-6/PySide6/QtQml/index.html>
+@QmlAttached(AttachedType) / @QmlExtended(Ext) / @QmlForeign(Cls)  # attached properties / extension objects / register a type you cannot change  @advanced  <https://doc.qt.io/qtforpython-6/PySide6/QtQml/QmlAttached.html>
+qmlRegisterSingletonInstance(Backend, "demo", 1, 0, "Backend", backend)  # register an existing object as a singleton  @singleton  <https://doc.qt.io/qtforpython-6/PySide6/QtQml/index.html>
+qmlRegisterType(MyType, "demo", 1, 0, "MyType")  # older registration call (QmlElement is preferred)  @register @legacy  <https://doc.qt.io/qtforpython-6/PySide6/QtQml/index.html>
+qmlRegisterUncreatableType(T, "demo", 1, 0, "T", "reason")  # older uncreatable registration  @legacy  <https://doc.qt.io/qtforpython-6/PySide6/QtQml/index.html>
+ListProperty(Child, append=FN, count=FN, at=FN, clear=FN)  # a list property QML can fill with child objects (default property)  @list  <https://doc.qt.io/qtforpython-6/PySide6/QtQml/ListProperty.html>
+@ClassInfo(DefaultProperty="children")  # mark the default property of a QML type  @default  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/ClassInfo.html>
+QPyQmlParserStatus                  # base class with classBegin()/componentComplete() for QML types  @lifecycle  <https://doc.qt.io/qtforpython-6/PySide6/QtQml/QPyQmlParserStatus.html>
+qmlEngine(obj) / qmlContext(obj)    # get the engine / context an object was created in  @engine  <https://doc.qt.io/qtforpython-6/PySide6/QtQml/index.html>
+
+## QtQmlFeatures (new in 6.12): less boilerplate for QML types
+from PySide6.QtQmlFeatures import auto_properties, computed, watch, effect  # import the reactive helpers  @import  <https://doc.qt.io/qtforpython-6/PySide6/QtQmlFeatures/index.html>
+@auto_properties                    # turn every public self.x = value in __init__ into a Qt Property with an xChanged signal  @property @reactive  <https://doc.qt.io/qtforpython-6/PySide6/QtQmlFeatures/auto_properties.html>
+    @QmlElement
+    @auto_properties
+    class Person(QObject):
+        def __init__(self, parent=None):
+            super().__init__(parent)
+            self.first = "Ada"        # -> Property(str) + firstChanged
+            self.age = 36             # -> Property(int) + ageChanged
+        @computed("first")
+        def greeting(self) -> str:   # read-only, recomputed when first changes
+            return f"Hi {self.first}"
+        @watch("age")
+        def on_age(self, change):    # change.name, change.old, change.new, change.owner
+            print(change.old, "->", change.new)
+@computed("a", "b")                 # a read-only property calculated from other properties; type from the return annotation  @computed @derived  <https://doc.qt.io/qtforpython-6/PySide6/QtQmlFeatures/computed.html>
+@watch("age")                       # run the method with a Change(name, old, new, owner) when one property changes  @watch @observer  <https://doc.qt.io/qtforpython-6/PySide6/QtQmlFeatures/watch.html>
+@effect("first", "last")            # run the method (no argument) after any listed property changes  @effect @side-effect  <https://doc.qt.io/qtforpython-6/PySide6/QtQmlFeatures/effect.html>
+self._x = 0                         # names starting with _ stay plain Python attributes under  @auto_properties @private
+type mapping                        # bool->bool, int->int, float->double, str->QString, bytes->QByteArray, list/tuple->QVariantList, dict->QVariantMap, else QVariant  @types  <file:/src/notes-goblin/qt/.venv/lib/python3.12/site-packages/PySide6/support/auto_property_helper.py>
+factory = load_qml_component(engine, source="Card.qml")  # load a QML component file for creating objects from Python (relative to the caller's file)  @component @factory  <https://doc.qt.io/qtforpython-6/PySide6/QtQmlFeatures/load_qml_component.html>
+load_qml_component(engine, module="Main", type_name="Card")  # load a component from a QML module  @component  <https://doc.qt.io/qtforpython-6/PySide6/QtQmlFeatures/load_qml_component.html>
+card = factory.create(title="Hi"); card.title = "x"; card.poked.connect(FN)  # create an instance; QML properties and signals are plain attributes  @create  <file:/src/notes-goblin/qt/.venv/lib/python3.12/site-packages/PySide6/support/qml_component_helper.py>
+card.ping()                         # calls a QML function, but in 6.12 returns only True/False and fails with arguments; use invokeMethod with Q_RETURN_ARG("QVariant")  @gotcha @call  <file:/src/notes-goblin/qt/.venv/lib/python3.12/site-packages/PySide6/support/qml_component_helper.py#L32>
+card.qobject                        # get the real QObject behind a QmlObject wrapper (a property, not a method)  @escape  <file:/src/notes-goblin/qt/.venv/lib/python3.12/site-packages/PySide6/support/qml_component_helper.py#L115>
+
+## QQmlComponent, QQmlContext, QJSEngine
+comp = QQmlComponent(engine, QUrl.fromLocalFile("Item.qml")); obj = comp.create()  # create QML objects from Python by hand  @component @create  <https://doc.qt.io/qtforpython-6/PySide6/QtQml/QQmlComponent.html>
+comp.createWithInitialProperties({"x": 10})  # create with properties set before bindings run  @initial  <https://doc.qt.io/qtforpython-6/PySide6/QtQml/QQmlComponent.html#PySide6.QtQml.QQmlComponent.createWithInitialProperties>
+comp.isError() / comp.errorString() / comp.status()  # check why a component failed  @error  <https://doc.qt.io/qtforpython-6/PySide6/QtQml/QQmlComponent.html#PySide6.QtQml.QQmlComponent.errorString>
+comp.setData(b"import QtQuick; Rectangle {}", QUrl())  # build a component from text  @inline  <https://doc.qt.io/qtforpython-6/PySide6/QtQml/QQmlComponent.html#PySide6.QtQml.QQmlComponent.setData>
+ctx = QQmlContext(engine.rootContext()); ctx.setContextProperty(...)  # child context with its own names  @context  <https://doc.qt.io/qtforpython-6/PySide6/QtQml/QQmlContext.html>
+js = QJSEngine(); js.evaluate("1 + 2").toInt()  # run JavaScript without any UI  @javascript @eval  <https://doc.qt.io/qtforpython-6/PySide6/QtQml/QJSEngine.html#PySide6.QtQml.QJSEngine.evaluate>
+js.globalObject().setProperty("py", js.newQObject(obj))  # expose a QObject to JavaScript  @javascript  <https://doc.qt.io/qtforpython-6/PySide6/QtQml/QJSEngine.html#PySide6.QtQml.QJSEngine.newQObject>
+js.installExtensions(QJSEngine.Extension.ConsoleExtension)  # enable console.log in a QJSEngine  @console  <https://doc.qt.io/qtforpython-6/PySide6/QtQml/QJSEngine.html#PySide6.QtQml.QJSEngine.installExtensions>
+val.isError() / val.toString() / val.call([ARGS])  # inspect and call a QJSValue  @value  <https://doc.qt.io/qtforpython-6/PySide6/QtQml/QJSValue.html#PySide6.QtQml.QJSValue.call>
+QJSEngine.setObjectOwnership(OBJ, QJSEngine.ObjectOwnership.CppOwnership)  # stop the JS garbage collector from deleting an object you return to QML  @ownership @gc  <https://doc.qt.io/qtforpython-6/PySide6/QtQml/QJSEngine.html#PySide6.QtQml.QJSEngine.setObjectOwnership>
+QQmlPropertyMap()                   # a dict-like object whose keys are QML properties (pm.insert("k", v))  @dict @map  <https://doc.qt.io/qtforpython-6/PySide6/QtQml/QQmlPropertyMap.html>
+
+## QQuickView, QQuickWidget, QQuickItem
+view = QQuickView(); view.setSource(QUrl.fromLocalFile("main.qml")); view.show()  # show a QML file whose root is an Item (not a Window)  @view @window  <https://doc.qt.io/qtforpython-6/PySide6/QtQuick/QQuickView.html>
+view.setResizeMode(QQuickView.ResizeMode.SizeRootObjectToView)  # resize the root item with the window  @resize  <https://doc.qt.io/qtforpython-6/PySide6/QtQuick/QQuickView.html#PySide6.QtQuick.QQuickView.setResizeMode>
+view.rootObject() / view.rootContext() / view.engine()  # get the root item / context / engine  @root  <https://doc.qt.io/qtforpython-6/PySide6/QtQuick/QQuickView.html#PySide6.QtQuick.QQuickView.rootObject>
+view.status() == QQuickView.Status.Error and view.errors()  # check load errors  @error  <https://doc.qt.io/qtforpython-6/PySide6/QtQuick/QQuickView.html#PySide6.QtQuick.QQuickView.errors>
+QWidget.createWindowContainer(view)  # embed a QQuickView into a widget layout  @embed @widgets  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QWidget.html#PySide6.QtWidgets.QWidget.createWindowContainer>
+qw = QQuickWidget(); qw.setSource(QUrl.fromLocalFile("panel.qml"))  # put QML inside a widgets UI as a normal widget (QtQuickWidgets)  @embed @widgets  <https://doc.qt.io/qtforpython-6/PySide6/QtQuickWidgets/QQuickWidget.html>
+qw.setResizeMode(QQuickWidget.ResizeMode.SizeRootObjectToView)  # resize QML with the widget  @resize  <https://doc.qt.io/qtforpython-6/PySide6/QtQuickWidgets/QQuickWidget.html#PySide6.QtQuickWidgets.QQuickWidget.setResizeMode>
+class Clock(QQuickPaintedItem): def paint(self, painter): ...  # draw a QML item with QPainter  @custom @paint  <https://doc.qt.io/qtforpython-6/PySide6/QtQuick/QQuickPaintedItem.html>
+class Item(QQuickItem): def updatePaintNode(self, old, data)  # draw with the scene graph (fast, GPU)  @scenegraph  <https://doc.qt.io/qtforpython-6/PySide6/QtQuick/QQuickItem.html>
+QQuickImageProvider                 # serve images to QML as image://id/name from Python  @image @provider  <https://doc.qt.io/qtforpython-6/PySide6/QtQuick/QQuickImageProvider.html>
+engine.addImageProvider("thumbs", PROVIDER)  # register an image provider  @image  <https://doc.qt.io/qtforpython-6/PySide6/QtQml/QQmlEngine.html#PySide6.QtQml.QQmlEngine.addImageProvider>
+window.grabWindow().save("shot.png")  # screenshot a QQuickWindow  @screenshot  <https://doc.qt.io/qtforpython-6/PySide6/QtQuick/QQuickWindow.html#PySide6.QtQuick.QQuickWindow.grabWindow>
+QQuickWindow.setGraphicsApi(QSGRendererInterface.GraphicsApi.Software)  # force software rendering (no GPU, VMs)  @software @gpu  <https://doc.qt.io/qtforpython-6/PySide6/QtQuick/QQuickWindow.html#PySide6.QtQuick.QQuickWindow.setGraphicsApi>
+QSG_RHI_BACKEND=vulkan python main.py  # pick the rendering backend (opengl, vulkan, d3d11, metal)  @gpu @env
+QML_IMPORT_TRACE=1 python main.py   # print how QML imports are resolved  @debug @import
+QT_QML_DEBUG / QQmlDebuggingEnabler  # enable the QML debugger / profiler connection  @debug @profiler  <https://doc.qt.io/qtforpython-6/PySide6/QtQml/QQmlDebuggingEnabler.html>

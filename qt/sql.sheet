@@ -1,0 +1,53 @@
+title: qt sql: QSqlDatabase, QSqlQuery, SQL models (pyside6)
+url:   https://doc.qt.io/qtforpython-6/PySide6/QtSql/index.html
+tags:  qt pyside6 qtsql sql database sqlite postgres mysql query qsqlquery qsqldatabase qsqltablemodel transaction prepared-statement
+
+## connect
+QSqlDatabase.drivers()              # list available drivers: QSQLITE, QPSQL, QMYSQL, QMARIADB, QODBC, QOCI, QIBASE, QMIMER  @drivers @list  <https://doc.qt.io/qtforpython-6/PySide6/QtSql/QSqlDatabase.html#PySide6.QtSql.QSqlDatabase.drivers>
+db = QSqlDatabase.addDatabase("QSQLITE")  # create the default connection with a driver  @connect @sqlite  <https://doc.qt.io/qtforpython-6/PySide6/QtSql/QSqlDatabase.html#PySide6.QtSql.QSqlDatabase.addDatabase>
+db.setDatabaseName("app.db")        # set the SQLite file (":memory:" for an in-memory db)  @file @memory  <https://doc.qt.io/qtforpython-6/PySide6/QtSql/QSqlDatabase.html#PySide6.QtSql.QSqlDatabase.setDatabaseName>
+db.setHostName("localhost"); db.setPort(5432); db.setUserName("u"); db.setPassword("p")  # set server login for Postgres/MySQL  @server @login  <https://doc.qt.io/qtforpython-6/PySide6/QtSql/QSqlDatabase.html#PySide6.QtSql.QSqlDatabase.setHostName>
+if not db.open(): print(db.lastError().text())  # open the connection and show why it failed  @open @error  <https://doc.qt.io/qtforpython-6/PySide6/QtSql/QSqlDatabase.html#PySide6.QtSql.QSqlDatabase.open>
+QSqlDatabase.addDatabase("QSQLITE", "second")  # create a named extra connection  @named @multiple  <https://doc.qt.io/qtforpython-6/PySide6/QtSql/QSqlDatabase.html#PySide6.QtSql.QSqlDatabase.addDatabase>
+QSqlDatabase.database("second")     # get a connection by name (default connection with no name)  @get  <https://doc.qt.io/qtforpython-6/PySide6/QtSql/QSqlDatabase.html#PySide6.QtSql.QSqlDatabase.database>
+db.close(); QSqlDatabase.removeDatabase("second")  # close and remove a connection (drop all query objects first)  @close  <https://doc.qt.io/qtforpython-6/PySide6/QtSql/QSqlDatabase.html#PySide6.QtSql.QSqlDatabase.removeDatabase>
+db.isOpen() / db.isValid()          # check the connection  @check  <https://doc.qt.io/qtforpython-6/PySide6/QtSql/QSqlDatabase.html#PySide6.QtSql.QSqlDatabase.isOpen>
+db.tables()                         # list table names  @tables @schema  <https://doc.qt.io/qtforpython-6/PySide6/QtSql/QSqlDatabase.html#PySide6.QtSql.QSqlDatabase.tables>
+db.record("t")                      # get the columns of a table as a QSqlRecord  @columns @schema  <https://doc.qt.io/qtforpython-6/PySide6/QtSql/QSqlDatabase.html#PySide6.QtSql.QSqlDatabase.record>
+db.setConnectOptions("QSQLITE_BUSY_TIMEOUT=5000")  # pass driver options  @options  <https://doc.qt.io/qtforpython-6/PySide6/QtSql/QSqlDatabase.html#PySide6.QtSql.QSqlDatabase.setConnectOptions>
+one connection per thread           # a QSqlDatabase may only be used in the thread that made it; add a named connection per thread  @thread
+
+## queries
+q = QSqlQuery()                     # make a query on the default connection (QSqlQuery(db) for another)  @query  <https://doc.qt.io/qtforpython-6/PySide6/QtSql/QSqlQuery.html>
+q.exec("create table t (id integer primary key, name text)")  # run SQL; returns False on error  @exec @run  <https://doc.qt.io/qtforpython-6/PySide6/QtSql/QSqlQuery.html#PySide6.QtSql.QSqlQuery.exec>
+q.lastError().text()                # get the error message  @error  <https://doc.qt.io/qtforpython-6/PySide6/QtSql/QSqlQuery.html#PySide6.QtSql.QSqlQuery.lastError>
+q.prepare("insert into t (name) values (:name)"); q.bindValue(":name", "a"); q.exec()  # run a prepared statement with named values (safe from SQL injection)  @prepare @bind @insert  <https://doc.qt.io/qtforpython-6/PySide6/QtSql/QSqlQuery.html#PySide6.QtSql.QSqlQuery.prepare>
+q.prepare("insert into t (name) values (?)"); q.addBindValue("b"); q.exec()  # bind values by position  @bind  <https://doc.qt.io/qtforpython-6/PySide6/QtSql/QSqlQuery.html#PySide6.QtSql.QSqlQuery.addBindValue>
+q.execBatch()                       # run a prepared statement once per item of list-bound values  @batch @bulk  <https://doc.qt.io/qtforpython-6/PySide6/QtSql/QSqlQuery.html#PySide6.QtSql.QSqlQuery.execBatch>
+q.exec("select id, name from t"); while q.next(): q.value(0), q.value("name")  # loop over result rows and read columns  @select @loop  <https://doc.qt.io/qtforpython-6/PySide6/QtSql/QSqlQuery.html#PySide6.QtSql.QSqlQuery.next>
+q.value(I) / q.value("col")         # read a column of the current row by index / name  @value  <https://doc.qt.io/qtforpython-6/PySide6/QtSql/QSqlQuery.html#PySide6.QtSql.QSqlQuery.value>
+q.record().indexOf("name")          # get a column index from its name  @column  <https://doc.qt.io/qtforpython-6/PySide6/QtSql/QSqlQuery.html#PySide6.QtSql.QSqlQuery.record>
+q.first() / q.last() / q.previous() / q.seek(N)  # move in the result  @navigate  <https://doc.qt.io/qtforpython-6/PySide6/QtSql/QSqlQuery.html#PySide6.QtSql.QSqlQuery.seek>
+q.setForwardOnly(True)              # faster, less memory for one-pass reads  @performance  <https://doc.qt.io/qtforpython-6/PySide6/QtSql/QSqlQuery.html#PySide6.QtSql.QSqlQuery.setForwardOnly>
+q.lastInsertId()                    # get the id of the inserted row  @id @autoincrement  <https://doc.qt.io/qtforpython-6/PySide6/QtSql/QSqlQuery.html#PySide6.QtSql.QSqlQuery.lastInsertId>
+q.numRowsAffected()                 # get how many rows an UPDATE/DELETE changed  @count  <https://doc.qt.io/qtforpython-6/PySide6/QtSql/QSqlQuery.html#PySide6.QtSql.QSqlQuery.numRowsAffected>
+q.size()                            # get the number of rows of a SELECT (-1 if the driver does not know, e.g. SQLite)  @count  <https://doc.qt.io/qtforpython-6/PySide6/QtSql/QSqlQuery.html#PySide6.QtSql.QSqlQuery.size>
+q.isActive() / q.isSelect() / q.lastQuery()  # inspect a query  @debug  <https://doc.qt.io/qtforpython-6/PySide6/QtSql/QSqlQuery.html#PySide6.QtSql.QSqlQuery.lastQuery>
+q.finish()                          # free the result early (before reuse or db close)  @free  <https://doc.qt.io/qtforpython-6/PySide6/QtSql/QSqlQuery.html#PySide6.QtSql.QSqlQuery.finish>
+db.transaction(); ...; db.commit() / db.rollback()  # group statements in a transaction  @transaction @atomic  <https://doc.qt.io/qtforpython-6/PySide6/QtSql/QSqlDatabase.html#PySide6.QtSql.QSqlDatabase.transaction>
+
+## models for views
+m = QSqlQueryModel(); m.setQuery("select * from t")  # read-only model of a SELECT for a QTableView  @model @readonly  <https://doc.qt.io/qtforpython-6/PySide6/QtSql/QSqlQueryModel.html>
+m.setHeaderData(0, Qt.Orientation.Horizontal, "ID")  # set column titles  @header  <https://doc.qt.io/qtforpython-6/PySide6/QtSql/QSqlQueryModel.html#PySide6.QtSql.QSqlQueryModel.setHeaderData>
+m.record(ROW).value("name")         # read a row from the model  @row  <https://doc.qt.io/qtforpython-6/PySide6/QtSql/QSqlQueryModel.html#PySide6.QtSql.QSqlQueryModel.record>
+m = QSqlTableModel(db=db); m.setTable("t"); m.select()  # editable model of one table  @model @edit  <https://doc.qt.io/qtforpython-6/PySide6/QtSql/QSqlTableModel.html>
+m.setFilter("name like 'a%'") / m.setSort(1, Qt.SortOrder.AscendingOrder)  # WHERE and ORDER BY for the model; call select() again  @filter @sort  <https://doc.qt.io/qtforpython-6/PySide6/QtSql/QSqlTableModel.html#PySide6.QtSql.QSqlTableModel.setFilter>
+m.setEditStrategy(QSqlTableModel.EditStrategy.OnManualSubmit)  # keep edits until submitAll() (OnFieldChange default, OnRowChange)  @save  <https://doc.qt.io/qtforpython-6/PySide6/QtSql/QSqlTableModel.html#PySide6.QtSql.QSqlTableModel.setEditStrategy>
+m.submitAll() / m.revertAll()       # write / drop pending edits  @save @undo  <https://doc.qt.io/qtforpython-6/PySide6/QtSql/QSqlTableModel.html#PySide6.QtSql.QSqlTableModel.submitAll>
+m.insertRecord(-1, REC) / m.removeRow(ROW)  # add / delete a row  @insert @delete  <https://doc.qt.io/qtforpython-6/PySide6/QtSql/QSqlTableModel.html#PySide6.QtSql.QSqlTableModel.insertRecord>
+rec = m.record(); rec.setValue("name", "x"); m.insertRecord(-1, rec)  # build a new row from the table's empty record  @insert  <https://doc.qt.io/qtforpython-6/PySide6/QtSql/QSqlRecord.html#PySide6.QtSql.QSqlRecord.setValue>
+m.fieldIndex("name")                # get a column index by name  @column  <https://doc.qt.io/qtforpython-6/PySide6/QtSql/QSqlTableModel.html#PySide6.QtSql.QSqlTableModel.fieldIndex>
+m.lastError()                       # get the error after select/submit failed  @error  <https://doc.qt.io/qtforpython-6/PySide6/QtSql/QSqlQueryModel.html#PySide6.QtSql.QSqlQueryModel.lastError>
+m.canFetchMore() / m.fetchMore()    # SQL models load 256 rows at a time; call fetchMore to load more  @lazy @rows  <https://doc.qt.io/qtforpython-6/PySide6/QtSql/QSqlQueryModel.html#PySide6.QtSql.QSqlQueryModel.fetchMore>
+m = QSqlRelationalTableModel(); m.setRelation(COL, QSqlRelation("cities", "id", "name"))  # show a foreign key as the name from another table  @foreign-key @join  <https://doc.qt.io/qtforpython-6/PySide6/QtSql/QSqlRelationalTableModel.html#PySide6.QtSql.QSqlRelationalTableModel.setRelation>
+view.setItemDelegate(QSqlRelationalDelegate(view))  # edit foreign keys with a combo box  @combo @foreign-key  <https://doc.qt.io/qtforpython-6/PySide6/QtSql/QSqlRelationalDelegate.html>

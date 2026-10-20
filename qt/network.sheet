@@ -1,0 +1,134 @@
+title: qt network: http requests, rest, sockets, servers, websockets, http server (pyside6)
+url:   https://doc.qt.io/qtforpython-6/PySide6/QtNetwork/index.html
+tags:  qt pyside6 qtnetwork network http https request download upload json api rest qnetworkaccessmanager tcp udp socket server websocket qhttpserver ssl dns
+
+## QNetworkAccessManager (HTTP client)
+self.nam = QNetworkAccessManager(self)  # make one manager for the whole app and keep it  @http @client  <https://doc.qt.io/qtforpython-6/PySide6/QtNetwork/QNetworkAccessManager.html>
+reply = self.nam.get(QNetworkRequest(QUrl("https://api.example.com/x")))  # start a GET; returns at once (async)  @get @fetch  <https://doc.qt.io/qtforpython-6/PySide6/QtNetwork/QNetworkAccessManager.html#PySide6.QtNetwork.QNetworkAccessManager.get>
+reply.finished.connect(lambda: self.on_done(reply))  # handle the answer when it arrives  @done @callback  <https://doc.qt.io/qtforpython-6/PySide6/QtNetwork/QNetworkReply.html#PySide6.QtNetwork.QNetworkReply.finished>
+    def fetch(self):
+        req = QNetworkRequest(QUrl("https://api.github.com/repos/qt/qtbase"))
+        reply = self.nam.get(req)
+        reply.finished.connect(lambda: self.on_done(reply))
+    def on_done(self, reply):
+        if reply.error() == QNetworkReply.NetworkError.NoError:
+            data = QJsonDocument.fromJson(reply.readAll()).object()
+            print(data["full_name"])
+        else:
+            print(reply.errorString())
+        reply.deleteLater()
+nam.finished.connect(FN)            # run FN(reply) for every finished reply of the manager  @done  <https://doc.qt.io/qtforpython-6/PySide6/QtNetwork/QNetworkAccessManager.html#PySide6.QtNetwork.QNetworkAccessManager.finished>
+reply.readAll()                     # read the response body (QByteArray)  @body @content  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/QIODevice.html#PySide6.QtCore.QIODevice.readAll>
+reply.error() / reply.errorString()  # check for errors (NetworkError.NoError when fine)  @error  <https://doc.qt.io/qtforpython-6/PySide6/QtNetwork/QNetworkReply.html#PySide6.QtNetwork.QNetworkReply.error>
+reply.attribute(QNetworkRequest.Attribute.HttpStatusCodeAttribute)  # get the HTTP status code (200, 404...)  @status @code  <https://doc.qt.io/qtforpython-6/PySide6/QtNetwork/QNetworkReply.html#PySide6.QtNetwork.QNetworkReply.attribute>
+reply.attribute(QNetworkRequest.Attribute.HttpReasonPhraseAttribute)  # get the status text ("Not Found")  @status  <https://doc.qt.io/qtforpython-6/PySide6/QtNetwork/QNetworkReply.html#PySide6.QtNetwork.QNetworkReply.attribute>
+reply.header(QNetworkRequest.KnownHeaders.ContentTypeHeader)  # read a standard response header  @header  <https://doc.qt.io/qtforpython-6/PySide6/QtNetwork/QNetworkReply.html#PySide6.QtNetwork.QNetworkReply.header>
+reply.rawHeader(b"X-RateLimit-Remaining") / reply.rawHeaderPairs()  # read any / all response headers  @header  <https://doc.qt.io/qtforpython-6/PySide6/QtNetwork/QNetworkReply.html#PySide6.QtNetwork.QNetworkReply.rawHeader>
+reply.headers()                     # get all headers as QHttpHeaders  @header  <https://doc.qt.io/qtforpython-6/PySide6/QtNetwork/QNetworkReply.html#PySide6.QtNetwork.QNetworkReply.headers>
+reply.deleteLater()                 # free the reply when you are done (or nam.setAutoDeleteReplies(True))  @memory  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/QObject.html#PySide6.QtCore.QObject.deleteLater>
+nam.setAutoDeleteReplies(True)      # delete every reply after finished  @memory  <https://doc.qt.io/qtforpython-6/PySide6/QtNetwork/QNetworkAccessManager.html#PySide6.QtNetwork.QNetworkAccessManager.setAutoDeleteReplies>
+reply.downloadProgress.connect(lambda got, total: ...)  # show download progress (total = -1 if unknown)  @progress @download  <https://doc.qt.io/qtforpython-6/PySide6/QtNetwork/QNetworkReply.html#PySide6.QtNetwork.QNetworkReply.downloadProgress>
+reply.uploadProgress.connect(FN)    # show upload progress  @progress @upload  <https://doc.qt.io/qtforpython-6/PySide6/QtNetwork/QNetworkReply.html#PySide6.QtNetwork.QNetworkReply.uploadProgress>
+reply.readyRead.connect(lambda: f.write(reply.readAll()))  # stream a big download to a file as data arrives  @stream @download  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/QIODevice.html#PySide6.QtCore.QIODevice.readyRead>
+reply.abort()                       # cancel a request  @cancel  <https://doc.qt.io/qtforpython-6/PySide6/QtNetwork/QNetworkReply.html#PySide6.QtNetwork.QNetworkReply.abort>
+reply.errorOccurred.connect(FN)     # react to errors as they happen  @error  <https://doc.qt.io/qtforpython-6/PySide6/QtNetwork/QNetworkReply.html#PySide6.QtNetwork.QNetworkReply.errorOccurred>
+reply.sslErrors.connect(lambda errs: reply.ignoreSslErrors())  # accept bad certificates (testing only)  @ssl @insecure  <https://doc.qt.io/qtforpython-6/PySide6/QtNetwork/QNetworkReply.html#PySide6.QtNetwork.QNetworkReply.sslErrors>
+nam.post(REQ, BYTES)                # send a POST with a body  @post  <https://doc.qt.io/qtforpython-6/PySide6/QtNetwork/QNetworkAccessManager.html#PySide6.QtNetwork.QNetworkAccessManager.post>
+nam.put(REQ, BYTES) / nam.deleteResource(REQ) / nam.head(REQ)  # PUT / DELETE / HEAD  @put @delete  <https://doc.qt.io/qtforpython-6/PySide6/QtNetwork/QNetworkAccessManager.html#PySide6.QtNetwork.QNetworkAccessManager.put>
+nam.sendCustomRequest(REQ, b"PATCH", BYTES)  # send any HTTP verb  @patch @verb  <https://doc.qt.io/qtforpython-6/PySide6/QtNetwork/QNetworkAccessManager.html#PySide6.QtNetwork.QNetworkAccessManager.sendCustomRequest>
+nam.setTransferTimeout(10000)       # abort transfers that stall for 10 s  @timeout  <https://doc.qt.io/qtforpython-6/PySide6/QtNetwork/QNetworkAccessManager.html#PySide6.QtNetwork.QNetworkAccessManager.setTransferTimeout>
+nam.setRedirectPolicy(QNetworkRequest.RedirectPolicy.NoLessSafeRedirectPolicy)  # follow redirects (default) but not https -> http  @redirect  <https://doc.qt.io/qtforpython-6/PySide6/QtNetwork/QNetworkAccessManager.html#PySide6.QtNetwork.QNetworkAccessManager.setRedirectPolicy>
+nam.setCookieJar(QNetworkCookieJar()) / nam.cookieJar().allCookies()  # keep / read cookies  @cookies  <https://doc.qt.io/qtforpython-6/PySide6/QtNetwork/QNetworkAccessManager.html#PySide6.QtNetwork.QNetworkAccessManager.setCookieJar>
+cache = QNetworkDiskCache(); cache.setCacheDirectory(DIR); nam.setCache(cache)  # cache responses on disk  @cache  <https://doc.qt.io/qtforpython-6/PySide6/QtNetwork/QNetworkDiskCache.html>
+nam.setProxy(QNetworkProxy(QNetworkProxy.ProxyType.HttpProxy, "host", 8080))  # use a proxy  @proxy  <https://doc.qt.io/qtforpython-6/PySide6/QtNetwork/QNetworkAccessManager.html#PySide6.QtNetwork.QNetworkAccessManager.setProxy>
+nam.authenticationRequired.connect(lambda reply, auth: (auth.setUser("u"), auth.setPassword("p")))  # answer HTTP Basic/Digest auth  @auth @login  <https://doc.qt.io/qtforpython-6/PySide6/QtNetwork/QNetworkAccessManager.html#PySide6.QtNetwork.QNetworkAccessManager.authenticationRequired>
+nam.get(QNetworkRequest(QUrl.fromLocalFile(PATH)))  # read local files and qrc:/ with the same API  @file
+QEventLoop + reply.finished         # block until a reply is done without freezing the UI (see threads sheet)  @sync @wait
+
+## QNetworkRequest
+req = QNetworkRequest(QUrl(URL))    # make a request  @request  <https://doc.qt.io/qtforpython-6/PySide6/QtNetwork/QNetworkRequest.html>
+req.setHeader(QNetworkRequest.KnownHeaders.ContentTypeHeader, "application/json")  # set the content type  @header @json  <https://doc.qt.io/qtforpython-6/PySide6/QtNetwork/QNetworkRequest.html#PySide6.QtNetwork.QNetworkRequest.setHeader>
+req.setRawHeader(b"Authorization", b"Bearer " + TOKEN)  # set any header  @header @token  <https://doc.qt.io/qtforpython-6/PySide6/QtNetwork/QNetworkRequest.html#PySide6.QtNetwork.QNetworkRequest.setRawHeader>
+req.setHeader(QNetworkRequest.KnownHeaders.UserAgentHeader, "myapp/1.0")  # set the User-Agent  @useragent  <https://doc.qt.io/qtforpython-6/PySide6/QtNetwork/QNetworkRequest.html#PySide6.QtNetwork.QNetworkRequest.setHeader>
+h = QHttpHeaders(); h.append(QHttpHeaders.WellKnownHeader.Accept, "application/json"); req.setHeaders(h)  # set headers with QHttpHeaders  @headers  <https://doc.qt.io/qtforpython-6/PySide6/QtNetwork/QHttpHeaders.html>
+req.setTransferTimeout(MS)          # timeout for this request  @timeout  <https://doc.qt.io/qtforpython-6/PySide6/QtNetwork/QNetworkRequest.html#PySide6.QtNetwork.QNetworkRequest.setTransferTimeout>
+req.setAttribute(QNetworkRequest.Attribute.CacheLoadControlAttribute, QNetworkRequest.CacheLoadControl.PreferCache)  # read from cache when possible  @cache  <https://doc.qt.io/qtforpython-6/PySide6/QtNetwork/QNetworkRequest.html#PySide6.QtNetwork.QNetworkRequest.setAttribute>
+req.setMaximumRedirectsAllowed(N)   # limit redirects  @redirect  <https://doc.qt.io/qtforpython-6/PySide6/QtNetwork/QNetworkRequest.html#PySide6.QtNetwork.QNetworkRequest.setMaximumRedirectsAllowed>
+url = QUrl(BASE); q = QUrlQuery(); q.addQueryItem("page", "2"); url.setQuery(q)  # add ?page=2 query parameters  @params @query  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/QUrlQuery.html>
+nam.post(req, QJsonDocument({"a": 1}).toJson())  # POST JSON  @json @post
+nam.post(req, QByteArray(b"a=1&b=2")) with ContentTypeHeader "application/x-www-form-urlencoded"  # POST a form  @form
+mp = QHttpMultiPart(QHttpMultiPart.ContentType.FormDataType)  # build a multipart/form-data upload  @upload @multipart  <https://doc.qt.io/qtforpython-6/PySide6/QtNetwork/QHttpMultiPart.html>
+    part = QHttpPart()
+    part.setHeader(QNetworkRequest.KnownHeaders.ContentDispositionHeader, 'form-data; name="file"; filename="a.png"')
+    f = QFile("a.png"); f.open(QIODevice.OpenModeFlag.ReadOnly); part.setBodyDevice(f)
+    mp.append(part); reply = nam.post(req, mp)   # keep f and mp alive until finished
+
+## REST helpers (QRestAccessManager, QNetworkRequestFactory)
+rest = QRestAccessManager(self.nam)  # wrap a manager with a simpler REST API  @rest @api  <https://doc.qt.io/qtforpython-6/PySide6/QtNetwork/QRestAccessManager.html>
+factory = QNetworkRequestFactory(QUrl("https://api.example.com/v1"))  # make requests relative to a base URL with shared headers  @base-url  <https://doc.qt.io/qtforpython-6/PySide6/QtNetwork/QNetworkRequestFactory.html>
+factory.setBearerToken(TOKEN)       # add "Authorization: Bearer" to every request  @token @auth  <https://doc.qt.io/qtforpython-6/PySide6/QtNetwork/QNetworkRequestFactory.html#PySide6.QtNetwork.QNetworkRequestFactory.setBearerToken>
+factory.createRequest("users")      # make a request for BASE/users  @request  <https://doc.qt.io/qtforpython-6/PySide6/QtNetwork/QNetworkRequestFactory.html#PySide6.QtNetwork.QNetworkRequestFactory.createRequest>
+rest.get(factory.createRequest("users"), self, lambda r: print(r.readJson()))  # GET and get a QRestReply in the callback  @get @json  <https://doc.qt.io/qtforpython-6/PySide6/QtNetwork/QRestAccessManager.html#PySide6.QtNetwork.QRestAccessManager.get>
+rest.post(REQ, {"name": "x"}, self, CALLBACK)  # POST a dict as JSON  @post @json  <https://doc.qt.io/qtforpython-6/PySide6/QtNetwork/QRestAccessManager.html#PySide6.QtNetwork.QRestAccessManager.post>
+r.isSuccess() / r.httpStatus() / r.readJson() / r.readText() / r.readBody()  # read a QRestReply  @reply  <https://doc.qt.io/qtforpython-6/PySide6/QtNetwork/QRestReply.html>
+doc, err = r.readJson()             # returns (QJsonDocument or None, QJsonParseError) in PySide6  @json @tuple
+
+## TCP client and server
+sock = QTcpSocket(self); sock.connectToHost("example.com", 80)  # open a TCP connection (async)  @tcp @client  <https://doc.qt.io/qtforpython-6/PySide6/QtNetwork/QAbstractSocket.html#PySide6.QtNetwork.QAbstractSocket.connectToHost>
+sock.connected.connect(FN)          # run FN once connected  @connect  <https://doc.qt.io/qtforpython-6/PySide6/QtNetwork/QAbstractSocket.html#PySide6.QtNetwork.QAbstractSocket.connected>
+sock.readyRead.connect(lambda: handle(sock.readAll()))  # read data as it arrives (may be split or merged: frame your messages)  @read @stream  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/QIODevice.html#PySide6.QtCore.QIODevice.readyRead>
+sock.write(b"data")                 # send bytes  @send @write  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/QIODevice.html#PySide6.QtCore.QIODevice.write>
+sock.disconnectFromHost() / sock.abort()  # close nicely / at once  @close  <https://doc.qt.io/qtforpython-6/PySide6/QtNetwork/QAbstractSocket.html#PySide6.QtNetwork.QAbstractSocket.disconnectFromHost>
+sock.disconnected.connect(FN) / sock.errorOccurred.connect(FN)  # react to close / errors  @signal  <https://doc.qt.io/qtforpython-6/PySide6/QtNetwork/QAbstractSocket.html#PySide6.QtNetwork.QAbstractSocket.errorOccurred>
+sock.state()                        # get UnconnectedState, ConnectingState, ConnectedState...  @state  <https://doc.qt.io/qtforpython-6/PySide6/QtNetwork/QAbstractSocket.html#PySide6.QtNetwork.QAbstractSocket.state>
+sock.waitForConnected(3000) / sock.waitForReadyRead(MS)  # block (only in worker threads or scripts)  @blocking  <https://doc.qt.io/qtforpython-6/PySide6/QtNetwork/QAbstractSocket.html#PySide6.QtNetwork.QAbstractSocket.waitForConnected>
+sock.peerAddress() / sock.peerPort() / sock.localPort()  # get address info  @address  <https://doc.qt.io/qtforpython-6/PySide6/QtNetwork/QAbstractSocket.html#PySide6.QtNetwork.QAbstractSocket.peerAddress>
+sock.canReadLine() / sock.readLine()  # read line-based protocols  @line  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/QIODevice.html#PySide6.QtCore.QIODevice.canReadLine>
+sock.setSocketOption(QAbstractSocket.SocketOption.LowDelayOption, 1)  # turn off Nagle (TCP_NODELAY)  @nodelay  <https://doc.qt.io/qtforpython-6/PySide6/QtNetwork/QAbstractSocket.html#PySide6.QtNetwork.QAbstractSocket.setSocketOption>
+server = QTcpServer(self); server.listen(QHostAddress.SpecialAddress.Any, 5000)  # listen on a port (0 = pick a free one; serverPort() tells which)  @server @listen  <https://doc.qt.io/qtforpython-6/PySide6/QtNetwork/QTcpServer.html#PySide6.QtNetwork.QTcpServer.listen>
+server.newConnection.connect(lambda: self.add(server.nextPendingConnection()))  # accept clients  @accept  <https://doc.qt.io/qtforpython-6/PySide6/QtNetwork/QTcpServer.html#PySide6.QtNetwork.QTcpServer.nextPendingConnection>
+server.errorString() / server.close()  # get why listen failed / stop listening  @error  <https://doc.qt.io/qtforpython-6/PySide6/QtNetwork/QTcpServer.html#PySide6.QtNetwork.QTcpServer.errorString>
+QSslSocket(); s.connectToHostEncrypted("example.com", 443)  # TLS client socket  @ssl @tls  <https://doc.qt.io/qtforpython-6/PySide6/QtNetwork/QSslSocket.html#PySide6.QtNetwork.QSslSocket.connectToHostEncrypted>
+QSslSocket.supportsSsl() / QSslSocket.sslLibraryVersionString()  # check TLS support (OpenSSL)  @ssl  <https://doc.qt.io/qtforpython-6/PySide6/QtNetwork/QSslSocket.html#PySide6.QtNetwork.QSslSocket.supportsSsl>
+
+## UDP, local sockets, DNS, network info
+udp = QUdpSocket(self); udp.bind(QHostAddress.SpecialAddress.AnyIPv4, 4545)  # listen for UDP datagrams  @udp  <https://doc.qt.io/qtforpython-6/PySide6/QtNetwork/QUdpSocket.html#PySide6.QtNetwork.QUdpSocket.bind>
+udp.readyRead.connect(FN); while udp.hasPendingDatagrams(): dg = udp.receiveDatagram()  # read datagrams (dg.data(), dg.senderAddress())  @udp @read  <https://doc.qt.io/qtforpython-6/PySide6/QtNetwork/QUdpSocket.html#PySide6.QtNetwork.QUdpSocket.receiveDatagram>
+udp.writeDatagram(b"hi", QHostAddress("192.168.1.255"), 4545)  # send a datagram (broadcast)  @udp @send  <https://doc.qt.io/qtforpython-6/PySide6/QtNetwork/QUdpSocket.html#PySide6.QtNetwork.QUdpSocket.writeDatagram>
+udp.joinMulticastGroup(QHostAddress("239.0.0.1"))  # receive multicast  @multicast  <https://doc.qt.io/qtforpython-6/PySide6/QtNetwork/QUdpSocket.html#PySide6.QtNetwork.QUdpSocket.joinMulticastGroup>
+QLocalServer / QLocalSocket         # Unix domain sockets / Windows named pipes (single-instance apps, IPC)  @ipc @unix-socket  <https://doc.qt.io/qtforpython-6/PySide6/QtNetwork/QLocalServer.html>
+srv = QLocalServer(); QLocalServer.removeServer("myapp"); srv.listen("myapp")  # start a named local server (remove a stale one first)  @ipc  <https://doc.qt.io/qtforpython-6/PySide6/QtNetwork/QLocalServer.html#PySide6.QtNetwork.QLocalServer.listen>
+c = QLocalSocket(); c.connectToServer("myapp")  # connect to a local server  @ipc  <https://doc.qt.io/qtforpython-6/PySide6/QtNetwork/QLocalSocket.html#PySide6.QtNetwork.QLocalSocket.connectToServer>
+QHostInfo.lookupHost("example.com", self, lambda info: info.addresses())  # resolve a host name (async)  @dns @resolve  <https://doc.qt.io/qtforpython-6/PySide6/QtNetwork/QHostInfo.html#PySide6.QtNetwork.QHostInfo.lookupHost>
+QHostInfo.fromName("example.com").addresses()  # resolve a host name (blocking)  @dns  <https://doc.qt.io/qtforpython-6/PySide6/QtNetwork/QHostInfo.html#PySide6.QtNetwork.QHostInfo.fromName>
+QHostInfo.localHostName()           # get this machine's name  @hostname  <https://doc.qt.io/qtforpython-6/PySide6/QtNetwork/QHostInfo.html#PySide6.QtNetwork.QHostInfo.localHostName>
+QHostAddress("10.0.0.1").isInSubnet(QHostAddress("10.0.0.0"), 8)  # check an IP against a subnet  @ip @cidr  <https://doc.qt.io/qtforpython-6/PySide6/QtNetwork/QHostAddress.html#PySide6.QtNetwork.QHostAddress.isInSubnet>
+QHostAddress(S).isLoopback() / .isPrivateUse() / .protocol()  # inspect an IP address  @ip  <https://doc.qt.io/qtforpython-6/PySide6/QtNetwork/QHostAddress.html#PySide6.QtNetwork.QHostAddress.isPrivateUse>
+QNetworkInterface.allAddresses()    # list this machine's IP addresses  @ip @interfaces  <https://doc.qt.io/qtforpython-6/PySide6/QtNetwork/QNetworkInterface.html#PySide6.QtNetwork.QNetworkInterface.allAddresses>
+QNetworkInformation.loadDefaultBackend(); QNetworkInformation.instance().reachability()  # check if the machine is online  @online @connectivity  <https://doc.qt.io/qtforpython-6/PySide6/QtNetwork/QNetworkInformation.html#PySide6.QtNetwork.QNetworkInformation.reachability>
+QNetworkInformation.instance().reachabilityChanged.connect(FN)  # react to going on/offline  @online  <https://doc.qt.io/qtforpython-6/PySide6/QtNetwork/QNetworkInformation.html#PySide6.QtNetwork.QNetworkInformation.reachabilityChanged>
+QNetworkInformation.instance().isMetered()  # check for a metered (mobile) connection  @metered  <https://doc.qt.io/qtforpython-6/PySide6/QtNetwork/QNetworkInformation.html#PySide6.QtNetwork.QNetworkInformation.isMetered>
+
+## WebSockets (QtWebSockets)
+ws = QWebSocket(); ws.open(QUrl("wss://echo.example.com"))  # connect to a WebSocket server  @websocket @ws  <https://doc.qt.io/qtforpython-6/PySide6/QtWebSockets/QWebSocket.html#PySide6.QtWebSockets.QWebSocket.open>
+ws.connected.connect(lambda: ws.sendTextMessage("hi"))  # send text once connected  @send  <https://doc.qt.io/qtforpython-6/PySide6/QtWebSockets/QWebSocket.html#PySide6.QtWebSockets.QWebSocket.sendTextMessage>
+ws.textMessageReceived.connect(FN) / ws.binaryMessageReceived.connect(FN)  # receive messages  @receive  <https://doc.qt.io/qtforpython-6/PySide6/QtWebSockets/QWebSocket.html#PySide6.QtWebSockets.QWebSocket.textMessageReceived>
+ws.sendBinaryMessage(BYTES)         # send binary data  @binary  <https://doc.qt.io/qtforpython-6/PySide6/QtWebSockets/QWebSocket.html#PySide6.QtWebSockets.QWebSocket.sendBinaryMessage>
+ws.close() / ws.disconnected.connect(FN) / ws.errorOccurred.connect(FN)  # close / react to close / errors  @close  <https://doc.qt.io/qtforpython-6/PySide6/QtWebSockets/QWebSocket.html#PySide6.QtWebSockets.QWebSocket.close>
+ws.ping() / ws.pong.connect(lambda elapsed, payload: ...)  # measure latency / keep alive  @ping  <https://doc.qt.io/qtforpython-6/PySide6/QtWebSockets/QWebSocket.html#PySide6.QtWebSockets.QWebSocket.ping>
+wss = QWebSocketServer("name", QWebSocketServer.SslMode.NonSecureMode); wss.listen(QHostAddress.SpecialAddress.Any, 8765)  # run a WebSocket server  @server  <https://doc.qt.io/qtforpython-6/PySide6/QtWebSockets/QWebSocketServer.html>
+wss.newConnection.connect(lambda: self.add(wss.nextPendingConnection()))  # accept WebSocket clients  @accept  <https://doc.qt.io/qtforpython-6/PySide6/QtWebSockets/QWebSocketServer.html#PySide6.QtWebSockets.QWebSocketServer.nextPendingConnection>
+
+## QHttpServer (QtHttpServer)
+srv = QHttpServer(); tcp = QTcpServer(); tcp.listen(QHostAddress.SpecialAddress.Any, 8080); srv.bind(tcp)  # serve HTTP on port 8080  @server @http @api  <https://doc.qt.io/qtforpython-6/PySide6/QtHttpServer/QAbstractHttpServer.html#PySide6.QtHttpServer.QAbstractHttpServer.bind>
+srv.route("/hello", handler)        # call handler(request) for a path; it must return a str (tested on 6.12)  @route @endpoint  <https://doc.qt.io/qtforpython-6/PySide6/QtHttpServer/QHttpServer.html#PySide6.QtHttpServer.QHttpServer.route>
+    def hello(request):                     # named function: keep it alive
+        return f"{request.method().name} {request.url().path()} x={request.query().queryItemValue('x')}"
+    srv = QHttpServer(); srv.route("/hello", hello)
+    tcp = QTcpServer(); tcp.listen(QHostAddress.SpecialAddress.LocalHost, 8080); srv.bind(tcp)
+srv.route(PATH, lambda request: ...)  # do not use a lambda in 6.12: the callback is not kept alive and the route calls garbage  @gotcha @lambda @crash
+return QHttpServerResponse(...) / bytes / dict from a route  # fails in 6.12 ("Cannot copy-convert ... to C++") and sends an empty 200; return str  @gotcha
+request.method() / request.url() / request.query() / request.headers() / request.body() / request.remoteAddress()  # read a QHttpServerRequest  @request  <https://doc.qt.io/qtforpython-6/PySide6/QtHttpServer/QHttpServerRequest.html>
+"/user/<arg>" route rules           # placeholders need C++ types and do not work from Python in 6.12 (prints "not enough types")  @gotcha @params
+srv.addAfterRequestHandler(self, FN)  # change every response (add CORS headers)  @middleware  <https://doc.qt.io/qtforpython-6/PySide6/QtHttpServer/QHttpServer.html#PySide6.QtHttpServer.QHttpServer.addAfterRequestHandler>
+tcp.serverPort()                    # get the port when you listened on 0  @port  <https://doc.qt.io/qtforpython-6/PySide6/QtNetwork/QTcpServer.html#PySide6.QtNetwork.QTcpServer.serverPort>

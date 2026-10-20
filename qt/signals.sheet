@@ -1,70 +1,131 @@
-title: qt signals and slots (pyside6)
+title: qt signals, slots, properties, meta-object (pyside6)
 url:   https://doc.qt.io/qtforpython-6/tutorials/basictutorial/signals_and_slots.html
-tags:  qt qt6 pyside pyside6 python signal slot connect emit event callback
+tags:  qt pyside6 signal slot connect emit event callback property notify metaobject invokemethod qobject
 
-; Python only (PySide6). A signal is "something happened"; a slot is the function that runs.
+; Signal = event an object announces. Slot = any callable that runs when it fires. Both need a QObject subclass.
 
-## connect and disconnect
-button.clicked.connect(FN)          # run FN when the signal fires  @callback @onclick @bind  <https://doc.qt.io/qtforpython-6/tutorials/basictutorial/signals_and_slots.html>
-button.clicked.connect(line_edit.clear)  # connect a signal to a built-in slot of another widget  @slot
-edit.textChanged.connect(lambda s: print(s))  # use a lambda as a slot; the signal args are passed to it  @lambda
-button.clicked.connect(lambda: self.go(ADDR))  # pass extra args with a lambda that ignores the signal args  @arguments
-functools.partial(FN, ARG)          # bind extra args to a slot without a lambda  @arguments @partial
-c = sig.connect(FN); sig.disconnect(c)  # keep the Connection to remove one connection later  @remove @unbind  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/QMetaObject.html>
-sig.disconnect(FN)                  # remove the connection to FN  @remove
-sig.disconnect()                    # remove every connection of a signal  @remove @all
-sig_a.connect(sig_b)                # chain signals: emitting A emits B  @forward @relay
-sig.connect(FN, Qt.ConnectionType.QueuedConnection)  # run FN later from the event loop instead of right now  @queued @async  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/Qt.html#PySide6.QtCore.Qt.ConnectionType>
-Qt.ConnectionType.AutoConnection    # default: direct if same thread, queued if the receiver lives in another thread  @thread
-w.blockSignals(True)                # stop a widget emitting signals while you change it from code  @mute @loop @recursion  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/QObject.html#PySide6.QtCore.QObject.blockSignals>
-with QSignalBlocker(w): w.setValue(5)  # block signals only inside the with block  @mute  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/QSignalBlocker.html>
-self.sender()                       # inside a slot, get the object that emitted the signal  @who @source  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/QObject.html#PySide6.QtCore.QObject.sender>
+## connect built-in signals
+button.clicked.connect(self.on_click)  # call a method when the signal fires  @connect @callback  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/SignalInstance.html#PySide6.QtCore.SignalInstance.connect>
+button.clicked.connect(lambda: self.go(5))  # pass extra arguments with a lambda  @lambda @args
+button.clicked.connect(lambda checked=False: self.go(5))  # take clicked's bool argument so it does not land in your lambda  @lambda @bool @args
+button.clicked.connect(functools.partial(self.go, 5))  # pass extra arguments with partial  @partial @args
+edit.textChanged.connect(label.setText)  # connect a signal straight to a slot of another widget  @chain
+spin.valueChanged.connect(slider.setValue)  # keep two widgets in sync (connect both ways, Qt stops the loop)  @sync
+sig.connect(SLOT, Qt.ConnectionType.QueuedConnection)  # deliver later through the event loop, even in the same thread  @queued @later  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/Qt.html#PySide6.QtCore.Qt.ConnectionType>
+sig.connect(SLOT, Qt.ConnectionType.DirectConnection)  # call the slot at once in the emitting thread  @direct  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/Qt.html#PySide6.QtCore.Qt.ConnectionType>
+sig.connect(SLOT, Qt.ConnectionType.BlockingQueuedConnection)  # queue to another thread and wait for the slot to finish (deadlocks in the same thread)  @thread @wait  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/Qt.html#PySide6.QtCore.Qt.ConnectionType>
+sig.connect(SLOT, Qt.ConnectionType.SingleShotConnection)  # disconnect by itself after the first call  @once @one-shot  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/Qt.html#PySide6.QtCore.Qt.ConnectionType>
+sig.connect(SLOT, Qt.ConnectionType.UniqueConnection)  # do not connect the same slot twice  @duplicate  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/Qt.html#PySide6.QtCore.Qt.ConnectionType>
+Qt.ConnectionType.AutoConnection    # default: direct if receiver lives in the emitting thread, else queued  @default @thread  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/Qt.html#PySide6.QtCore.Qt.ConnectionType>
+conn = sig.connect(SLOT)            # keep the returned QMetaObject.Connection to disconnect exactly this link later  @handle  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/QMetaObject.html#PySide6.QtCore.QMetaObject.Connection>
+QObject.disconnect(conn)            # remove one connection by its handle  @disconnect  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/QObject.html#PySide6.QtCore.QObject.disconnect>
+sig.disconnect(SLOT)                # remove one slot from a signal  @disconnect @remove  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/SignalInstance.html#PySide6.QtCore.SignalInstance.disconnect>
+sig.disconnect()                    # remove every slot from a signal  @disconnect @all  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/SignalInstance.html#PySide6.QtCore.SignalInstance.disconnect>
+RuntimeWarning: Failed to disconnect  # you disconnected a slot that was not connected  @error @disconnect
+sig.emit(ARGS)                      # fire a signal by hand  @emit @trigger  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/SignalInstance.html#PySide6.QtCore.SignalInstance.emit>
+sig.connect(other_obj.some_signal)  # forward one signal to another signal  @forward @relay
+doc.qt.io/qt-6/signalsandslots.html  # read the full signals and slots concept guide  @guide  <https://doc.qt.io/qt-6/signalsandslots.html>
+QT_LOGGING_RULES="qt.pyside.libpyside.warning=true" python app.py  # warn about slots that miss the decorator  @Slot @debug @warning
 
 ## define your own signals
-class C(QObject): done = Signal(int)  # declare a signal as a class attribute of a QObject subclass  @custom @new  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/Signal.html>
-    class Loader(QObject):
+class Worker(QObject): progress = Signal(int)  # declare a signal as a CLASS attribute of a QObject subclass  @define @custom  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/Signal.html>
+    from PySide6.QtCore import QObject, Signal
+    class Worker(QObject):
         progress = Signal(int)
-        finished = Signal(str, list)
+        done = Signal(str, list)
         def run(self):
             self.progress.emit(50)
-            self.finished.emit("ok", [1, 2])
-self.done.emit(VALUE)               # fire a signal with values  @trigger @send  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/Signal.html>
-Signal()                            # signal with no arguments  @empty
-Signal(int, str)                    # signal with several arguments  @types
-Signal(object)                      # signal that carries any Python object (dict, BinaryView...)  @any @pyobject
-Signal(int, name="rangeChanged")    # give the signal a different Qt name than the Python attribute  @rename
-Signal((int,), (str,))              # overloaded signal; pick one with sig[str].connect / sig[str].emit (legacy style)  @overload
-Signal on a non-QObject class       # does not work: the class must inherit QObject or a widget  @error @attributeerror
-doc.qt.io/qt-6/signalsandslots.html  # read the full signals and slots concept guide  @guide  <https://doc.qt.io/qt-6/signalsandslots.html>
+            self.done.emit("ok", [1, 2])
+Signal()                            # declare a signal with no arguments  @define  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/Signal.html>
+Signal(int, str)                    # declare a signal that sends an int and a str  @args @types  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/Signal.html>
+Signal(object)                      # send any Python object (dict, custom class) without conversion  @any @pyobject  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/Signal.html>
+Signal(list) / Signal(dict)         # send a Python list or dict (converted to QVariantList / QVariantMap)  @list @dict  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/Signal.html>
+Signal(QModelIndex)                 # send a Qt value type  @types
+Signal(int, name="valueChanged")    # give the signal a different Qt name than the Python attribute  @name  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/Signal.html>
+Signal(int, arguments=["value"])    # name the arguments (QML handlers see them as value)  @qml @args  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/Signal.html>
+Signal((int,), (str,))              # declare an overloaded signal: one per argument list  @overload  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/Signal.html>
+obj.sig[str].connect(SLOT)          # pick one overload of an overloaded signal (default is the first)  @overload @index
+obj.sig[str].emit("x")              # emit one overload of an overloaded signal  @overload
+AttributeError: 'Signal' object has no attribute 'connect'  # you declared the signal inside __init__ or on a non-QObject class  @error
+super().__init__()                  # call it in your QObject subclass __init__ or signals will not work  @error @init
 
 ## slots
-@Slot()                             # mark a method as a slot: faster connect, correct thread for queued calls  @decorator  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/Slot.html>
-@Slot(str)                          # slot that takes a str  @decorator @types
-@Slot(int, result=int)              # slot with a return type  @return
-    from PySide6.QtCore import QObject, Slot
-    class Handler(QObject):
-        @Slot(str)
-        def on_text(self, s):
-            print(s)
-QT_LOGGING_RULES="qt.pyside.libpyside.warning=true"  # env var: warn about slots missing the @Slot decorator  @debug @warning  <https://doc.qt.io/qtforpython-6/tutorials/basictutorial/signals_and_slots.html>
+@Slot()                             # mark a method as a Qt slot: faster, less memory, visible to QML and invokeMethod  @decorator  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/Slot.html>
+@Slot(int)                          # declare a slot that takes an int  @args  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/Slot.html>
+@Slot(str, result=int)              # declare a slot that returns an int (for QML / invokeMethod)  @return  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/Slot.html>
+@Slot(name="mySlot")                # give the slot a different Qt name  @name  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/Slot.html>
+@Slot("QVariantList")               # declare an argument type by its C++ name  @types  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/Slot.html>
+plain functions and lambdas         # also work as slots; is optional except for QML, invokeMethod, cross-thread named slots  @Slot @callback
+self.sender()                       # get the object that emitted the signal (only inside a slot called by a signal)  @who @source  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/QObject.html#PySide6.QtCore.QObject.sender>
+self.senderSignalIndex()            # get which signal of the sender called this slot  @source  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/QObject.html#PySide6.QtCore.QObject.senderSignalIndex>
+QMetaObject.connectSlotsByName(OBJ)  # connect methods named on_<child>_<signal> automatically  @auto @designer  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/QMetaObject.html#PySide6.QtCore.QMetaObject.connectSlotsByName>
 
-## threads
-worker.moveToThread(thread)         # make a QObject's @Slot methods run in that thread  @thread @affinity  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/QObject.html#PySide6.QtCore.QObject.moveToThread>
-emit from worker, slot on UI object  # the safe way to update widgets from a thread: queued call lands on the UI thread  @thread @crash @update
-lambda slots run in the sender thread  # a plain function or lambda slot is not moved to the receiver thread  @thread @gotcha
+## block and inspect
+obj.blockSignals(True)              # stop an object from emitting signals (returns the old state)  @mute @silent  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/QObject.html#PySide6.QtCore.QObject.blockSignals>
+obj.signalsBlocked()                # check if signals are blocked  @mute  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/QObject.html#PySide6.QtCore.QObject.signalsBlocked>
+with QSignalBlocker(obj):           # block signals only inside the with-block; restores the old state after  @mute @context  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/QSignalBlocker.html>
+    with QSignalBlocker(self.spin):
+        self.spin.setValue(10)   # valueChanged is not emitted
+blocker.unblock() / blocker.reblock()  # turn a QSignalBlocker off and on again  @mute  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/QSignalBlocker.html#PySide6.QtCore.QSignalBlocker.unblock>
+obj.receivers(SIGNAL("valueChanged(int)"))  # count how many slots are connected to a signal  @count  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/QObject.html#PySide6.QtCore.QObject.receivers>
+obj.isSignalConnected(QMetaMethod.fromSignal(obj.sig))  # check if a signal has any receiver  @connected  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/QObject.html#PySide6.QtCore.QObject.isSignalConnected>
+QMetaMethod.fromSignal(obj.sig)     # get the meta-method of a signal (name, parameter types)  @introspection  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/QMetaMethod.html#PySide6.QtCore.QMetaMethod.fromSignal>
+obj.connectNotify(meta) / disconnectNotify(meta)  # override to react when someone connects or disconnects a signal of yours  @lazy  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/QObject.html#PySide6.QtCore.QObject.connectNotify>
 
-## common built-in signals
-QPushButton.clicked                 # button was pressed and released  @click @button  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QAbstractButton.html#PySide6.QtWidgets.QAbstractButton.clicked>
-QCheckBox.toggled(bool)             # check box or toggle button changed state  @checkbox  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QAbstractButton.html#PySide6.QtWidgets.QAbstractButton.toggled>
-QLineEdit.textChanged(str)          # text changed by user or code  @input @edit  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QLineEdit.html#PySide6.QtWidgets.QLineEdit.textChanged>
-QLineEdit.textEdited(str)           # text changed by the user only, not by setText  @input
-QLineEdit.returnPressed             # user pressed Enter in the line edit  @enter @submit
-QComboBox.currentIndexChanged(int)  # user or code picked another item  @dropdown @select  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QComboBox.html>
-QSpinBox.valueChanged(int)          # number changed  @number
-QAbstractItemView.doubleClicked(QModelIndex)  # item double-clicked in a list, table or tree  @row @open  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QAbstractItemView.html>
-view.selectionModel().selectionChanged  # selection in an item view changed  @select @row  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/QItemSelectionModel.html>
-view.selectionModel().currentChanged(cur, prev)  # current (focused) item changed  @cursor
-QTimer.timeout                      # timer fired  @timer
-QThread.started / QThread.finished  # thread started or ended  @thread
-QObject.destroyed                   # object is being deleted; use for cleanup  @cleanup @delete
-QWidget.customContextMenuRequested(QPoint)  # right-click when policy is CustomContextMenu  @rightclick @menu
+## old-style string connections
+QObject.connect(btn, SIGNAL("clicked()"), self, SLOT("close()"))  # connect with C++ signature strings (old style; prefer sig.connect)  @legacy @qt4  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/QObject.html#PySide6.QtCore.QObject.connect>
+SIGNAL("valueChanged(int)")         # make the string form of a signal signature  @legacy  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/index.html>
+SLOT("setValue(int)")               # make the string form of a slot signature  @legacy  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/index.html>
+
+## call a method later or in another thread
+QTimer.singleShot(0, FN)            # run FN after control returns to the event loop  @later @defer @async  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/QTimer.html#PySide6.QtCore.QTimer.singleShot>
+QTimer.singleShot(0, CONTEXT_OBJ, FN)  # run FN later in CONTEXT_OBJ's thread; skipped if CONTEXT_OBJ is deleted  @thread @context  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/QTimer.html#PySide6.QtCore.QTimer.singleShot>
+QMetaObject.invokeMethod(obj, "methodName")  # call a slot by name (queued if obj lives in another thread)  @invoke @dynamic  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/QMetaObject.html#PySide6.QtCore.QMetaObject.invokeMethod>
+QMetaObject.invokeMethod(obj, "setText", Qt.ConnectionType.QueuedConnection, Q_ARG(str, "hi"))  # call a slot by name with arguments  @invoke @args  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/QMetaObject.html#PySide6.QtCore.QMetaObject.invokeMethod>
+QMetaObject.invokeMethod(obj, "compute", Qt.ConnectionType.BlockingQueuedConnection, Q_RETURN_ARG(int), Q_ARG(int, 2))  # call a slot by name and get its return value  @invoke @return  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/QMetaObject.html#PySide6.QtCore.QMetaObject.invokeMethod>
+Q_ARG(TYPE, VALUE)                  # wrap an argument for invokeMethod  @invoke  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/index.html>
+Q_RETURN_ARG(TYPE)                  # declare the return type for invokeMethod  @invoke  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/index.html>
+emit a signal from a worker thread  # the safe way to update the GUI: connect it to a slot of a GUI object (auto-queued)  @thread @gui
+
+## properties (Property)
+Property(int, fget, fset, notify=sig)  # declare a Qt property (seen by QML, animations, stylesheets, Designer)  @property  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/Property.html>
+    from PySide6.QtCore import QObject, Property, Signal
+    class Person(QObject):
+        nameChanged = Signal()
+        def __init__(self):
+            super().__init__(); self._name = ""
+        @Property(str, notify=nameChanged)
+        def name(self): return self._name
+        @name.setter
+        def name(self, v):
+            if v != self._name:
+                self._name = v; self.nameChanged.emit()
+@Property(TYPE)                     # decorate the getter to make a property (like Python )  @property @decorator  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/Property.html>
+@NAME.setter                        # decorate the setter of a Property  @setter  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/Property.html#PySide6.QtCore.Property.setter>
+Property(int, fget, constant=True)  # declare a read-only property that never changes (no notify needed)  @constant @readonly  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/Property.html>
+Property(int, fget, fset, freset=FN)  # add a reset function (property can go back to default)  @reset  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/Property.html>
+Property(str, fget, fset, user=True)  # mark the property that holds the "user value" (QDataWidgetMapper, delegates)  @user  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/Property.html>
+Property(int, fget, fset, designable=False, scriptable=False, stored=False, final=True)  # set the other property flags  @flags  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/Property.html>
+Property(int, fget, fset, doc="text")  # add a doc string to a property  @doc  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/Property.html>
+obj.setProperty("name", VALUE)      # write a property by name (also works for C++ properties)  @dynamic  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/QObject.html#PySide6.QtCore.QObject.setProperty>
+obj.property("name")                # read a property by name  @dynamic  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/QObject.html#PySide6.QtCore.QObject.property>
+QDynamicPropertyChangeEvent         # event sent when a dynamic property is added or changed  @dynamic @event  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/QDynamicPropertyChangeEvent.html>
+ClassInfo(author="me", version="1")  # attach key=value class info to a QObject subclass (decorator)  @classinfo @metadata  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/ClassInfo.html>
+
+## meta-object introspection
+mo = obj.metaObject()               # get the meta-object: class name, methods, signals, properties, enums  @introspection @reflection  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/QObject.html#PySide6.QtCore.QObject.metaObject>
+mo.className()                      # get the class name  @name  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/QMetaObject.html#PySide6.QtCore.QMetaObject.className>
+mo.superClass()                     # get the parent class meta-object  @inheritance  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/QMetaObject.html#PySide6.QtCore.QMetaObject.superClass>
+mo.methodCount() / mo.method(I)     # walk all methods (signals and slots)  @list  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/QMetaObject.html#PySide6.QtCore.QMetaObject.method>
+mo.method(I).methodSignature()      # get a method signature like b"clicked(bool)"  @signature  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/QMetaMethod.html#PySide6.QtCore.QMetaMethod.methodSignature>
+mo.method(I).methodType()           # tell if a method is a Signal, Slot, Method or Constructor  @type  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/QMetaMethod.html#PySide6.QtCore.QMetaMethod.methodType>
+mo.indexOfSignal("clicked(bool)")   # find a signal by signature, -1 if none  @find  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/QMetaObject.html#PySide6.QtCore.QMetaObject.indexOfSignal>
+mo.indexOfSlot("close()")           # find a slot by signature  @find  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/QMetaObject.html#PySide6.QtCore.QMetaObject.indexOfSlot>
+mo.propertyCount() / mo.property(I)  # walk all properties  @list  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/QMetaObject.html#PySide6.QtCore.QMetaObject.property>
+mo.property(I).name() / .typeName() / .read(obj)  # read the name, type and value of a meta-property  @property  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/QMetaProperty.html>
+mo.indexOfProperty("text")          # find a property by name  @find  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/QMetaObject.html#PySide6.QtCore.QMetaObject.indexOfProperty>
+mo.userProperty()                   # get the property marked user=True (e.g. QLineEdit.text)  @user  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/QMetaObject.html#PySide6.QtCore.QMetaObject.userProperty>
+mo.enumeratorCount() / mo.enumerator(I)  # walk the registered enums  @enum  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/QMetaObject.html#PySide6.QtCore.QMetaObject.enumerator>
+mo.classInfo(I)                     # read one ClassInfo key/value  @classinfo  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/QMetaObject.html#PySide6.QtCore.QMetaObject.classInfo>
+QMetaObject.normalizedSignature("valueChanged( int )")  # normalize a signature string  @signature  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/QMetaObject.html#PySide6.QtCore.QMetaObject.normalizedSignature>
+QMetaType.fromName(b"QString")      # look up a registered type by its C++ name  @types  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/QMetaType.html>

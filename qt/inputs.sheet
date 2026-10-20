@@ -1,0 +1,211 @@
+title: qt input widgets: buttons, labels, text fields, combo boxes, spin boxes, sliders, dates (pyside6)
+url:   https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/index.html
+tags:  qt pyside6 widgets button qpushbutton checkbox radio label qlabel lineedit textbox input combobox dropdown spinbox slider progress date calendar validator completer
+
+## QPushButton and other buttons
+btn = QPushButton("OK")             # make a push button  @button @create  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QPushButton.html>
+QPushButton(QIcon("i.png"), "Save")  # make a button with an icon  @icon  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QPushButton.html>
+btn.clicked.connect(FN)             # run FN on click (FN gets checked: bool if it accepts an argument)  @click @onclick  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QAbstractButton.html#PySide6.QtWidgets.QAbstractButton.clicked>
+btn.pressed / btn.released          # signals for mouse down / up  @press  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QAbstractButton.html#PySide6.QtWidgets.QAbstractButton.pressed>
+btn.setText("&Save")                # set the label; & makes Alt+S a shortcut (&& for a real &)  @label @mnemonic  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QAbstractButton.html#PySide6.QtWidgets.QAbstractButton.setText>
+btn.setIcon(QIcon("i.png")); btn.setIconSize(QSize(24, 24))  # set an icon and its size  @icon  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QAbstractButton.html#PySide6.QtWidgets.QAbstractButton.setIcon>
+btn.setCheckable(True)              # make a toggle button that stays pressed  @toggle  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QAbstractButton.html#PySide6.QtWidgets.QAbstractButton.setCheckable>
+btn.toggled.connect(FN)             # run FN(checked) when a checkable button changes  @toggle  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QAbstractButton.html#PySide6.QtWidgets.QAbstractButton.toggled>
+btn.setChecked(True) / btn.isChecked()  # set / read the checked state  @toggle  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QAbstractButton.html#PySide6.QtWidgets.QAbstractButton.setChecked>
+btn.setDefault(True)                # make Enter press this button in a dialog  @enter @default  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QPushButton.html#PySide6.QtWidgets.QPushButton.setDefault>
+btn.setAutoDefault(False)           # stop a dialog button from becoming the Enter default  @enter  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QPushButton.html#PySide6.QtWidgets.QPushButton.setAutoDefault>
+btn.setFlat(True)                   # draw the button without a raised border  @flat  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QPushButton.html#PySide6.QtWidgets.QPushButton.setFlat>
+btn.setMenu(MENU)                   # attach a dropdown menu to the button  @dropdown @menu  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QPushButton.html#PySide6.QtWidgets.QPushButton.setMenu>
+btn.setShortcut(QKeySequence("Ctrl+S"))  # give the button a keyboard shortcut  @shortcut  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QAbstractButton.html#PySide6.QtWidgets.QAbstractButton.setShortcut>
+btn.setAutoRepeat(True)             # fire clicked again and again while held  @repeat  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QAbstractButton.html#PySide6.QtWidgets.QAbstractButton.setAutoRepeat>
+btn.click() / btn.animateClick()    # click the button from code (animate shows it pressed)  @trigger  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QAbstractButton.html#PySide6.QtWidgets.QAbstractButton.click>
+btn.setEnabled(False)               # grey out the button  @disable  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QWidget.html#PySide6.QtWidgets.QWidget.setEnabled>
+QToolButton()                       # small button for toolbars, often icon only  @toolbutton  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QToolButton.html>
+tb.setDefaultAction(ACTION)         # make a tool button show and trigger an action  @action  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QToolButton.html#PySide6.QtWidgets.QToolButton.setDefaultAction>
+tb.setPopupMode(QToolButton.ToolButtonPopupMode.InstantPopup)  # open the menu on click (MenuButtonPopup = split button with arrow)  @dropdown  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QToolButton.html#PySide6.QtWidgets.QToolButton.setPopupMode>
+tb.setToolButtonStyle(Qt.ToolButtonStyle.ToolButtonTextUnderIcon)  # show text under the icon (IconOnly, TextOnly, TextBesideIcon)  @style  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QToolButton.html#PySide6.QtWidgets.QToolButton.setToolButtonStyle>
+tb.setArrowType(Qt.ArrowType.DownArrow)  # show an arrow instead of an icon  @arrow  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QToolButton.html#PySide6.QtWidgets.QToolButton.setArrowType>
+tb.setAutoRaise(True)               # draw the border only on hover  @flat  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QToolButton.html#PySide6.QtWidgets.QToolButton.setAutoRaise>
+QCommandLinkButton("Title", "Description")  # Vista-style big button with a description  @wizard  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QCommandLinkButton.html>
+
+## QCheckBox, QRadioButton, QButtonGroup
+cb = QCheckBox("Remember me")       # make a check box  @checkbox @tick  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QCheckBox.html>
+cb.isChecked() / cb.setChecked(True)  # read / set a two-state check box  @checked  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QAbstractButton.html#PySide6.QtWidgets.QAbstractButton.isChecked>
+cb.checkStateChanged.connect(FN)    # run FN(Qt.CheckState) on change  @signal @change  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QCheckBox.html#PySide6.QtWidgets.QCheckBox.checkStateChanged>
+cb.toggled.connect(FN)              # run FN(bool) on change  @signal  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QAbstractButton.html#PySide6.QtWidgets.QAbstractButton.toggled>
+cb.setTristate(True)                # allow a third "partially checked" state  @tristate  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QCheckBox.html#PySide6.QtWidgets.QCheckBox.setTristate>
+cb.checkState() / cb.setCheckState(Qt.CheckState.PartiallyChecked)  # read / set the three-state value  @tristate  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QCheckBox.html#PySide6.QtWidgets.QCheckBox.checkState>
+rb = QRadioButton("Small")          # make a radio button; radios with the same parent are exclusive  @radio @option  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QRadioButton.html>
+group = QButtonGroup(self)          # group buttons logically (exclusive by default)  @group @exclusive  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QButtonGroup.html>
+group.addButton(BTN, ID)            # add a button with an int id  @group  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QButtonGroup.html#PySide6.QtWidgets.QButtonGroup.addButton>
+group.checkedButton() / group.checkedId()  # get which button is checked  @selected  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QButtonGroup.html#PySide6.QtWidgets.QButtonGroup.checkedId>
+group.idClicked.connect(FN)         # run FN(id) when any button in the group is clicked  @signal  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QButtonGroup.html#PySide6.QtWidgets.QButtonGroup.idClicked>
+group.buttonToggled.connect(FN)     # run FN(button, checked) on any toggle  @signal  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QButtonGroup.html#PySide6.QtWidgets.QButtonGroup.buttonToggled>
+group.setExclusive(False)           # let several buttons be checked (check box group)  @multi  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QButtonGroup.html#PySide6.QtWidgets.QButtonGroup.setExclusive>
+QGroupBox("Size") with a layout of radios  # put radio buttons in a group box so they form one exclusive set  @radio @frame
+
+## QLabel
+lbl = QLabel("TEXT")                # show text  @label @text  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QLabel.html>
+lbl.setText("TEXT") / lbl.text()    # set / get the text  @text  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QLabel.html#PySide6.QtWidgets.QLabel.setText>
+lbl.setNum(42)                      # show a number  @number  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QLabel.html#PySide6.QtWidgets.QLabel.setNum>
+lbl.setText("<b>bold</b> <a href='https://x.org'>link</a>")  # show rich text (HTML subset)  @html @rich  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QLabel.html#PySide6.QtWidgets.QLabel.setText>
+lbl.setTextFormat(Qt.TextFormat.MarkdownText)  # read the text as Markdown (PlainText to never parse HTML)  @markdown  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QLabel.html#PySide6.QtWidgets.QLabel.setTextFormat>
+lbl.setOpenExternalLinks(True)      # open links in the browser on click  @link @href  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QLabel.html#PySide6.QtWidgets.QLabel.setOpenExternalLinks>
+lbl.linkActivated.connect(FN)       # run FN(url) when a link is clicked (instead of opening it)  @link  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QLabel.html#PySide6.QtWidgets.QLabel.linkActivated>
+lbl.setAlignment(Qt.AlignmentFlag.AlignCenter)  # center the text (AlignLeft, AlignRight, AlignTop, AlignVCenter...)  @align @center  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QLabel.html#PySide6.QtWidgets.QLabel.setAlignment>
+lbl.setWordWrap(True)               # wrap long text onto more lines  @wrap  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QLabel.html#PySide6.QtWidgets.QLabel.setWordWrap>
+lbl.setTextInteractionFlags(Qt.TextInteractionFlag.TextSelectableByMouse)  # let the user select and copy the text  @select @copy  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QLabel.html#PySide6.QtWidgets.QLabel.setTextInteractionFlags>
+lbl.setPixmap(QPixmap("img.png"))   # show an image  @image @picture  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QLabel.html#PySide6.QtWidgets.QLabel.setPixmap>
+lbl.setPixmap(pm.scaled(lbl.size(), Qt.AspectRatioMode.KeepAspectRatio, Qt.TransformationMode.SmoothTransformation))  # show an image scaled to fit, keeping its ratio  @image @fit  <https://doc.qt.io/qtforpython-6/PySide6/QtGui/QPixmap.html#PySide6.QtGui.QPixmap.scaled>
+lbl.setScaledContents(True)         # stretch the image to fill the label (ignores ratio)  @image @stretch  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QLabel.html#PySide6.QtWidgets.QLabel.setScaledContents>
+lbl.setMovie(QMovie("anim.gif")); lbl.movie().start()  # show an animated GIF  @gif @animation  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QLabel.html#PySide6.QtWidgets.QLabel.setMovie>
+lbl.setBuddy(EDIT)                  # make the label's &mnemonic focus EDIT  @mnemonic  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QLabel.html#PySide6.QtWidgets.QLabel.setBuddy>
+lbl.setIndent(N) / lbl.setMargin(N)  # set text indent / margin in pixels  @padding  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QLabel.html#PySide6.QtWidgets.QLabel.setMargin>
+lbl.setFrameStyle(QFrame.Shape.Box | QFrame.Shadow.Plain)  # draw a frame around the label (QLabel is a QFrame)  @border  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QFrame.html#PySide6.QtWidgets.QFrame.setFrameStyle>
+lbl.clear()                         # remove text and image  @clear  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QLabel.html#PySide6.QtWidgets.QLabel.clear>
+
+## QLineEdit (one line of text)
+ed = QLineEdit()                    # make a one-line text field  @input @textbox @entry  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QLineEdit.html>
+ed.text() / ed.setText("TEXT")      # read / set the text  @value  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QLineEdit.html#PySide6.QtWidgets.QLineEdit.text>
+ed.setPlaceholderText("Search...")  # show grey hint text while empty  @placeholder @hint  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QLineEdit.html#PySide6.QtWidgets.QLineEdit.setPlaceholderText>
+ed.textChanged.connect(FN)          # run FN(text) on every change, also from code  @signal @change  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QLineEdit.html#PySide6.QtWidgets.QLineEdit.textChanged>
+ed.textEdited.connect(FN)           # run FN(text) only when the user types  @signal @user  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QLineEdit.html#PySide6.QtWidgets.QLineEdit.textEdited>
+ed.returnPressed.connect(FN)        # run FN when Enter is pressed  @enter @submit  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QLineEdit.html#PySide6.QtWidgets.QLineEdit.returnPressed>
+ed.editingFinished.connect(FN)      # run FN on Enter or when focus leaves  @done @blur  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QLineEdit.html#PySide6.QtWidgets.QLineEdit.editingFinished>
+ed.setEchoMode(QLineEdit.EchoMode.Password)  # hide typed text (Normal, NoEcho, PasswordEchoOnEdit)  @password @secret  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QLineEdit.html#PySide6.QtWidgets.QLineEdit.setEchoMode>
+ed.setReadOnly(True)                # allow select/copy but no editing  @readonly  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QLineEdit.html#PySide6.QtWidgets.QLineEdit.setReadOnly>
+ed.setMaxLength(N)                  # limit the number of characters  @limit  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QLineEdit.html#PySide6.QtWidgets.QLineEdit.setMaxLength>
+ed.setClearButtonEnabled(True)      # show an x button that clears the field  @clear  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QLineEdit.html#PySide6.QtWidgets.QLineEdit.setClearButtonEnabled>
+ed.addAction(QIcon("search.png"), QLineEdit.ActionPosition.LeadingPosition)  # put an icon/action inside the field  @icon @search  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QLineEdit.html#PySide6.QtWidgets.QLineEdit.addAction>
+ed.setInputMask("999.999.999.999;_")  # force a format: 9 digit, A letter, N alnum, X any; ;_ = blank char  @mask @format  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QLineEdit.html#PySide6.QtWidgets.QLineEdit.setInputMask>
+ed.setValidator(QIntValidator(0, 100))  # accept only ints in a range  @validate @number  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QLineEdit.html#PySide6.QtWidgets.QLineEdit.setValidator>
+ed.setValidator(QDoubleValidator(0.0, 1.0, 3))  # accept only floats with up to 3 decimals  @validate @float  <https://doc.qt.io/qtforpython-6/PySide6/QtGui/QDoubleValidator.html>
+ed.setValidator(QRegularExpressionValidator(QRegularExpression(r"[A-Z]{3}")))  # accept only text that matches a regex  @validate @regex  <https://doc.qt.io/qtforpython-6/PySide6/QtGui/QRegularExpressionValidator.html>
+ed.hasAcceptableInput()             # check the text passes the validator and mask  @validate  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QLineEdit.html#PySide6.QtWidgets.QLineEdit.hasAcceptableInput>
+ed.inputRejected.connect(FN)        # react when a key was refused by the validator  @validate  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QLineEdit.html#PySide6.QtWidgets.QLineEdit.inputRejected>
+ed.setAlignment(Qt.AlignmentFlag.AlignRight)  # align the text (numbers)  @align  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QLineEdit.html#PySide6.QtWidgets.QLineEdit.setAlignment>
+ed.selectAll() / ed.selectedText() / ed.setSelection(START, LEN)  # select text  @select  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QLineEdit.html#PySide6.QtWidgets.QLineEdit.selectAll>
+ed.cursorPosition() / ed.setCursorPosition(N)  # get / set the cursor  @cursor  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QLineEdit.html#PySide6.QtWidgets.QLineEdit.setCursorPosition>
+ed.insert("TEXT")                   # insert at the cursor (replaces selection)  @insert  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QLineEdit.html#PySide6.QtWidgets.QLineEdit.insert>
+ed.undo() / ed.redo() / ed.cut() / ed.copy() / ed.paste() / ed.clear()  # edit actions  @clipboard  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QLineEdit.html#PySide6.QtWidgets.QLineEdit.undo>
+ed.setFrame(False)                  # draw the field without a border  @border  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QLineEdit.html#PySide6.QtWidgets.QLineEdit.setFrame>
+ed.setCompleter(QCompleter(["apple", "banana"]))  # suggest words while typing  @autocomplete @suggest  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QLineEdit.html#PySide6.QtWidgets.QLineEdit.setCompleter>
+ed.isModified() / ed.setModified(False)  # track if the user changed the text  @dirty  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QLineEdit.html#PySide6.QtWidgets.QLineEdit.isModified>
+
+## validators (QtGui)
+QIntValidator(BOTTOM, TOP)          # allow ints in a range  @int  <https://doc.qt.io/qtforpython-6/PySide6/QtGui/QIntValidator.html>
+QDoubleValidator(BOTTOM, TOP, DECIMALS)  # allow floats; setNotation(StandardNotation) to forbid 1e5  @float  <https://doc.qt.io/qtforpython-6/PySide6/QtGui/QDoubleValidator.html>
+QRegularExpressionValidator(RE)     # allow text matching a regex (anchored to the whole text)  @regex  <https://doc.qt.io/qtforpython-6/PySide6/QtGui/QRegularExpressionValidator.html>
+class V(QValidator): def validate(self, text, pos): return (QValidator.State.Acceptable, text, pos)  # write your own validator  @custom  <https://doc.qt.io/qtforpython-6/PySide6/QtGui/QValidator.html#PySide6.QtGui.QValidator.validate>
+QValidator.State.Acceptable / Intermediate / Invalid  # results of validate(): ok, maybe-later, refuse the key  @state  <https://doc.qt.io/qtforpython-6/PySide6/QtGui/QValidator.html#PySide6.QtGui.QValidator.State>
+validator.setLocale(QLocale.c())    # use "." as decimal point no matter the user locale  @locale  <https://doc.qt.io/qtforpython-6/PySide6/QtGui/QValidator.html#PySide6.QtGui.QValidator.setLocale>
+
+## QCompleter
+comp = QCompleter(WORDS)            # suggest from a list of strings  @autocomplete  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QCompleter.html>
+QCompleter(MODEL)                   # suggest from a model (QFileSystemModel for paths)  @model @path  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QCompleter.html>
+comp.setCaseSensitivity(Qt.CaseSensitivity.CaseInsensitive)  # ignore case  @case  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QCompleter.html#PySide6.QtWidgets.QCompleter.setCaseSensitivity>
+comp.setFilterMode(Qt.MatchFlag.MatchContains)  # match anywhere, not just the start  @contains @fuzzy  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QCompleter.html#PySide6.QtWidgets.QCompleter.setFilterMode>
+comp.setCompletionMode(QCompleter.CompletionMode.InlineCompletion)  # complete inside the field instead of a popup  @inline  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QCompleter.html#PySide6.QtWidgets.QCompleter.setCompletionMode>
+comp.setMaxVisibleItems(N)          # limit the popup height  @popup  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QCompleter.html#PySide6.QtWidgets.QCompleter.setMaxVisibleItems>
+comp.activated.connect(FN)          # run FN(text) when a suggestion is chosen  @select  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QCompleter.html#PySide6.QtWidgets.QCompleter.activated>
+
+## QComboBox (dropdown)
+combo = QComboBox()                 # make a dropdown list  @select @dropdown  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QComboBox.html>
+combo.addItem("TEXT") / combo.addItem("TEXT", DATA)  # add an item, optionally with hidden data  @add  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QComboBox.html#PySide6.QtWidgets.QComboBox.addItem>
+combo.addItem(QIcon("i.png"), "TEXT")  # add an item with an icon  @icon  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QComboBox.html#PySide6.QtWidgets.QComboBox.addItem>
+combo.addItems(["a", "b", "c"])     # add many items  @add  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QComboBox.html#PySide6.QtWidgets.QComboBox.addItems>
+combo.insertItem(I, "TEXT") / combo.removeItem(I) / combo.clear()  # insert / remove / remove all  @edit  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QComboBox.html#PySide6.QtWidgets.QComboBox.insertItem>
+combo.insertSeparator(I)            # add a line between items  @separator  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QComboBox.html#PySide6.QtWidgets.QComboBox.insertSeparator>
+combo.currentText() / combo.currentIndex() / combo.currentData()  # get the chosen text / index / data  @value  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QComboBox.html#PySide6.QtWidgets.QComboBox.currentData>
+combo.setCurrentIndex(I) / combo.setCurrentText("b")  # choose an item from code  @select  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QComboBox.html#PySide6.QtWidgets.QComboBox.setCurrentIndex>
+combo.findText("b") / combo.findData(DATA)  # get the index of an item (-1 if missing)  @find  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QComboBox.html#PySide6.QtWidgets.QComboBox.findData>
+combo.itemText(I) / combo.itemData(I) / combo.count()  # read items  @read  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QComboBox.html#PySide6.QtWidgets.QComboBox.itemData>
+combo.setItemText(I, T) / combo.setItemData(I, DATA)  # change an item  @edit  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QComboBox.html#PySide6.QtWidgets.QComboBox.setItemData>
+combo.currentIndexChanged.connect(FN)  # run FN(index) when the choice changes (also from code)  @signal @change  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QComboBox.html#PySide6.QtWidgets.QComboBox.currentIndexChanged>
+combo.currentTextChanged.connect(FN)  # run FN(text) when the choice changes  @signal  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QComboBox.html#PySide6.QtWidgets.QComboBox.currentTextChanged>
+combo.activated.connect(FN)         # run FN(index) only when the user picks an item  @signal @user  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QComboBox.html#PySide6.QtWidgets.QComboBox.activated>
+combo.textActivated.connect(FN)     # run FN(text) when the user picks an item  @signal @user  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QComboBox.html#PySide6.QtWidgets.QComboBox.textActivated>
+combo.setEditable(True)             # let the user type a new value  @editable @input  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QComboBox.html#PySide6.QtWidgets.QComboBox.setEditable>
+combo.setInsertPolicy(QComboBox.InsertPolicy.NoInsert)  # do not add typed text as a new item  @editable  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QComboBox.html#PySide6.QtWidgets.QComboBox.setInsertPolicy>
+combo.setPlaceholderText("Choose...")  # show hint text when nothing is chosen (index -1)  @placeholder  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QComboBox.html#PySide6.QtWidgets.QComboBox.setPlaceholderText>
+combo.lineEdit()                    # get the QLineEdit of an editable combo  @editable  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QComboBox.html#PySide6.QtWidgets.QComboBox.lineEdit>
+combo.setModel(MODEL) / combo.setModelColumn(C)  # fill from a model and show one of its columns  @model  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QComboBox.html#PySide6.QtWidgets.QComboBox.setModel>
+combo.setSizeAdjustPolicy(QComboBox.SizeAdjustPolicy.AdjustToContents)  # resize the combo to its longest item  @width  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QComboBox.html#PySide6.QtWidgets.QComboBox.setSizeAdjustPolicy>
+combo.setMaxVisibleItems(N)         # limit the popup height  @popup  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QComboBox.html#PySide6.QtWidgets.QComboBox.setMaxVisibleItems>
+combo.showPopup()                   # open the list from code  @open  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QComboBox.html#PySide6.QtWidgets.QComboBox.showPopup>
+QFontComboBox()                     # dropdown of installed fonts; currentFontChanged(QFont)  @font  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QFontComboBox.html>
+fcb.setFontFilters(QFontComboBox.FontFilter.MonospacedFonts)  # list only fixed-width fonts  @monospace  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QFontComboBox.html#PySide6.QtWidgets.QFontComboBox.setFontFilters>
+
+## QSpinBox / QDoubleSpinBox
+spin = QSpinBox()                   # make an int input with up/down arrows  @number @int  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QSpinBox.html>
+spin.setRange(0, 100) / spin.setMinimum(0) / spin.setMaximum(100)  # set the allowed range (default 0..99)  @range @limit  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QSpinBox.html#PySide6.QtWidgets.QSpinBox.setRange>
+spin.setValue(N) / spin.value()     # set / get the value  @value  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QSpinBox.html#PySide6.QtWidgets.QSpinBox.setValue>
+spin.valueChanged.connect(FN)       # run FN(value) on change  @signal  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QSpinBox.html#PySide6.QtWidgets.QSpinBox.valueChanged>
+spin.setSingleStep(5)               # change by 5 per arrow click  @step  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QSpinBox.html#PySide6.QtWidgets.QSpinBox.setSingleStep>
+spin.setPrefix("$ ") / spin.setSuffix(" px")  # show text before / after the number  @unit  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QSpinBox.html#PySide6.QtWidgets.QSpinBox.setSuffix>
+spin.setSpecialValueText("Auto")    # show a word instead of the minimum value  @special  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QAbstractSpinBox.html#PySide6.QtWidgets.QAbstractSpinBox.setSpecialValueText>
+spin.setWrapping(True)              # go from max back to min  @wrap  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QAbstractSpinBox.html#PySide6.QtWidgets.QAbstractSpinBox.setWrapping>
+spin.setDisplayIntegerBase(16)      # show the value in hex  @hex  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QSpinBox.html#PySide6.QtWidgets.QSpinBox.setDisplayIntegerBase>
+spin.setKeyboardTracking(False)     # emit valueChanged only on Enter / focus out, not each key  @signal  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QAbstractSpinBox.html#PySide6.QtWidgets.QAbstractSpinBox.setKeyboardTracking>
+spin.setButtonSymbols(QAbstractSpinBox.ButtonSymbols.NoButtons)  # hide the arrows (or PlusMinus)  @arrows  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QAbstractSpinBox.html#PySide6.QtWidgets.QAbstractSpinBox.setButtonSymbols>
+spin.setAccelerated(True)           # speed up while an arrow is held  @fast  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QAbstractSpinBox.html#PySide6.QtWidgets.QAbstractSpinBox.setAccelerated>
+spin.setGroupSeparatorShown(True)   # show 1,000,000 separators  @format  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QAbstractSpinBox.html#PySide6.QtWidgets.QAbstractSpinBox.setGroupSeparatorShown>
+spin.setStepType(QAbstractSpinBox.StepType.AdaptiveDecimalStepType)  # step by powers of ten of the current value  @step  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QSpinBox.html#PySide6.QtWidgets.QSpinBox.setStepType>
+spin.editingFinished.connect(FN)    # run FN on Enter or focus out  @done  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QAbstractSpinBox.html#PySide6.QtWidgets.QAbstractSpinBox.editingFinished>
+dspin = QDoubleSpinBox(); dspin.setDecimals(3)  # make a float input with 3 decimals (default 2)  @float @decimal  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QDoubleSpinBox.html#PySide6.QtWidgets.QDoubleSpinBox.setDecimals>
+
+## QSlider, QDial, QScrollBar, QProgressBar, QLCDNumber
+slider = QSlider(Qt.Orientation.Horizontal)  # make a slider  @range @slide  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QSlider.html>
+slider.setRange(0, 100); slider.setValue(50)  # set range and value (ints only)  @value  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QAbstractSlider.html#PySide6.QtWidgets.QAbstractSlider.setRange>
+slider.valueChanged.connect(FN)     # run FN(value) on change  @signal  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QAbstractSlider.html#PySide6.QtWidgets.QAbstractSlider.valueChanged>
+slider.sliderMoved / sliderPressed / sliderReleased  # signals while the user drags  @drag  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QAbstractSlider.html#PySide6.QtWidgets.QAbstractSlider.sliderMoved>
+slider.setTracking(False)           # emit valueChanged only when the drag ends  @signal  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QAbstractSlider.html#PySide6.QtWidgets.QAbstractSlider.setTracking>
+slider.setTickPosition(QSlider.TickPosition.TicksBelow); slider.setTickInterval(10)  # draw tick marks  @ticks  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QSlider.html#PySide6.QtWidgets.QSlider.setTickPosition>
+slider.setSingleStep(1) / slider.setPageStep(10)  # step for arrow keys / PageUp  @step  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QAbstractSlider.html#PySide6.QtWidgets.QAbstractSlider.setPageStep>
+slider.setInvertedAppearance(True)  # put the minimum on the right / top  @invert  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QAbstractSlider.html#PySide6.QtWidgets.QAbstractSlider.setInvertedAppearance>
+value / 100                         # sliders are ints: map to floats yourself (slider 0..1000 -> 0.0..1.0)  @float
+QDial()                             # round knob; setNotchesVisible(True), setWrapping(True)  @knob @rotary  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QDial.html>
+QScrollBar(Qt.Orientation.Vertical)  # stand-alone scroll bar (scroll areas make their own)  @scroll  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QScrollBar.html>
+bar = QProgressBar(); bar.setRange(0, 100); bar.setValue(42)  # show progress  @progress @loading  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QProgressBar.html>
+bar.setRange(0, 0)                  # show a busy bar with no known end  @indeterminate @busy  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QProgressBar.html#PySide6.QtWidgets.QProgressBar.setRange>
+bar.setFormat("%v of %m (%p%)")     # set the text: %v value, %m max, %p percent  @format  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QProgressBar.html#PySide6.QtWidgets.QProgressBar.setFormat>
+bar.setTextVisible(False)           # hide the percent text  @text  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QProgressBar.html#PySide6.QtWidgets.QProgressBar.setTextVisible>
+bar.reset()                         # go back to "no progress"  @reset  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QProgressBar.html#PySide6.QtWidgets.QProgressBar.reset>
+lcd = QLCDNumber(6); lcd.display(42)  # show a number in 7-segment digits  @lcd @digital  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QLCDNumber.html>
+lcd.setMode(QLCDNumber.Mode.Hex) / lcd.setSegmentStyle(QLCDNumber.SegmentStyle.Flat)  # change base / look  @lcd  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QLCDNumber.html#PySide6.QtWidgets.QLCDNumber.setMode>
+
+## dates and times
+QDateEdit(QDate.currentDate())      # make a date input  @date  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QDateEdit.html>
+QTimeEdit(QTime.currentTime())      # make a time input  @time  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QTimeEdit.html>
+QDateTimeEdit(QDateTime.currentDateTime())  # make a date + time input  @datetime  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QDateTimeEdit.html>
+de.setCalendarPopup(True)           # open a calendar on click  @calendar @picker  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QDateTimeEdit.html#PySide6.QtWidgets.QDateTimeEdit.setCalendarPopup>
+de.setDisplayFormat("yyyy-MM-dd")   # set how the date is shown  @format  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QDateTimeEdit.html#PySide6.QtWidgets.QDateTimeEdit.setDisplayFormat>
+de.date() / de.setDate(QDate(2026, 1, 1))  # get / set the date  @value  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QDateTimeEdit.html#PySide6.QtWidgets.QDateTimeEdit.date>
+de.setDateRange(MIN, MAX) / de.setMinimumDate(D)  # limit the dates  @range  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QDateTimeEdit.html#PySide6.QtWidgets.QDateTimeEdit.setDateRange>
+de.dateChanged.connect(FN) / te.timeChanged.connect(FN) / dte.dateTimeChanged.connect(FN)  # react to changes  @signal  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QDateTimeEdit.html#PySide6.QtWidgets.QDateTimeEdit.dateChanged>
+cal = QCalendarWidget()             # show a month calendar  @calendar  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QCalendarWidget.html>
+cal.selectedDate() / cal.setSelectedDate(D)  # get / set the selected day  @date  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QCalendarWidget.html#PySide6.QtWidgets.QCalendarWidget.selectedDate>
+cal.clicked.connect(FN) / cal.selectionChanged.connect(FN)  # react to day clicks  @signal  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QCalendarWidget.html#PySide6.QtWidgets.QCalendarWidget.clicked>
+cal.setGridVisible(True) / cal.setFirstDayOfWeek(Qt.DayOfWeek.Monday)  # show a grid / start weeks on Monday  @look  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QCalendarWidget.html#PySide6.QtWidgets.QCalendarWidget.setFirstDayOfWeek>
+cal.setDateTextFormat(D, QTextCharFormat())  # color or bold one day (holidays, events)  @highlight  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QCalendarWidget.html#PySide6.QtWidgets.QCalendarWidget.setDateTextFormat>
+QKeySequenceEdit()                  # let the user record a shortcut; keySequence(), keySequenceChanged  @shortcut @hotkey  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QKeySequenceEdit.html>
+
+## QTextEdit / QPlainTextEdit (multi-line text; see text sheet)
+QPlainTextEdit()                    # make a fast multi-line plain text editor (logs, code)  @multiline @textarea  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QPlainTextEdit.html>
+pte.toPlainText() / pte.setPlainText(S)  # get / set all text  @value  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QPlainTextEdit.html#PySide6.QtWidgets.QPlainTextEdit.toPlainText>
+pte.appendPlainText(LINE)           # add a line at the end (log view)  @log @append  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QPlainTextEdit.html#PySide6.QtWidgets.QPlainTextEdit.appendPlainText>
+pte.setMaximumBlockCount(1000)      # keep only the last 1000 lines  @log @limit  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QPlainTextEdit.html#PySide6.QtWidgets.QPlainTextEdit.setMaximumBlockCount>
+pte.setReadOnly(True)               # make it a viewer  @readonly  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QPlainTextEdit.html#PySide6.QtWidgets.QPlainTextEdit.setReadOnly>
+pte.setLineWrapMode(QPlainTextEdit.LineWrapMode.NoWrap)  # turn off line wrapping  @wrap  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QPlainTextEdit.html#PySide6.QtWidgets.QPlainTextEdit.setLineWrapMode>
+QTextEdit()                         # make a rich text editor (HTML, Markdown, images, tables)  @rich @html  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QTextEdit.html>
+te.toHtml() / te.setHtml(H) / te.toMarkdown() / te.setMarkdown(M)  # get / set rich content  @html @markdown  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QTextEdit.html#PySide6.QtWidgets.QTextEdit.setMarkdown>
+te.textChanged.connect(FN)          # run FN on every change (no argument; call toPlainText())  @signal  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QTextEdit.html#PySide6.QtWidgets.QTextEdit.textChanged>
+te.setTabStopDistance(40)           # set the tab width in pixels  @tab  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QTextEdit.html#PySide6.QtWidgets.QTextEdit.setTabStopDistance>
+
+## misc widgets
+QFrame()                            # empty box with an optional border  @box @border  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QFrame.html>
+line = QFrame(); line.setFrameShape(QFrame.Shape.HLine); line.setFrameShadow(QFrame.Shadow.Sunken)  # draw a horizontal separator line  @separator @hr  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QFrame.html#PySide6.QtWidgets.QFrame.setFrameShape>
+QFrame.Shape.VLine                  # a vertical separator line  @separator  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QFrame.html#PySide6.QtWidgets.QFrame.Shape>
+QSizeGrip(parent)                   # a resize handle for the window corner  @resize  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QSizeGrip.html>
+QRubberBand(QRubberBand.Shape.Rectangle, parent)  # a selection rectangle you move and resize by hand  @select @lasso  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QRubberBand.html>
+QFocusFrame()                       # draws a focus ring around another widget  @focus  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QFocusFrame.html>

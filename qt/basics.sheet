@@ -1,98 +1,211 @@
 title: qt basics (pyside6)
 url:   https://doc.qt.io/qtforpython-6/
-tags:  qt qt6 pyside pyside6 python gui widgets binaryninja
+tags:  qt qt6 pyside pyside6 python gui start install import enum version
 
-; Python only (PySide6). Binary Ninja ships Qt 6.11.1 + PySide6 6.11.1: no pip install needed.
-; Modules in Binary Ninja's PySide6: QtCore, QtGui, QtWidgets, QtSvg, QtPrintSupport, QtDBus. No QtUiTools, no QtQml.
+; Source of truth: PySide6 6.12.0 in /src/notes-goblin/qt/.venv (the .pyi stubs hold the exact signatures).
 
 ## docs and sources
 doc.qt.io/qtforpython-6             # read the PySide6 docs: Python signatures, tutorials, examples  @docs @reference  <https://doc.qt.io/qtforpython-6/>
-doc.qt.io/qt-6                      # read the Qt 6 C++ docs; more complete, names are the same in Python  @docs @cpp  <https://doc.qt.io/qt-6/>
-doc.qt.io/qt-6/qtwidgets-index.html  # list all widget classes and guides  @widgets  <https://doc.qt.io/qt-6/qtwidgets-index.html>
-doc.qt.io/qt-6/classes.html         # list every Qt class A-Z  @index @all  <https://doc.qt.io/qt-6/classes.html>
-/opt/binaryninja/python3/PySide6/QtWidgets.pyi  # read exact Python signatures of the PySide6 that Binary Ninja uses  @stubs @signature  <file:/opt/binaryninja/python3/PySide6/QtWidgets.pyi>
-/opt/binaryninja/python3/PySide6/QtCore.pyi  # read exact Python signatures for QtCore (signals, models, timers)  @stubs @signature  <file:/opt/binaryninja/python3/PySide6/QtCore.pyi>
-code.qt.io pyside-setup examples   # browse official PySide6 example programs  @example  <https://code.qt.io/cgit/pyside/pyside-setup.git/tree/examples?h=v6.11.1>
-help(QWidget.setLayout)             # show a method signature in the Binary Ninja console  @signature @console
+doc.qt.io/qtforpython-6/api.html    # list every PySide6 module with its classes  @modules @index  <https://doc.qt.io/qtforpython-6/api.html>
+doc.qt.io/qt-6                      # read the Qt 6 C++ docs; deeper text, same class and method names as Python  @cpp @docs  <https://doc.qt.io/qt-6/>
+doc.qt.io/qt-6/classes.html         # list every Qt class A-Z  @all @index  <https://doc.qt.io/qt-6/classes.html>
+.venv/lib/python3.12/site-packages/PySide6/QtWidgets.pyi  # read exact Python signatures of every widget method  @stubs @signature  <file:/src/notes-goblin/qt/.venv/lib/python3.12/site-packages/PySide6/QtWidgets.pyi>
+.venv/lib/python3.12/site-packages/PySide6/QtCore.pyi  # read exact signatures for QtCore (signals, timers, files, models)  @stubs  <file:/src/notes-goblin/qt/.venv/lib/python3.12/site-packages/PySide6/QtCore.pyi>
+.venv/lib/python3.12/site-packages/PySide6/QtGui.pyi  # read exact signatures for QtGui (painting, images, actions, text)  @stubs  <file:/src/notes-goblin/qt/.venv/lib/python3.12/site-packages/PySide6/QtGui.pyi>
+rg "def setText" .venv/lib/python3.12/site-packages/PySide6/*.pyi  # find which classes have a method, with its signature  @grep @search
+help(QWidget.setLayout)             # show a method signature in the Python REPL  @signature @repl
+code.qt.io pyside-setup examples    # browse the official PySide6 example programs  @example @sample  <https://code.qt.io/cgit/pyside/pyside-setup.git/tree/examples?h=6.12>
+doc.qt.io/qt-6/qtexamplesandtutorials.html  # browse all Qt examples and tutorials (C++, same ideas)  @example @tutorial  <https://doc.qt.io/qt-6/qtexamplesandtutorials.html>
+
+## install and version
+uv add pyside6                      # add PySide6 (Essentials + Addons) to a uv project  @install @pip
+pip install pyside6                 # install PySide6 with pip  @install
+pip install pyside6-essentials      # install only the core modules (Core, Gui, Widgets, Network, Qml, Quick...)  @install @small
+pip install pyside6-addons          # install the extra modules (Charts, Multimedia, WebEngine, 3D, Pdf...)  @install @extra
+PySide6.__version__                 # get the PySide6 version string, e.g. "6.12.0"  @version
+PySide6.__version_info__            # get the version as a tuple, e.g. (6, 12, 0, "", "")  @version @tuple
+QtCore.qVersion()                   # get the version of the Qt C++ libraries at run time  @version  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/index.html>
+QtCore.__version__                  # get the Qt version the PySide6 module was built with  @version
+QLibraryInfo.version()              # get the Qt version as a QVersionNumber  @version  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/QLibraryInfo.html#PySide6.QtCore.QLibraryInfo.version>
+QLibraryInfo.path(QLibraryInfo.LibraryPath.PluginsPath)  # find where Qt plugins (platforms, styles, imageformats) live  @plugins  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/QLibraryInfo.html#PySide6.QtCore.QLibraryInfo.path>
+QLibraryInfo.isDebugBuild()         # check if Qt is a debug build  @debug  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/QLibraryInfo.html#PySide6.QtCore.QLibraryInfo.isDebugBuild>
+python -c "import PySide6, os; print(os.path.dirname(PySide6.__file__))"  # print the PySide6 install folder  @path @where
 
 ## imports
-from PySide6.QtCore import Qt, QObject, Signal, Slot, QTimer  # core: enums, signals, timers, models  @import  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/index.html>
-from PySide6.QtGui import QColor, QFont, QIcon, QKeySequence, QAction  # gui: colors, fonts, icons, actions  @import  <https://doc.qt.io/qtforpython-6/PySide6/QtGui/index.html>
-from PySide6.QtWidgets import QWidget, QLabel, QVBoxLayout  # widgets: everything you see on screen  @import  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/index.html>
-import binaryninjaui                # in a Binary Ninja plugin, import this before PySide6 so the right Qt loads  @crash @binaryninja  <https://docs.binary.ninja/dev/plugins.html#ui-plugins>
-QAction                             # lives in QtGui in Qt 6, not QtWidgets as in Qt 5  @importerror @qt5  <https://doc.qt.io/qtforpython-6/PySide6/QtGui/QAction.html>
+from PySide6.QtCore import Qt, QObject, Signal, Slot, QTimer  # import core: enums, signals, timers, models, files  @import  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/index.html>
+from PySide6.QtGui import QColor, QFont, QIcon, QAction, QKeySequence  # import gui: colors, fonts, icons, actions, painting  @import  <https://doc.qt.io/qtforpython-6/PySide6/QtGui/index.html>
+from PySide6.QtWidgets import QApplication, QWidget, QVBoxLayout  # import widgets: everything you see in a desktop window  @import  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/index.html>
+from PySide6 import QtCore, QtGui, QtWidgets  # import whole modules; then write QtWidgets.QLabel  @import @namespace
+QAction                             # lives in QtGui in Qt 6 (QtWidgets in Qt 5)  @importerror @qt5  <https://doc.qt.io/qtforpython-6/PySide6/QtGui/QAction.html>
+QShortcut                           # lives in QtGui in Qt 6 (QtWidgets in Qt 5)  @importerror @qt5  <https://doc.qt.io/qtforpython-6/PySide6/QtGui/QShortcut.html>
+QUndoStack / QUndoCommand           # live in QtGui in Qt 6; QUndoView stays in QtWidgets  @importerror @qt5  <https://doc.qt.io/qtforpython-6/PySide6/QtGui/QUndoStack.html>
+QFileSystemModel                    # import from QtWidgets in PySide6  @importerror  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QFileSystemModel.html>
+QStandardItemModel / QStandardItem  # import from QtGui, not QtCore  @importerror  <https://doc.qt.io/qtforpython-6/PySide6/QtGui/QStandardItemModel.html>
+QSvgWidget                          # import from QtSvgWidgets; QtSvg only has the renderer and generator  @importerror @svg  <https://doc.qt.io/qtforpython-6/PySide6/QtSvgWidgets/QSvgWidget.html>
+QOpenGLWidget                       # import from QtOpenGLWidgets in Qt 6  @importerror @opengl  <https://doc.qt.io/qtforpython-6/PySide6/QtOpenGLWidgets/QOpenGLWidget.html>
+QRegExp                             # gone in Qt 6; use QRegularExpression  @qt5 @removed  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/QRegularExpression.html>
+QDesktopWidget                      # gone in Qt 6; use QScreen (QGuiApplication.primaryScreen())  @qt5 @removed  <https://doc.qt.io/qtforpython-6/PySide6/QtGui/QScreen.html>
 
 ## application and event loop
-app = QApplication(sys.argv)        # create the app object once, before any widget (standalone scripts only)  @start @main  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QApplication.html>
-sys.exit(app.exec())                # run the event loop until the last window closes  @mainloop @run  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QApplication.html#PySide6.QtWidgets.QApplication.exec>
+app = QApplication(sys.argv)        # create the one app object before any widget  @start @main  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QApplication.html>
+app = QApplication([])              # create the app without command line arguments  @start
+sys.exit(app.exec())                # run the event loop until the last window closes, then exit with its code  @mainloop @run  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QApplication.html#PySide6.QtWidgets.QApplication.exec>
     import sys
     from PySide6.QtWidgets import QApplication, QLabel
     app = QApplication(sys.argv)
     w = QLabel("Hello"); w.show()
     sys.exit(app.exec())
-QApplication.instance()             # get the running app; in Binary Ninja it already exists, never create one  @binaryninja @existing  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/QCoreApplication.html#PySide6.QtCore.QCoreApplication.instance>
-exec() vs exec_()                   # use exec(); exec_() is the old Qt 5 name  @qt5 @deprecated
-QApplication.processEvents()        # let the UI repaint during a long loop (better: use a thread)  @freeze @hang  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/QCoreApplication.html#PySide6.QtCore.QCoreApplication.processEvents>
-QApplication.clipboard().setText(S)  # copy text to the clipboard  @copy  <https://doc.qt.io/qtforpython-6/PySide6/QtGui/QClipboard.html>
+exec() vs exec_()                   # use exec(); exec_() is the old Qt 5 name, still there but deprecated  @qt5 @deprecated
+QCoreApplication(sys.argv)          # create an app with no GUI (command line tools, servers)  @console @headless  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/QCoreApplication.html>
+QGuiApplication(sys.argv)           # create an app with a GUI but no widgets (QML / QWindow only)  @qml  <https://doc.qt.io/qtforpython-6/PySide6/QtGui/QGuiApplication.html>
+QApplication.instance()             # get the running app object, or None  @existing @singleton  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/QCoreApplication.html#PySide6.QtCore.QCoreApplication.instance>
+QCoreApplication.instanceExists()   # check if an app object already exists  @existing  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/QCoreApplication.html#PySide6.QtCore.QCoreApplication.instanceExists>
+app.quit()                          # stop the event loop (exec() returns 0)  @exit @close  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/QCoreApplication.html#PySide6.QtCore.QCoreApplication.quit>
+app.exit(CODE)                      # stop the event loop and make exec() return CODE  @exit  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/QCoreApplication.html#PySide6.QtCore.QCoreApplication.exit>
+app.aboutToQuit.connect(FN)         # run cleanup just before the event loop ends  @shutdown @cleanup  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/QCoreApplication.html#PySide6.QtCore.QCoreApplication.aboutToQuit>
+app.setQuitOnLastWindowClosed(False)  # keep running after the last window closes (tray apps)  @tray  <https://doc.qt.io/qtforpython-6/PySide6/QtGui/QGuiApplication.html#PySide6.QtGui.QGuiApplication.setQuitOnLastWindowClosed>
+app.lastWindowClosed.connect(FN)    # react when the last window was closed  @close  <https://doc.qt.io/qtforpython-6/PySide6/QtGui/QGuiApplication.html#PySide6.QtGui.QGuiApplication.lastWindowClosed>
+QApplication.processEvents()        # let the UI repaint during a long loop (better: move the work to a thread)  @freeze @hang  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/QCoreApplication.html#PySide6.QtCore.QCoreApplication.processEvents>
+app.setApplicationName("NAME")      # set the app name (used by QSettings, QStandardPaths)  @name  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/QCoreApplication.html#PySide6.QtCore.QCoreApplication.setApplicationName>
+app.setOrganizationName("ORG")      # set the organization name (used by QSettings)  @settings  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/QCoreApplication.html#PySide6.QtCore.QCoreApplication.setOrganizationName>
+app.setOrganizationDomain("example.com")  # set the domain (used by QSettings on macOS)  @settings  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/QCoreApplication.html#PySide6.QtCore.QCoreApplication.setOrganizationDomain>
+app.setApplicationVersion("1.0")    # set the version shown by QCommandLineParser --version  @version  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/QCoreApplication.html#PySide6.QtCore.QCoreApplication.setApplicationVersion>
+app.setApplicationDisplayName("My App")  # set the name shown in window titles  @title  <https://doc.qt.io/qtforpython-6/PySide6/QtGui/QGuiApplication.html#PySide6.QtGui.QGuiApplication.setApplicationDisplayName>
+app.setWindowIcon(QIcon("icon.png"))  # set the default icon for all windows  @icon  <https://doc.qt.io/qtforpython-6/PySide6/QtGui/QGuiApplication.html#PySide6.QtGui.QGuiApplication.setWindowIcon>
+app.setDesktopFileName("org.example.app")  # link the app to its .desktop file (Wayland icon, taskbar)  @linux @wayland  <https://doc.qt.io/qtforpython-6/PySide6/QtGui/QGuiApplication.html#PySide6.QtGui.QGuiApplication.setDesktopFileName>
+QCoreApplication.arguments()        # get the command line arguments as a list of str  @argv  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/QCoreApplication.html#PySide6.QtCore.QCoreApplication.arguments>
+QCoreApplication.applicationDirPath()  # get the folder of the running executable  @path  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/QCoreApplication.html#PySide6.QtCore.QCoreApplication.applicationDirPath>
+QCoreApplication.applicationPid()   # get the process id  @pid  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/QCoreApplication.html#PySide6.QtCore.QCoreApplication.applicationPid>
+QGuiApplication.platformName()      # get the platform plugin in use: "xcb", "wayland", "offscreen"...  @platform  <https://doc.qt.io/qtforpython-6/PySide6/QtGui/QGuiApplication.html#PySide6.QtGui.QGuiApplication.platformName>
+QT_QPA_PLATFORM=offscreen python app.py  # run without a display (CI, tests, screenshots)  @headless @ci
+QT_QPA_PLATFORM=xcb python app.py   # force X11 instead of Wayland  @wayland @x11
+QT_DEBUG_PLUGINS=1 python app.py    # print why a plugin (e.g. platform "xcb") fails to load  @plugin @error
+QApplication.setStyle("Fusion")     # use the Fusion style, same look on every OS  @style @theme  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QApplication.html#PySide6.QtWidgets.QApplication.setStyle>
+QApplication.clipboard()            # get the system clipboard  @copy @paste  <https://doc.qt.io/qtforpython-6/PySide6/QtGui/QGuiApplication.html#PySide6.QtGui.QGuiApplication.clipboard>
+QApplication.primaryScreen()        # get the main screen (size, dpi)  @monitor @display  <https://doc.qt.io/qtforpython-6/PySide6/QtGui/QGuiApplication.html#PySide6.QtGui.QGuiApplication.primaryScreen>
+QApplication.screens()              # list all screens  @monitor  <https://doc.qt.io/qtforpython-6/PySide6/QtGui/QGuiApplication.html#PySide6.QtGui.QGuiApplication.screens>
+QApplication.allWidgets()           # list every widget that exists  @debug  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QApplication.html#PySide6.QtWidgets.QApplication.allWidgets>
+QApplication.topLevelWidgets()      # list all windows  @windows  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QApplication.html#PySide6.QtWidgets.QApplication.topLevelWidgets>
+QApplication.activeWindow()         # get the window that has keyboard focus  @focus  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QApplication.html#PySide6.QtWidgets.QApplication.activeWindow>
+QApplication.focusWidget()          # get the widget that has keyboard focus  @focus  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QApplication.html#PySide6.QtWidgets.QApplication.focusWidget>
+QApplication.widgetAt(QCursor.pos())  # get the widget under the mouse  @hover  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QApplication.html#PySide6.QtWidgets.QApplication.widgetAt>
+app.focusChanged.connect(FN)        # react when focus moves: FN(old, new)  @focus  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QApplication.html#PySide6.QtWidgets.QApplication.focusChanged>
+QApplication.beep()                 # play the system bell  @sound  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QApplication.html#PySide6.QtWidgets.QApplication.beep>
+QApplication.alert(WINDOW)          # flash the taskbar entry of a window  @attention  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QApplication.html#PySide6.QtWidgets.QApplication.alert>
+QApplication.setOverrideCursor(Qt.CursorShape.WaitCursor)  # show a busy cursor everywhere  @busy @wait  <https://doc.qt.io/qtforpython-6/PySide6/QtGui/QGuiApplication.html#PySide6.QtGui.QGuiApplication.setOverrideCursor>
+QApplication.restoreOverrideCursor()  # remove the busy cursor again  @busy  <https://doc.qt.io/qtforpython-6/PySide6/QtGui/QGuiApplication.html#PySide6.QtGui.QGuiApplication.restoreOverrideCursor>
+with QOverrideCursorGuard(Qt.CursorShape.WaitCursor):  # show a busy cursor only inside the with-block (new in 6.12)  @busy @context  <https://doc.qt.io/qtforpython-6/PySide6/QtGui/QOverrideCursorGuard.html>
+QApplication.keyboardModifiers()    # check which of Shift/Ctrl/Alt is held right now  @modifier  <https://doc.qt.io/qtforpython-6/PySide6/QtGui/QGuiApplication.html#PySide6.QtGui.QGuiApplication.keyboardModifiers>
+QApplication.mouseButtons()         # check which mouse buttons are held right now  @mouse  <https://doc.qt.io/qtforpython-6/PySide6/QtGui/QGuiApplication.html#PySide6.QtGui.QGuiApplication.mouseButtons>
+QGuiApplication.styleHints().colorScheme()  # check if the system uses dark or light mode  @dark @theme  <https://doc.qt.io/qtforpython-6/PySide6/QtGui/QStyleHints.html#PySide6.QtGui.QStyleHints.colorScheme>
+QGuiApplication.styleHints().colorSchemeChanged.connect(FN)  # react when the system switches dark/light mode  @dark  <https://doc.qt.io/qtforpython-6/PySide6/QtGui/QStyleHints.html#PySide6.QtGui.QStyleHints.colorSchemeChanged>
+QGuiApplication.styleHints().setColorScheme(Qt.ColorScheme.Dark)  # force dark (or Light) mode for this app  @dark @theme  <https://doc.qt.io/qtforpython-6/PySide6/QtGui/QStyleHints.html#PySide6.QtGui.QStyleHints.setColorScheme>
+QGuiApplication.setHighDpiScaleFactorRoundingPolicy(Qt.HighDpiScaleFactorRoundingPolicy.PassThrough)  # keep fractional scaling (150%) as is; call before the app  @hidpi @scale  <https://doc.qt.io/qtforpython-6/PySide6/QtGui/QGuiApplication.html#PySide6.QtGui.QGuiApplication.setHighDpiScaleFactorRoundingPolicy>
+QT_SCALE_FACTOR=1.5 python app.py   # scale the whole UI by a factor  @hidpi @zoom
+QCoreApplication.setAttribute(Qt.ApplicationAttribute.AA_DontShowIconsInMenus)  # set an app-wide attribute; call before creating the app  @attribute  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/QCoreApplication.html#PySide6.QtCore.QCoreApplication.setAttribute>
 
-## enums
-Qt.AlignmentFlag.AlignCenter        # write enums with their full scope; Qt.AlignCenter also works but is old style  @enum @flag  <https://doc.qt.io/qtforpython-6/considerations.html>
-Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignVCenter  # combine flags with |  @or @flags
-Qt.ItemDataRole.UserRole            # first role number free for your own data in models  @role
-Qt.Orientation.Horizontal           # horizontal or vertical, used by headers, splitters, sliders  @direction
-value.value                         # get the int behind a Python enum member  @int @enum
+## objects and ownership
+QObject(parent)                     # create an object owned by PARENT; it is deleted when the parent is deleted  @parent @memory  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/QObject.html>
+QWidget(parent)                     # create a child widget drawn inside PARENT; no parent means a new window  @parent @window  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QWidget.html>
+self.win = MainWindow()             # keep a Python reference to a parentless window or it is garbage collected and vanishes  @gc @disappear
+obj.deleteLater()                   # delete a QObject safely once control returns to the event loop  @delete @free  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/QObject.html#PySide6.QtCore.QObject.deleteLater>
+obj.setParent(NEW)                  # move an object to a new parent (owner)  @reparent  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/QObject.html#PySide6.QtCore.QObject.setParent>
+obj.parent()                        # get the owning object  @tree  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/QObject.html#PySide6.QtCore.QObject.parent>
+obj.children()                      # list direct children  @tree  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/QObject.html#PySide6.QtCore.QObject.children>
+obj.findChild(QPushButton, "okButton")  # find one child by type and objectName (searches all levels)  @find @lookup  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/QObject.html#PySide6.QtCore.QObject.findChild>
+obj.findChildren(QLineEdit)         # list all children of a type  @find  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/QObject.html#PySide6.QtCore.QObject.findChildren>
+obj.findChildren(QLineEdit, options=Qt.FindChildOption.FindDirectChildrenOnly)  # list only direct children of a type  @find  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/QObject.html#PySide6.QtCore.QObject.findChildren>
+obj.setObjectName("NAME")           # give an object a name for findChild, stylesheets (#NAME) and debugging  @id @name  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/QObject.html#PySide6.QtCore.QObject.setObjectName>
+obj.inherits("QAbstractButton")     # check the C++ class hierarchy by class name  @isinstance  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/QObject.html#PySide6.QtCore.QObject.inherits>
+obj.metaObject().className()        # get the class name, e.g. "QPushButton"  @type @class  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/QMetaObject.html#PySide6.QtCore.QMetaObject.className>
+obj.dumpObjectTree()                # print the child tree to the debug output  @debug  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/QObject.html#PySide6.QtCore.QObject.dumpObjectTree>
+obj.setProperty("NAME", VALUE)      # set a Qt property, or add a dynamic one (usable in stylesheets)  @dynamic  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/QObject.html#PySide6.QtCore.QObject.setProperty>
+obj.property("NAME")                # read a Qt property by name  @dynamic  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/QObject.html#PySide6.QtCore.QObject.property>
+obj.dynamicPropertyNames()          # list the names of dynamic properties  @dynamic  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/QObject.html#PySide6.QtCore.QObject.dynamicPropertyNames>
+obj.destroyed.connect(FN)           # run FN when the C++ object is deleted  @delete @signal  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/QObject.html#PySide6.QtCore.QObject.destroyed>
+obj.tr("Text")                      # mark a string as translatable  @i18n @translate  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/QObject.html#PySide6.QtCore.QObject.tr>
+shiboken6.isValid(obj)              # check if the C++ object behind a Python wrapper still exists  @deleted @crash
+shiboken6.delete(obj)               # delete the C++ object right now  @delete
+shiboken6.getCppPointer(obj)        # get the C++ address of a wrapped object  @pointer @address
+RuntimeError: Internal C++ object (...) already deleted.  # you used a wrapper whose C++ object was deleted (its parent died)  @error @crash
+doc.qt.io/qt-6/objecttrees.html     # read how parents own and delete their children  @ownership @guide  <https://doc.qt.io/qt-6/objecttrees.html>
 
-## object tree and memory
-QWidget(parent)                     # give a parent so Qt owns and deletes the child with it  @ownership @delete @leak  <https://doc.qt.io/qt-6/objecttrees.html>
-self.w = QWidget()                  # keep a Python reference to a top-level widget or it is garbage collected and vanishes  @disappear @gc
-w.deleteLater()                     # delete a QObject safely when control returns to the event loop  @destroy @free  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/QObject.html#PySide6.QtCore.QObject.deleteLater>
-w.setParent(None)                   # detach a widget from its parent (it becomes a window or is collected)  @remove
-w.findChild(QLabel, "NAME")         # find a child by type and objectName  @search  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/QObject.html#PySide6.QtCore.QObject.findChild>
-w.setObjectName("NAME")             # name a widget, used by findChild and stylesheets  @id  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/QObject.html#PySide6.QtCore.QObject.setObjectName>
-RuntimeError: Internal C++ object already deleted  # Python still holds a widget Qt has freed; keep a parent or reference  @error @crash
-doc.qt.io/qt-6/objecttrees.html     # read how parents own children  @ownership  <https://doc.qt.io/qt-6/objecttrees.html>
+## enums and flags
+Qt.AlignmentFlag.AlignCenter        # write enums with the full scope: Qt.EnumName.Value  @enum  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/Qt.html#PySide6.QtCore.Qt.AlignmentFlag>
+Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignVCenter  # combine flags with |  @or @flags  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/Qt.html#PySide6.QtCore.Qt.AlignmentFlag>
+FLAGS & Qt.KeyboardModifier.ShiftModifier  # test if one flag is set in a flag value  @and @test  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/Qt.html#PySide6.QtCore.Qt.KeyboardModifier>
+Qt.AlignCenter                      # short old-style name; still works but not in the stubs, so the IDE complains  @enum @qt5
+QMessageBox.StandardButton.Ok       # enums inside a class: Class.EnumName.Value  @enum @nested  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QMessageBox.html#PySide6.QtWidgets.QMessageBox.StandardButton>
+Qt.Key.Key_Escape.value             # get the integer behind an enum (Python enum.Enum)  @int @value  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/Qt.html#PySide6.QtCore.Qt.Key>
+Qt.ItemDataRole(256)                # turn an int back into an enum value  @int @cast  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/Qt.html#PySide6.QtCore.Qt.ItemDataRole>
+Qt.GlobalColor.red                  # use a predefined color  @color  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/Qt.html#PySide6.QtCore.Qt.GlobalColor>
+Qt.Orientation.Horizontal / Qt.Orientation.Vertical  # pick a direction for sliders, splitters, headers  @orientation  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/Qt.html#PySide6.QtCore.Qt.Orientation>
+Qt.CheckState.Checked / Unchecked / PartiallyChecked  # set or read a check box state  @checkbox  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/Qt.html#PySide6.QtCore.Qt.CheckState>
+Qt.SortOrder.AscendingOrder / DescendingOrder  # set the sort direction  @sort  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/Qt.html#PySide6.QtCore.Qt.SortOrder>
+Qt.CaseSensitivity.CaseInsensitive  # ignore case in filters and searches  @case  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/Qt.html#PySide6.QtCore.Qt.CaseSensitivity>
+Qt.MatchFlag.MatchContains          # find items whose text contains the search text  @find  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/Qt.html#PySide6.QtCore.Qt.MatchFlag>
+Qt.TextFormat.RichText / PlainText / MarkdownText / AutoText  # tell a label how to read its text  @html @markdown  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/Qt.html#PySide6.QtCore.Qt.TextFormat>
+Qt.CursorShape.PointingHandCursor   # use a hand mouse cursor (also WaitCursor, IBeamCursor, CrossCursor...)  @cursor  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/Qt.html#PySide6.QtCore.Qt.CursorShape>
+Qt.MouseButton.LeftButton / RightButton / MiddleButton  # name a mouse button  @mouse  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/Qt.html#PySide6.QtCore.Qt.MouseButton>
+Qt.KeyboardModifier.ControlModifier  # name the Ctrl key (Cmd on macOS); also ShiftModifier, AltModifier, MetaModifier  @ctrl @modifier  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/Qt.html#PySide6.QtCore.Qt.KeyboardModifier>
+Qt.Key.Key_Return / Key_Enter / Key_Escape / Key_Delete  # name keys in key events  @keyboard  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/Qt.html#PySide6.QtCore.Qt.Key>
+Qt.DayOfWeek.Monday                 # name a weekday  @date  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/Qt.html#PySide6.QtCore.Qt.DayOfWeek>
+Qt.DateFormat.ISODate               # format dates as ISO 8601  @date @iso  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/Qt.html#PySide6.QtCore.Qt.DateFormat>
+Qt.TimerType.PreciseTimer           # ask for ms-accurate timers (default CoarseTimer is ~5%)  @timer  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/Qt.html#PySide6.QtCore.Qt.TimerType>
+Qt.ConnectionType.QueuedConnection  # deliver a signal later through the event loop  @signal @thread  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/Qt.html#PySide6.QtCore.Qt.ConnectionType>
+@QEnum                              # register a Python enum.Enum in the meta-object system (for QML and properties)  @enum @decorator  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/index.html>
+    from enum import Enum
+    class Car(QObject):
+        @QEnum
+        class Brand(Enum):
+            Volvo, Saab = range(2)
+@QFlag                              # register a Python enum.Flag in the meta-object system  @flag @decorator  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/index.html>
 
-## timers
-QTimer.singleShot(MS, FN)           # run FN once after MS milliseconds on the UI thread  @delay @later  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/QTimer.html#PySide6.QtCore.QTimer.singleShot>
-QTimer.singleShot(0, FN)            # run FN after the current event finishes  @defer
-t = QTimer(self); t.timeout.connect(FN); t.start(MS)  # run FN every MS milliseconds  @repeat @interval @poll  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/QTimer.html>
-t.stop()                            # stop a repeating timer  @cancel
-t.setSingleShot(True)               # make a QTimer fire once; restart it to debounce  @debounce
+## __feature__ (snake_case, true_property)
+from __feature__ import snake_case  # call Qt methods in snake_case: w.set_window_title(...)  @pep8 @feature
+from __feature__ import true_property  # use properties as attributes: w.windowTitle = "x" instead of setWindowTitle  @property @feature
+from __feature__ import snake_case, true_property  # turn on both features; affects only this module  @feature
+    from PySide6.QtWidgets import QApplication, QLabel
+    from __feature__ import snake_case, true_property
+    app = QApplication([])
+    w = QLabel("hi")
+    w.window_title = "Demo"   # was: w.setWindowTitle("Demo")
+    w.show(); app.exec()
+; The feature switch only renames things for the module that imports it; other modules keep camelCase.
 
-## threads
-widgets only on the main thread     # never create or touch widgets from a worker thread; send a signal instead  @crash @thread  <https://doc.qt.io/qt-6/threads-qobject.html>
-class Worker(QObject)               # put long work in a QObject moved to a QThread, report back with signals  @background @async  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/QThread.html>
-    class Worker(QObject):
-        finished = Signal(object)
-        @Slot()
-        def run(self):
-            self.finished.emit(slow_work())
-    self.thread = QThread(); self.worker = Worker()
-    self.worker.moveToThread(self.thread)
-    self.thread.started.connect(self.worker.run)
-    self.worker.finished.connect(self.on_done)          # runs on the UI thread
-    self.worker.finished.connect(self.thread.quit)
-    self.thread.start()
-QThreadPool.globalInstance().start(RUNNABLE)  # run a QRunnable on a shared pool of threads  @pool  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/QThreadPool.html>
-execute_on_main_thread(FN)          # in Binary Ninja, the simple way to run UI code from a worker  @binaryninja  <https://api.binary.ninja/binaryninja.mainthread-module.html>
+## logging and debug output
+qDebug("text")                      # print a debug message through Qt's message handler  @log @print  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/index.html>
+qInfo("text") / qWarning("text") / qCritical("text")  # print a message with a level  @log @warn @error  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/index.html>
+qFatal("text")                      # print and abort the program  @log @abort  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/index.html>
+qInstallMessageHandler(FN)          # catch all Qt messages: FN(mode, context, message)  @log @handler  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/index.html>
+    def handler(mode, ctx, msg):
+        print(f"{mode.name} {ctx.file}:{ctx.line} {msg}")
+    qInstallMessageHandler(handler)
+qSetMessagePattern("%{type} %{file}:%{line} %{message}")  # change the format of Qt log lines  @log @format  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/index.html>
+QT_MESSAGE_PATTERN="[%{time}] %{message}" python app.py  # change the log format from the environment  @log @env
+QT_LOGGING_RULES="qt.*.debug=true" python app.py  # turn on Qt's internal debug categories  @log @verbose
+QLoggingCategory.setFilterRules("qt.network.ssl=true")  # turn logging categories on or off in code  @log @category  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/QLoggingCategory.html#PySide6.QtCore.QLoggingCategory.setFilterRules>
+QLoggingCategory("my.app")          # create your own logging category  @log @category  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/QLoggingCategory.html>
+qCDebug(CATEGORY, b"text")          # print a debug message in a category (message is bytes)  @log  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/index.html>
+QtMsgType.QtWarningMsg              # name the message levels: QtDebugMsg, QtInfoMsg, QtWarningMsg, QtCriticalMsg, QtFatalMsg  @log @level  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/QtMsgType.html>
+python -X faulthandler app.py       # print the Python stack when Qt crashes with a segfault  @crash @segfault
 
-## events (override methods)
-def mousePressEvent(self, event)    # react to a mouse click on your widget; event.button(), event.position()  @click  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QWidget.html#PySide6.QtWidgets.QWidget.mousePressEvent>
-def keyPressEvent(self, event)      # react to a key; event.key() == Qt.Key.Key_Escape  @keyboard  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QWidget.html#PySide6.QtWidgets.QWidget.keyPressEvent>
-def paintEvent(self, event)         # draw a custom widget with QPainter(self)  @draw @paint  <https://doc.qt.io/qtforpython-6/PySide6/QtGui/QPainter.html>
-def resizeEvent(self, event)        # react when the widget changes size  @resize
-def closeEvent(self, event)         # react when a window closes; event.ignore() to cancel  @close
-def contextMenuEvent(self, event)   # show your own right-click menu  @rightclick @menu
-w.update()                          # schedule a repaint (calls paintEvent later)  @redraw @refresh  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QWidget.html#PySide6.QtWidgets.QWidget.update>
-obj.installEventFilter(self)        # see another object's events in self.eventFilter(obj, event)  @intercept @hook  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/QObject.html#PySide6.QtCore.QObject.installEventFilter>
-super().keyPressEvent(event)        # pass the event on to the default handler  @default
-doc.qt.io/qt-6/eventsandfilters.html  # read how events and event filters work  @events  <https://doc.qt.io/qt-6/eventsandfilters.html>
+## translation (i18n)
+self.tr("Hello")                    # mark a string in a QObject subclass for translation  @i18n @translate  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/QObject.html#PySide6.QtCore.QObject.tr>
+QCoreApplication.translate("CONTEXT", "Hello")  # translate outside a QObject  @i18n  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/QCoreApplication.html#PySide6.QtCore.QCoreApplication.translate>
+QT_TR_NOOP("Hello")                 # mark a string for lupdate without translating it now  @i18n  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/index.html>
+translator = QTranslator(); translator.load("app_de.qm")  # load a compiled translation file  @i18n @qm  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/QTranslator.html#PySide6.QtCore.QTranslator.load>
+translator.load(QLocale(), "app", "_", ":/i18n")  # load app_<lang>.qm for the user's locale from resources  @i18n @locale  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/QTranslator.html#PySide6.QtCore.QTranslator.load>
+app.installTranslator(translator)   # turn on a loaded translation  @i18n  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/QCoreApplication.html#PySide6.QtCore.QCoreApplication.installTranslator>
+QLibraryInfo.path(QLibraryInfo.LibraryPath.TranslationsPath)  # find Qt's own translations (qtbase_de.qm)  @i18n  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/QLibraryInfo.html#PySide6.QtCore.QLibraryInfo.path>
+changeEvent(e) with e.type() == QEvent.Type.LanguageChange  # retranslate the UI when the language changes at run time  @i18n @retranslate  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/QEvent.html#PySide6.QtCore.QEvent.Type>
 
-## look and feel
-w.setStyleSheet("color: #fff; background: #262626;")  # style a widget with CSS-like rules  @css @qss @color  <https://doc.qt.io/qt-6/stylesheet-reference.html>
-app.setStyleSheet(open("style.qss").read())  # style the whole app from a .qss file  @css @theme
-QLabel#NAME { color: red; }         # target one widget by objectName in a stylesheet  @css @selector  <https://doc.qt.io/qt-6/stylesheet-syntax.html>
-QColor("#41cd52") / QColor(R, G, B)  # make a color  @rgb @hex  <https://doc.qt.io/qtforpython-6/PySide6/QtGui/QColor.html>
-QFont("Monospace", 10)              # make a font  @text  <https://doc.qt.io/qtforpython-6/PySide6/QtGui/QFont.html>
-w.palette().color(QPalette.ColorRole.Window)  # read a theme color so your widget matches dark/light mode  @theme @dark  <https://doc.qt.io/qtforpython-6/PySide6/QtGui/QPalette.html>
-QIcon.fromTheme("document-open")   # get a standard icon from the system theme  @icon  <https://doc.qt.io/qtforpython-6/PySide6/QtGui/QIcon.html>
+## common errors
+ModuleNotFoundError: No module named 'PySide6'  # wrong Python: activate the venv or use uv run  @install @venv
+qt.qpa.plugin: Could not load the Qt platform plugin "xcb"  # install libxcb-cursor0 (Debian/Ubuntu) or use QT_QPA_PLATFORM=wayland  @linux @x11
+QWidget: Must construct a QApplication before a QWidget  # create QApplication first, at the top of main  @order @crash
+QObject::startTimer: Timers can only be used with threads started with QThread  # touch timers/objects only in their own thread  @thread
+QObject: Cannot create children for a parent that is in a different thread  # create the object in the worker thread, or moveToThread()  @thread
+window opens and closes at once     # you kept no reference to it; store it on self or a variable that lives on  @gc @disappear
+UI freezes                          # long work runs in the GUI thread; use QThread, QThreadPool or QTimer  @hang @freeze
+TypeError: ... called with wrong argument types  # look at the overloads in the .pyi stub; PySide6 is strict about types  @signature @overload

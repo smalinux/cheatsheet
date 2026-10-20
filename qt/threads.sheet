@@ -1,0 +1,138 @@
+title: qt threads, thread pool, locks, asyncio (pyside6)
+url:   https://doc.qt.io/qtforpython-6/PySide6/QtCore/QThread.html
+tags:  qt pyside6 thread qthread worker background concurrency threadpool qrunnable mutex lock asyncio qtasyncio freeze
+
+; Rule: only the main (GUI) thread may touch widgets. Workers talk to the GUI with signals.
+
+## worker object + QThread (recommended)
+worker.moveToThread(thread)         # make WORKER's slots run in THREAD's event loop  @move @worker  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/QObject.html#PySide6.QtCore.QObject.moveToThread>
+    class Worker(QObject):
+        progress = Signal(int)
+        finished = Signal()
+        @Slot()
+        def run(self):
+            for i in range(100):
+                self.progress.emit(i)      # safe: queued to the GUI thread
+            self.finished.emit()
+
+    self.thread = QThread()
+    self.worker = Worker()
+    self.worker.moveToThread(self.thread)
+    self.thread.started.connect(self.worker.run)
+    self.worker.finished.connect(self.thread.quit)
+    self.worker.finished.connect(self.worker.deleteLater)
+    self.thread.finished.connect(self.thread.deleteLater)
+    self.worker.progress.connect(self.bar.setValue)
+    self.thread.start()
+thread.started.connect(worker.run)  # start the work when the thread starts  @start  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/QThread.html#PySide6.QtCore.QThread.started>
+worker.finished.connect(thread.quit)  # end the thread's event loop when the work is done  @stop  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/QThread.html#PySide6.QtCore.QThread.quit>
+thread.finished.connect(thread.deleteLater)  # free the thread object after it stops  @cleanup  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/QThread.html#PySide6.QtCore.QThread.finished>
+self.thread = QThread()             # keep a reference on self, or "QThread: Destroyed while thread is still running"  @gc @crash
+moveToThread fails if the object has a parent  # create the worker without a parent  @parent @error
+
+## QThread
+thread.start()                      # start the thread; calls run() (default run() runs an event loop)  @start  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/QThread.html#PySide6.QtCore.QThread.start>
+class T(QThread): def run(self): ...  # subclass and override run() for simple one-shot work (no event loop)  @subclass  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/QThread.html#PySide6.QtCore.QThread.run>
+thread.quit()                       # ask the thread's event loop to exit  @stop  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/QThread.html#PySide6.QtCore.QThread.quit>
+thread.exit(CODE)                   # exit the event loop with a return code  @stop  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/QThread.html#PySide6.QtCore.QThread.exit>
+thread.wait()                       # block until the thread finished (use before app exit)  @join @blocking  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/QThread.html#PySide6.QtCore.QThread.wait>
+thread.wait(QDeadlineTimer(3000))   # block at most 3 s  @join @timeout  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/QThread.html#PySide6.QtCore.QThread.wait>
+thread.requestInterruption()        # ask a run() loop to stop  @cancel @stop  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/QThread.html#PySide6.QtCore.QThread.requestInterruption>
+self.isInterruptionRequested()      # check inside run() whether to stop  @cancel  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/QThread.html#PySide6.QtCore.QThread.isInterruptionRequested>
+thread.terminate()                  # kill the thread at once; unsafe, last resort  @kill  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/QThread.html#PySide6.QtCore.QThread.terminate>
+thread.isRunning() / thread.isFinished()  # check the thread state  @state  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/QThread.html#PySide6.QtCore.QThread.isRunning>
+thread.setPriority(QThread.Priority.LowPriority)  # change the OS priority of a running thread  @priority  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/QThread.html#PySide6.QtCore.QThread.setPriority>
+thread.setObjectName("worker")      # name the thread (seen in debuggers, ps -L)  @name  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/QObject.html#PySide6.QtCore.QObject.setObjectName>
+QThread.currentThread()             # get the thread this code runs in  @current  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/QThread.html#PySide6.QtCore.QThread.currentThread>
+QThread.isMainThread()              # check if this code runs in the GUI thread  @main @gui  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/QThread.html#PySide6.QtCore.QThread.isMainThread>
+obj.thread()                        # get the thread an object lives in  @affinity  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/QObject.html#PySide6.QtCore.QObject.thread>
+QThread.msleep(MS) / QThread.sleep(S) / QThread.usleep(US)  # sleep the current thread (never in the GUI thread)  @sleep  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/QThread.html#PySide6.QtCore.QThread.msleep>
+QThread.idealThreadCount()          # get the number of CPU cores  @cores  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/QThread.html#PySide6.QtCore.QThread.idealThreadCount>
+QThread.yieldCurrentThread()        # give the CPU to another thread  @yield  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/QThread.html#PySide6.QtCore.QThread.yieldCurrentThread>
+thread.setStackSize(BYTES)          # set the stack size before start()  @stack  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/QThread.html#PySide6.QtCore.QThread.setStackSize>
+thread.loopLevel()                  # get how deep the event loop is nested  @eventloop  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/QThread.html#PySide6.QtCore.QThread.loopLevel>
+QThread.create(FN)                  # not available in PySide6; use QThreadPool.globalInstance().start(FN)  @missing
+
+## QThreadPool and QRunnable
+QThreadPool.globalInstance().start(FN)  # run a Python callable on a pool thread  @pool @background @async  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/QThreadPool.html#PySide6.QtCore.QThreadPool.start>
+QThreadPool.globalInstance().start(lambda: work(ARG))  # run a callable with arguments on a pool thread  @pool @lambda  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/QThreadPool.html#PySide6.QtCore.QThreadPool.start>
+class Job(QRunnable): def run(self): ...  # make a reusable task for the pool  @task @runnable  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/QRunnable.html>
+    class Signals(QObject):
+        result = Signal(object)
+    class Job(QRunnable):
+        def __init__(self, n):
+            super().__init__()
+            self.n = n
+            self.signals = Signals()     # QRunnable is not a QObject: use a helper for signals
+        def run(self):
+            self.signals.result.emit(self.n * 2)
+    job = Job(21)
+    job.signals.result.connect(print)
+    QThreadPool.globalInstance().start(job)
+QRunnable.create(FN)                # wrap a callable in a QRunnable  @task  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/QRunnable.html#PySide6.QtCore.QRunnable.create>
+job.setAutoDelete(False)            # keep the QRunnable after run() so it can be reused  @reuse  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/QRunnable.html#PySide6.QtCore.QRunnable.setAutoDelete>
+pool.start(job, priority=N)         # queue a task with a priority (higher runs first)  @priority  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/QThreadPool.html#PySide6.QtCore.QThreadPool.start>
+pool.tryStart(job)                  # run only if a thread is free right now  @nowait  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/QThreadPool.html#PySide6.QtCore.QThreadPool.tryStart>
+pool.setMaxThreadCount(N)           # limit the number of pool threads  @limit  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/QThreadPool.html#PySide6.QtCore.QThreadPool.setMaxThreadCount>
+pool.maxThreadCount() / pool.activeThreadCount()  # get the limit / how many are busy  @count  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/QThreadPool.html#PySide6.QtCore.QThreadPool.activeThreadCount>
+pool.waitForDone(MS)                # block until all tasks finished (call at exit)  @join @wait  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/QThreadPool.html#PySide6.QtCore.QThreadPool.waitForDone>
+pool.clear()                        # remove queued tasks that have not started  @cancel  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/QThreadPool.html#PySide6.QtCore.QThreadPool.clear>
+pool.tryTake(job)                   # remove one queued task  @cancel  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/QThreadPool.html#PySide6.QtCore.QThreadPool.tryTake>
+pool.setExpiryTimeout(MS)           # stop idle pool threads after MS ms (-1 = never)  @idle  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/QThreadPool.html#PySide6.QtCore.QThreadPool.setExpiryTimeout>
+pool = QThreadPool(); pool.setMaxThreadCount(1)  # make your own pool, e.g. one serial background queue  @serial @queue  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/QThreadPool.html>
+concurrent.futures.ThreadPoolExecutor  # also works; emit a signal or QTimer.singleShot(0, ctx, fn) to get back to the GUI  @python @executor
+
+## QtConcurrent
+from PySide6 import QtConcurrent    # the module exists but only has QFutureQString / QFutureVoid, no run() or mapped()  @missing @concurrent  <https://doc.qt.io/qtforpython-6/PySide6/QtConcurrent/index.html>
+QtConcurrent.run(FN)                # not exposed in PySide6 6.12; use QThreadPool.start(FN) or concurrent.futures  @missing @run
+
+## locks and sync
+mutex = QMutex()                    # make a lock  @lock @mutex  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/QMutex.html>
+mutex.lock(); ...; mutex.unlock()   # guard shared data by hand  @lock  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/QMutex.html>
+with QMutexLocker(mutex):           # lock for the with-block, unlock automatically  @lock @context  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/QMutexLocker.html>
+mutex.tryLock(MS)                   # try to lock, waiting at most MS; returns bool  @trylock @timeout  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/QMutex.html#PySide6.QtCore.QMutex.tryLock>
+QRecursiveMutex()                   # a lock the same thread may take more than once  @reentrant  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/QRecursiveMutex.html>
+lock = QReadWriteLock(); lock.lockForRead() / lock.lockForWrite() / lock.unlock()  # many readers or one writer  @rwlock  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/QReadWriteLock.html>
+with QReadLocker(lock): / with QWriteLocker(lock):  # hold a read / write lock for a block  @rwlock @context  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/QReadLocker.html>
+sem = QSemaphore(N); sem.acquire(); sem.release()  # allow N users at a time  @semaphore @limit  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/QSemaphore.html>
+sem.tryAcquire(1, MS)               # take one slot, waiting at most MS  @semaphore  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/QSemaphore.html#PySide6.QtCore.QSemaphore.tryAcquire>
+cond = QWaitCondition(); cond.wait(mutex); cond.wakeOne() / cond.wakeAll()  # sleep until another thread signals  @condition @notify  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/QWaitCondition.html>
+QThreadStorage                      # not in PySide6; use threading.local()  @tls
+QSystemSemaphore("KEY", 1)          # a semaphore shared between processes  @ipc  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/QSystemSemaphore.html>
+QSharedMemory("KEY")                # shared memory between processes: create(), attach(), lock(), data(), detach()  @ipc @shm  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/QSharedMemory.html>
+
+## event loops in threads
+QEventLoop()                        # run a nested local event loop (wait for a signal without blocking the UI)  @wait @nested  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/QEventLoop.html>
+    loop = QEventLoop()
+    reply.finished.connect(loop.quit)
+    loop.exec()        # returns when reply finished; UI keeps painting
+loop.exec(QEventLoop.ProcessEventsFlag.ExcludeUserInputEvents)  # wait but ignore clicks and keys  @wait  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/QEventLoop.html#PySide6.QtCore.QEventLoop.exec>
+QCoreApplication.processEvents(QEventLoop.ProcessEventsFlag.AllEvents, MS)  # handle pending events for up to MS  @pump  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/QCoreApplication.html#PySide6.QtCore.QCoreApplication.processEvents>
+QCoreApplication.postEvent(obj, EVENT)  # queue an event to an object in any thread (thread safe)  @event @post  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/QCoreApplication.html#PySide6.QtCore.QCoreApplication.postEvent>
+QCoreApplication.sendEvent(obj, EVENT)  # deliver an event now (same thread only)  @event @send  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/QCoreApplication.html#PySide6.QtCore.QCoreApplication.sendEvent>
+
+## QtAsyncio (asyncio on the Qt event loop)
+import PySide6.QtAsyncio as QtAsyncio  # use async/await with Qt: asyncio runs on the Qt event loop  @asyncio @async @await  <https://doc.qt.io/qtforpython-6/PySide6/QtAsyncio/index.html>
+QtAsyncio.run()                     # start the Qt event loop with asyncio support (instead of app.exec())  @asyncio @run
+QtAsyncio.run(main())               # run a coroutine on the Qt event loop  @asyncio @coroutine
+QtAsyncio.run(main(), keep_running=False)  # stop the loop when the coroutine ends  @asyncio
+QtAsyncio.run(main(), quit_qapp=False)  # stop asyncio but keep the QApplication running  @asyncio
+QtAsyncio.run(handle_sigint=True)   # let Ctrl+C stop the loop  @asyncio @sigint @ctrl-c
+asyncio.ensure_future(self.fetch())  # start a coroutine from a slot (button click)  @asyncio @task
+    import asyncio, sys
+    import PySide6.QtAsyncio as QtAsyncio
+    from PySide6.QtWidgets import QApplication, QPushButton
+    app = QApplication(sys.argv)
+    async def tick():
+        await asyncio.sleep(1); btn.setText("done")
+    btn = QPushButton("go"); btn.clicked.connect(lambda: asyncio.ensure_future(tick())); btn.show()
+    QtAsyncio.run(handle_sigint=True)
+QAsyncioEventLoopPolicy             # the asyncio event loop policy QtAsyncio.run installs  @asyncio @policy
+
+## common mistakes
+QObject::setParent: Cannot set parent, new parent is in a different thread  # create children in the thread their parent lives in  @error
+QPixmap: It is not safe to use pixmaps outside the GUI thread  # use QImage in workers, convert to QPixmap in the GUI thread  @image @error
+QBasicTimer can only be used with threads started with QThread  # Python threading.Thread has no Qt event loop; use QThread  @timer @error
+signal emitted in a worker, slot updates a widget  # fine: auto connection queues it to the GUI thread  @safe
+lambda connected to a worker signal runs in the WORKER thread  # a lambda has no thread; connect to a QObject slot or pass a context  @gotcha @lambda
+the GIL                             # Python code in threads does not run in parallel; use QProcess or multiprocessing for CPU-heavy work  @gil @cpu

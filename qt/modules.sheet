@@ -1,0 +1,81 @@
+title: qt modules index (pyside6 6.12): what each module is for
+url:   https://doc.qt.io/qtforpython-6/api.html
+tags:  qt pyside6 modules import package list index essentials addons which-module
+
+; Every module in PySide6.__all__ of the installed 6.12.0. Essentials = pyside6-essentials, Addons = pyside6-addons.
+
+## essentials: core, gui, widgets
+from PySide6 import QtCore          # non-GUI base: QObject, signals, timers, threads, files, JSON, models, settings (Essentials)  @core  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/index.html>
+from PySide6 import QtGui           # windows, painting, images, fonts, colors, actions, text documents, undo, OpenGL/Rhi base (Essentials)  @gui  <https://doc.qt.io/qtforpython-6/PySide6/QtGui/index.html>
+from PySide6 import QtWidgets       # desktop widgets, layouts, dialogs, main window, item views, graphics view (Essentials)  @widgets  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/index.html>
+from PySide6 import QtPrintSupport  # printers, print and preview dialogs (Essentials)  @print  <https://doc.qt.io/qtforpython-6/PySide6/QtPrintSupport/index.html>
+from PySide6 import QtSvg           # render and generate SVG: QSvgRenderer, QSvgGenerator (Essentials)  @svg  <https://doc.qt.io/qtforpython-6/PySide6/QtSvg/index.html>
+from PySide6 import QtSvgWidgets    # SVG widgets: QSvgWidget, QGraphicsSvgItem (Essentials)  @svg  <https://doc.qt.io/qtforpython-6/PySide6/QtSvgWidgets/index.html>
+from PySide6 import QtUiTools       # load Designer .ui files at run time: QUiLoader, loadUiType (Essentials)  @designer @ui  <https://doc.qt.io/qtforpython-6/PySide6/QtUiTools/index.html>
+from PySide6 import QtDesigner      # write Qt Designer plugins and custom widget collections (Essentials)  @designer @plugin  <https://doc.qt.io/qtforpython-6/PySide6/QtDesigner/index.html>
+from PySide6 import QtOpenGL        # OpenGL helpers: buffers, shaders, FBOs, versioned function tables (Essentials)  @opengl  <https://doc.qt.io/qtforpython-6/PySide6/QtOpenGL/index.html>
+from PySide6 import QtOpenGLWidgets  # QOpenGLWidget for OpenGL drawing inside widgets (Essentials)  @opengl  <https://doc.qt.io/qtforpython-6/PySide6/QtOpenGLWidgets/index.html>
+from PySide6 import QtTest          # unit test helpers: QTest, QSignalSpy, QAbstractItemModelTester (Essentials)  @test  <https://doc.qt.io/qtforpython-6/PySide6/QtTest/index.html>
+from PySide6 import QtConcurrent    # QFuture/QFutureWatcher types only; no run() in PySide6 (Essentials)  @concurrent  <https://doc.qt.io/qtforpython-6/PySide6/QtConcurrent/index.html>
+from PySide6 import QtDBus          # D-Bus IPC on Linux: QDBusConnection, QDBusInterface, QDBusMessage (Essentials)  @dbus @ipc  <https://doc.qt.io/qtforpython-6/PySide6/QtDBus/index.html>
+from PySide6 import QtXml           # DOM XML: QDomDocument, QDomElement; QtCore has the faster QXmlStreamReader (Essentials)  @xml @dom  <https://doc.qt.io/qtforpython-6/PySide6/QtXml/index.html>
+from PySide6 import QtHelp          # Qt Help (.qch) engine and widgets for in-app documentation (Essentials)  @help  <https://doc.qt.io/qtforpython-6/PySide6/QtHelp/index.html>
+from PySide6 import QtSql           # databases: QSqlDatabase, QSqlQuery, SQL table models (Essentials)  @sql @database  <https://doc.qt.io/qtforpython-6/PySide6/QtSql/index.html>
+from PySide6 import QtNetwork       # HTTP client, TCP/UDP/local sockets, DNS, SSL, network info (Essentials)  @network @http  <https://doc.qt.io/qtforpython-6/PySide6/QtNetwork/index.html>
+import PySide6.QtAsyncio as QtAsyncio  # QtAsyncio: asyncio event loop running on Qt, pure Python (Addons)  @asyncio  <https://doc.qt.io/qtforpython-6/PySide6/QtAsyncio/index.html>
+
+## essentials: qml and quick
+from PySide6 import QtQml           # QML engine, components, contexts, QJSEngine, QmlElement registration (Essentials)  @qml  <https://doc.qt.io/qtforpython-6/PySide6/QtQml/index.html>
+from PySide6 import QtQmlFeatures   # 6.12 helpers: auto_properties, computed, watch, effect, load_qml_component (Essentials)  @qml @reactive  <https://doc.qt.io/qtforpython-6/PySide6/QtQmlFeatures/index.html>
+from PySide6 import QtQuick         # Qt Quick scene graph: QQuickView, QQuickItem, QQuickWindow, QQuickPaintedItem (Essentials)  @quick  <https://doc.qt.io/qtforpython-6/PySide6/QtQuick/index.html>
+from PySide6 import QtQuickControls2  # QQuickStyle: pick the Quick Controls style (Essentials)  @controls @style  <https://doc.qt.io/qtforpython-6/PySide6/QtQuickControls2/index.html>
+from PySide6 import QtQuickWidgets  # QQuickWidget: QML inside a widgets UI (Essentials)  @embed  <https://doc.qt.io/qtforpython-6/PySide6/QtQuickWidgets/index.html>
+from PySide6 import QtQuickTest     # QUICK_TEST_MAIN: run QML TestCase unit tests (Essentials)  @test @qml  <https://doc.qt.io/qtforpython-6/PySide6/QtQuickTest/index.html>
+from PySide6 import QtLabsStyleKit  # QStyleKitStyle: experimental themeable widget style driven by style files (Essentials, labs)  @style @experimental  <https://doc.qt.io/qtforpython-6/PySide6/QtLabsStyleKit/index.html>
+
+## addons: multimedia, web, documents
+from PySide6 import QtMultimedia    # audio/video playback, recording, camera, screen capture, sound effects (Addons)  @audio @video  <https://doc.qt.io/qtforpython-6/PySide6/QtMultimedia/index.html>
+from PySide6 import QtMultimediaWidgets  # QVideoWidget and QGraphicsVideoItem to show video (Addons)  @video  <https://doc.qt.io/qtforpython-6/PySide6/QtMultimediaWidgets/index.html>
+from PySide6 import QtSpatialAudio  # 3D positional sound: QAudioEngine, QSpatialSound, QAudioRoom (Addons)  @audio @3d  <https://doc.qt.io/qtforpython-6/PySide6/QtSpatialAudio/index.html>
+from PySide6 import QtTextToSpeech  # speak text with system voices: QTextToSpeech (Addons)  @tts @speech  <https://doc.qt.io/qtforpython-6/PySide6/QtTextToSpeech/index.html>
+from PySide6 import QtWebEngineCore  # Chromium engine: pages, profiles, cookies, downloads, scripts (WebEngine wheel)  @browser @chromium  <https://doc.qt.io/qtforpython-6/PySide6/QtWebEngineCore/index.html>
+from PySide6 import QtWebEngineWidgets  # QWebEngineView: a browser widget (WebEngine wheel)  @browser @html  <https://doc.qt.io/qtforpython-6/PySide6/QtWebEngineWidgets/index.html>
+from PySide6 import QtWebEngineQuick  # WebEngineView for QML; call QtWebEngineQuick.initialize() first (WebEngine wheel)  @browser @qml  <https://doc.qt.io/qtforpython-6/PySide6/QtWebEngineQuick/index.html>
+from PySide6 import QtWebView       # native platform web view (lighter than WebEngine, mobile) (Addons)  @browser  <https://doc.qt.io/qtforpython-6/PySide6/QtWebView/index.html>
+from PySide6 import QtWebChannel    # talk between Python objects and JavaScript in web pages (Addons)  @javascript @bridge  <https://doc.qt.io/qtforpython-6/PySide6/QtWebChannel/index.html>
+from PySide6 import QtWebSockets    # WebSocket client and server (Addons)  @websocket  <https://doc.qt.io/qtforpython-6/PySide6/QtWebSockets/index.html>
+from PySide6 import QtHttpServer    # small embedded HTTP server with routes (Addons)  @http @server  <https://doc.qt.io/qtforpython-6/PySide6/QtHttpServer/index.html>
+from PySide6 import QtNetworkAuth   # OAuth 1 and OAuth 2 login flows (Addons)  @oauth @login  <https://doc.qt.io/qtforpython-6/PySide6/QtNetworkAuth/index.html>
+from PySide6 import QtPdf           # load, render and search PDF files: QPdfDocument (Pdf wheel)  @pdf  <https://doc.qt.io/qtforpython-6/PySide6/QtPdf/index.html>
+from PySide6 import QtPdfWidgets    # QPdfView: a PDF viewer widget (Pdf wheel)  @pdf  <https://doc.qt.io/qtforpython-6/PySide6/QtPdfWidgets/index.html>
+
+## addons: charts and data visualization
+from PySide6 import QtCharts        # 2D charts for widgets: line, bar, pie, scatter, area, candlestick (Addons)  @charts @plot  <https://doc.qt.io/qtforpython-6/PySide6/QtCharts/index.html>
+from PySide6 import QtGraphs        # new 2D/3D graphs for Qt Quick (replaces Charts and DataVisualization) (Addons)  @charts @graphs  <https://doc.qt.io/qtforpython-6/PySide6/QtGraphs/index.html>
+from PySide6 import QtGraphsWidgets  # 3D graphs for widgets: Q3DBarsWidgetItem, Q3DScatterWidgetItem, Q3DSurfaceWidgetItem (Addons)  @3d @graphs  <https://doc.qt.io/qtforpython-6/PySide6/QtGraphsWidgets/index.html>
+from PySide6 import QtDataVisualization  # older 3D bars, scatter and surface graphs (deprecated, use QtGraphs) (Addons)  @3d @legacy  <https://doc.qt.io/qtforpython-6/PySide6/QtDataVisualization/index.html>
+
+## addons: 3d
+from PySide6 import Qt3DCore, Qt3DRender, Qt3DInput, Qt3DLogic, Qt3DAnimation, Qt3DExtras  # the Qt 3D framework (entities, materials, cameras); classes live in a same-named namespace  @3d  <https://doc.qt.io/qtforpython-6/PySide6/Qt3DCore/index.html>
+from PySide6.Qt3DExtras import Qt3DExtras; Qt3DExtras.Qt3DWindow()  # use Qt 3D classes through the namespace: Qt3DExtras.QSphereMesh, Qt3DCore.QEntity...  @3d @namespace  <https://doc.qt.io/qtforpython-6/PySide6/Qt3DExtras/index.html>
+from PySide6 import QtQuick3D       # 3D in Qt Quick: custom geometry, instancing, texture data (Addons)  @3d @quick  <https://doc.qt.io/qtforpython-6/PySide6/QtQuick3D/index.html>
+from PySide6 import QtCanvasPainter  # GPU-accelerated 2D vector painter: QCanvasPainter, QCanvasPainterWidget, QCanvasPainterItem (Addons)  @2d @gpu  <https://doc.qt.io/qtforpython-6/PySide6/QtCanvasPainter/index.html>
+
+## addons: devices and hardware
+from PySide6 import QtSerialPort    # serial ports (RS-232, USB-serial): QSerialPort, QSerialPortInfo (Addons)  @serial @uart  <https://doc.qt.io/qtforpython-6/PySide6/QtSerialPort/index.html>
+from PySide6 import QtSerialBus     # CAN bus and Modbus (RTU/TCP) devices (Addons)  @can @modbus  <https://doc.qt.io/qtforpython-6/PySide6/QtSerialBus/index.html>
+from PySide6 import QtBluetooth     # classic Bluetooth and Bluetooth Low Energy (BLE) (Addons)  @bluetooth @ble  <https://doc.qt.io/qtforpython-6/PySide6/QtBluetooth/index.html>
+from PySide6 import QtNfc           # NFC tags and NDEF messages (Addons)  @nfc  <https://doc.qt.io/qtforpython-6/PySide6/QtNfc/index.html>
+from PySide6 import QtPositioning   # GPS position, coordinates, satellites, NMEA (Addons)  @gps @location  <https://doc.qt.io/qtforpython-6/PySide6/QtPositioning/index.html>
+from PySide6 import QtLocation      # maps services: geocoding, routing, places (Addons)  @maps @routing  <https://doc.qt.io/qtforpython-6/PySide6/QtLocation/index.html>
+from PySide6 import QtSensors       # accelerometer, gyroscope, compass, light, proximity... (Addons)  @sensors  <https://doc.qt.io/qtforpython-6/PySide6/QtSensors/index.html>
+
+## addons: architecture
+from PySide6 import QtRemoteObjects  # share QObjects between processes / machines (source and replica) (Addons)  @ipc @rpc  <https://doc.qt.io/qtforpython-6/PySide6/QtRemoteObjects/index.html>
+from PySide6 import QtStateMachine  # QStateMachine, QState, transitions (moved out of QtCore in Qt 6) (Addons)  @fsm  <https://doc.qt.io/qtforpython-6/PySide6/QtStateMachine/index.html>
+from PySide6 import QtScxml         # load and run SCXML state chart files (Addons)  @fsm @scxml  <https://doc.qt.io/qtforpython-6/PySide6/QtScxml/index.html>
+
+## checking what is installed
+PySide6.__all__                     # list the module names this PySide6 build has  @list
+python -c "import PySide6.QtCharts"  # check that an add-on module imports (pyside6-addons installed)  @check
+PySide6/PySide6_Essentials.json / PySide6_Addons.json  # list which Qt plugins each wheel ships  @plugins  <file:/src/notes-goblin/qt/.venv/lib/python3.12/site-packages/PySide6/PySide6_Essentials.json>

@@ -1,126 +1,283 @@
-title: qt model/view (pyside6)
+title: qt model/view: models, views, items, proxies, selection, delegates (pyside6)
 url:   https://doc.qt.io/qt-6/model-view-programming.html
-tags:  qt qt6 pyside pyside6 python model view table tree list qtableview qtreeview qabstractitemmodel proxy filter sort delegate
+tags:  qt pyside6 model view table tree list qtableview qtreeview qlistview qabstractitemmodel qabstracttablemodel qstandarditemmodel proxy filter sort delegate selection header roles
 
-; Python only (PySide6). Model = your data, view = the table/tree on screen, delegate = draws/edits one cell.
+; Model = your data, view = the table/tree/list on screen, delegate = draws and edits one cell.
 
 ## pick a class
-QListWidget / QTableWidget / QTreeWidget  # quick: widget holds the items itself; fine for small fixed data  @simple @convenience  <https://doc.qt.io/qt-6/model-view-programming.html#item-view-convenience-classes>
-QListView / QTableView / QTreeView  # view on a model; use for big or changing data, sorting, filtering  @view  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QTableView.html>
+QListWidget / QTableWidget / QTreeWidget  # quick: the widget stores the items; fine for small fixed data  @simple @convenience  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QTableWidget.html>
+QListView / QTableView / QTreeView  # view on a model: big or live data, sorting, filtering, several views on one model  @view  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QTableView.html>
 QStandardItemModel                  # ready-made model you fill with QStandardItem; no subclass needed  @easy @tree  <https://doc.qt.io/qtforpython-6/PySide6/QtGui/QStandardItemModel.html>
-QAbstractTableModel                 # subclass for your own table data (rows x columns)  @custom @table  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/QAbstractTableModel.html>
-QAbstractListModel                  # subclass for your own list data (one column)  @custom @list  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/QAbstractListModel.html>
-QAbstractItemModel                  # subclass for tree data; you must also write index() and parent()  @custom @tree  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/QAbstractItemModel.html>
 QStringListModel                    # model over a list of strings  @list  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/QStringListModel.html>
-doc.qt.io/qt-6/modelview.html       # read the model/view tutorial (step by step)  @tutorial  <https://doc.qt.io/qt-6/modelview.html>
+QAbstractTableModel                 # subclass for your own rows x columns data  @custom @table  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/QAbstractTableModel.html>
+QAbstractListModel                  # subclass for your own one-column list data  @custom @list  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/QAbstractListModel.html>
+QAbstractItemModel                  # subclass for tree data; you also write index() and parent()  @custom @tree  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/QAbstractItemModel.html>
+QRangeModel(PY_LIST)                # wrap a Python list (list of lists = table) as a model, no subclass (new in 6.10)  @list @easy  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/QRangeModel.html>
+QFileSystemModel                    # model of the file system (lazy, watched)  @files  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QFileSystemModel.html>
+QSqlQueryModel / QSqlTableModel     # models over SQL results (see sql sheet)  @database  <https://doc.qt.io/qtforpython-6/PySide6/QtSql/QSqlTableModel.html>
+doc.qt.io/qt-6/modelview.html       # read the step-by-step model/view tutorial  @tutorial  <https://doc.qt.io/qt-6/modelview.html>
 
-## convenience widgets
-table.setRowCount(N); table.setColumnCount(M)  # size a QTableWidget  @rows  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QTableWidget.html>
-table.setHorizontalHeaderLabels(["A", "B"])  # set column titles of a QTableWidget  @header
-table.setItem(ROW, COL, QTableWidgetItem("TEXT"))  # put text in a QTableWidget cell  @cell @set
-table.item(ROW, COL).text()         # read a QTableWidget cell  @cell @get
-item.setData(Qt.ItemDataRole.UserRole, VALUE)  # hide a value (e.g. an address) in an item  @data @hidden
-tree.setHeaderLabels(["Name", "Type"])  # set QTreeWidget column titles  @header  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QTreeWidget.html>
-parent.addChild(QTreeWidgetItem(["a", "b"]))  # add a child row under a tree item  @child @nest
-tree.addTopLevelItem(QTreeWidgetItem(["a"]))  # add a root row to a QTreeWidget  @root
-QListWidget().addItem("TEXT")       # add a row to a QListWidget  @list  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QListWidget.html>
-table.clearContents() / tree.clear()  # remove all items  @reset @empty
+## roles and flags
+Qt.ItemDataRole.DisplayRole         # the text shown in the cell  @text  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/Qt.html#PySide6.QtCore.Qt.ItemDataRole>
+Qt.ItemDataRole.EditRole            # the value given to the editor and set by it  @edit  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/Qt.html#PySide6.QtCore.Qt.ItemDataRole>
+Qt.ItemDataRole.DecorationRole      # an icon, QPixmap or QColor drawn left of the text  @icon  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/Qt.html#PySide6.QtCore.Qt.ItemDataRole>
+Qt.ItemDataRole.ToolTipRole / StatusTipRole / WhatsThisRole  # help texts for the cell  @tooltip  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/Qt.html#PySide6.QtCore.Qt.ItemDataRole>
+Qt.ItemDataRole.ForegroundRole / BackgroundRole  # text color / cell background (QColor or QBrush)  @color  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/Qt.html#PySide6.QtCore.Qt.ItemDataRole>
+Qt.ItemDataRole.FontRole            # a QFont for the cell (bold, italic)  @font  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/Qt.html#PySide6.QtCore.Qt.ItemDataRole>
+Qt.ItemDataRole.TextAlignmentRole   # alignment flags for the cell text (return int or Qt.AlignmentFlag)  @align  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/Qt.html#PySide6.QtCore.Qt.ItemDataRole>
+Qt.ItemDataRole.CheckStateRole      # Qt.CheckState for a check box in the cell  @checkbox  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/Qt.html#PySide6.QtCore.Qt.ItemDataRole>
+Qt.ItemDataRole.SizeHintRole        # a QSize for the cell  @size  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/Qt.html#PySide6.QtCore.Qt.ItemDataRole>
+Qt.ItemDataRole.UserRole            # first role number free for your own data (UserRole + 1, + 2...)  @custom @hidden  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/Qt.html#PySide6.QtCore.Qt.ItemDataRole>
+Qt.ItemFlag.ItemIsEnabled | Qt.ItemFlag.ItemIsSelectable  # default flags of a normal cell  @flags  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/Qt.html#PySide6.QtCore.Qt.ItemFlag>
+Qt.ItemFlag.ItemIsEditable          # allow editing the cell  @edit  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/Qt.html#PySide6.QtCore.Qt.ItemFlag>
+Qt.ItemFlag.ItemIsUserCheckable     # show a check box the user can click  @checkbox  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/Qt.html#PySide6.QtCore.Qt.ItemFlag>
+Qt.ItemFlag.ItemIsDragEnabled / ItemIsDropEnabled  # allow dragging the item / dropping onto it  @dnd  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/Qt.html#PySide6.QtCore.Qt.ItemFlag>
+Qt.ItemFlag.ItemNeverHasChildren    # promise no children (faster trees)  @tree  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/Qt.html#PySide6.QtCore.Qt.ItemFlag>
 
-## QStandardItemModel
-model = QStandardItemModel(0, 2)    # empty model with 2 columns  @create  <https://doc.qt.io/qtforpython-6/PySide6/QtGui/QStandardItemModel.html>
-model.setHorizontalHeaderLabels(["Addr", "Name"])  # set column titles  @header
-model.appendRow([QStandardItem(a), QStandardItem(b)])  # add a row  @add @row  <https://doc.qt.io/qtforpython-6/PySide6/QtGui/QStandardItemModel.html#PySide6.QtGui.QStandardItemModel.appendRow>
-parent_item.appendRow([...])        # add a child row to make a tree  @child @tree
-model.itemFromIndex(INDEX)          # get the QStandardItem behind an index  @lookup
-item.setEditable(False)             # make an item read-only  @readonly
-model.removeRows(0, model.rowCount())  # delete all rows  @clear
-
-## custom model (subclass)
-rowCount / columnCount / data       # the minimum a read-only table model must implement  @required @override  <https://doc.qt.io/qt-6/model-view-programming.html#read-only-access>
-    class FuncModel(QAbstractTableModel):
-        def __init__(self, rows, parent=None):
-            super().__init__(parent); self.rows = rows
+## custom table model (QAbstractTableModel)
+class TableModel(QAbstractTableModel):  # subclass, then write rowCount, columnCount, data (+ headerData, flags, setData)  @custom @table  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/QAbstractTableModel.html>
+    class TableModel(QAbstractTableModel):
+        def __init__(self, rows, headers):
+            super().__init__()
+            self._rows, self._headers = rows, headers
         def rowCount(self, parent=QModelIndex()):
-            return 0 if parent.isValid() else len(self.rows)
+            return 0 if parent.isValid() else len(self._rows)
         def columnCount(self, parent=QModelIndex()):
-            return 2
+            return 0 if parent.isValid() else len(self._headers)
         def data(self, index, role=Qt.ItemDataRole.DisplayRole):
-            if role == Qt.ItemDataRole.DisplayRole:
-                f = self.rows[index.row()]
-                return hex(f.start) if index.column() == 0 else f.name
+            if role in (Qt.ItemDataRole.DisplayRole, Qt.ItemDataRole.EditRole):
+                return self._rows[index.row()][index.column()]
             return None
         def headerData(self, section, orientation, role=Qt.ItemDataRole.DisplayRole):
             if role == Qt.ItemDataRole.DisplayRole and orientation == Qt.Orientation.Horizontal:
-                return ["Address", "Name"][section]
+                return self._headers[section]
             return None
-return None from data()             # means "no value for this role"; do this for every role you ignore  @invalid @qvariant
-headerData(section, orientation, role)  # give column and row titles  @header
-flags(index)                        # return item flags; add Qt.ItemFlag.ItemIsEditable to allow editing  @editable  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/QAbstractItemModel.html#PySide6.QtCore.QAbstractItemModel.flags>
-setData(index, value, role)         # save an edit; emit self.dataChanged.emit(index, index, [role]) and return True  @edit @write  <https://doc.qt.io/qt-6/model-view-programming.html#editable-items>
-self.beginResetModel(); self.rows = NEW; self.endResetModel()  # replace all data and refresh every view  @reload @refresh @update  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/QAbstractItemModel.html#PySide6.QtCore.QAbstractItemModel.beginResetModel>
-self.beginInsertRows(QModelIndex(), FIRST, LAST)  # call before adding rows, then endInsertRows()  @add @append  <https://doc.qt.io/qt-6/model-view-programming.html#resizable-models>
-self.beginRemoveRows(QModelIndex(), FIRST, LAST)  # call before removing rows, then endRemoveRows()  @delete
-self.dataChanged.emit(TOPLEFT, BOTTOMRIGHT)  # tell views some cells changed value  @refresh @update
-self.layoutAboutToBeChanged.emit() / self.layoutChanged.emit()  # wrap a big reorder of rows  @sort @reorder
-index(row, col, parent) / parent(index)  # tree models must implement these with self.createIndex(row, col, PTR)  @tree @hierarchy  <https://doc.qt.io/qt-6/model-view-programming.html#parents-and-children>
-canFetchMore / fetchMore            # load rows lazily as the user scrolls or expands  @lazy @big @performance  <https://doc.qt.io/qt-6/model-view-programming.html#performance-optimization-for-large-amounts-of-data>
-hasChildren(parent)                 # cheap check so a tree shows the expand arrow without counting children  @lazy @tree
+        def flags(self, index):
+            return super().flags(index) | Qt.ItemFlag.ItemIsEditable
+        def setData(self, index, value, role=Qt.ItemDataRole.EditRole):
+            if role != Qt.ItemDataRole.EditRole: return False
+            self._rows[index.row()][index.column()] = value
+            self.dataChanged.emit(index, index, [role])
+            return True
+def rowCount(self, parent=QModelIndex())  # return the number of rows (0 for a valid parent in flat models)  @rows  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/QAbstractItemModel.html#PySide6.QtCore.QAbstractItemModel.rowCount>
+def columnCount(self, parent=QModelIndex())  # return the number of columns  @columns  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/QAbstractItemModel.html#PySide6.QtCore.QAbstractItemModel.columnCount>
+def data(self, index, role)         # return the value for one cell and role; None when you have nothing  @data  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/QAbstractItemModel.html#PySide6.QtCore.QAbstractItemModel.data>
+def headerData(self, section, orientation, role)  # return column / row titles  @header  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/QAbstractItemModel.html#PySide6.QtCore.QAbstractItemModel.headerData>
+def flags(self, index)              # return what the user may do with a cell  @flags  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/QAbstractItemModel.html#PySide6.QtCore.QAbstractItemModel.flags>
+def setData(self, index, value, role)  # store an edit; emit dataChanged and return True  @edit  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/QAbstractItemModel.html#PySide6.QtCore.QAbstractItemModel.setData>
+def roleNames(self)                 # map role ints to names (needed for QML: {UserRole + 1: b"name"})  @qml  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/QAbstractItemModel.html#PySide6.QtCore.QAbstractItemModel.roleNames>
+def sort(self, column, order)       # sort the data yourself (or use a QSortFilterProxyModel)  @sort  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/QAbstractItemModel.html#PySide6.QtCore.QAbstractItemModel.sort>
+def canFetchMore(self, parent) / def fetchMore(self, parent)  # load rows lazily while the user scrolls  @lazy @paging  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/QAbstractItemModel.html#PySide6.QtCore.QAbstractItemModel.fetchMore>
+self.dataChanged.emit(TOP_LEFT, BOTTOM_RIGHT, [ROLES])  # tell views that existing cells changed  @update @refresh  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/QAbstractItemModel.html#PySide6.QtCore.QAbstractItemModel.dataChanged>
+self.headerDataChanged.emit(Qt.Orientation.Horizontal, FIRST, LAST)  # tell views that headers changed  @header  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/QAbstractItemModel.html#PySide6.QtCore.QAbstractItemModel.headerDataChanged>
 
-## roles (what data() is asked for)
-Qt.ItemDataRole.DisplayRole         # text shown in the cell  @text  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/Qt.html#PySide6.QtCore.Qt.ItemDataRole>
-Qt.ItemDataRole.EditRole            # value put in the editor when the user edits  @edit
-Qt.ItemDataRole.ToolTipRole         # hover text for the cell  @tooltip
-Qt.ItemDataRole.ForegroundRole      # text color: return a QColor or QBrush  @color
-Qt.ItemDataRole.BackgroundRole      # cell background color  @color @highlight
-Qt.ItemDataRole.FontRole            # cell font: return a QFont (e.g. monospace for addresses)  @font
-Qt.ItemDataRole.TextAlignmentRole   # cell alignment: return Qt.AlignmentFlag.AlignRight  @align
-Qt.ItemDataRole.DecorationRole      # icon or color square before the text  @icon
-Qt.ItemDataRole.UserRole + N        # your own roles, e.g. raw address for sorting or navigation  @custom @hidden
+## change the rows of a custom model
+self.beginInsertRows(QModelIndex(), FIRST, LAST); ...; self.endInsertRows()  # wrap adding rows FIRST..LAST  @insert @append @add  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/QAbstractItemModel.html#PySide6.QtCore.QAbstractItemModel.beginInsertRows>
+    def append(self, row):
+        n = len(self._rows)
+        self.beginInsertRows(QModelIndex(), n, n)
+        self._rows.append(row)
+        self.endInsertRows()
+self.beginRemoveRows(QModelIndex(), FIRST, LAST); ...; self.endRemoveRows()  # wrap deleting rows  @remove @delete  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/QAbstractItemModel.html#PySide6.QtCore.QAbstractItemModel.beginRemoveRows>
+self.beginInsertColumns(...) / beginRemoveColumns(...)  # wrap adding / deleting columns  @columns  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/QAbstractItemModel.html#PySide6.QtCore.QAbstractItemModel.beginInsertColumns>
+self.beginMoveRows(SRC_PARENT, FIRST, LAST, DST_PARENT, DST_ROW); ...; self.endMoveRows()  # wrap moving rows  @move  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/QAbstractItemModel.html#PySide6.QtCore.QAbstractItemModel.beginMoveRows>
+self.beginResetModel(); ...; self.endResetModel()  # wrap replacing all data (views reload everything)  @reset @reload  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/QAbstractItemModel.html#PySide6.QtCore.QAbstractItemModel.beginResetModel>
+self.layoutAboutToBeChanged.emit(); ...; self.layoutChanged.emit()  # wrap re-sorting rows in place  @sort @layout  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/QAbstractItemModel.html#PySide6.QtCore.QAbstractItemModel.layoutChanged>
+def insertRows(self, row, count, parent) / def removeRows(self, row, count, parent)  # override so views and proxies can add / delete rows  @edit  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/QAbstractItemModel.html#PySide6.QtCore.QAbstractItemModel.removeRows>
+model.insertRow(ROW) / model.removeRow(ROW)  # add / delete one row through the model API  @edit  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/QAbstractItemModel.html#PySide6.QtCore.QAbstractItemModel.removeRow>
 
-## view settings
-view.setModel(model)                # connect a view to a model  @attach  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QAbstractItemView.html>
-view.setSortingEnabled(True)        # sort by clicking column headers (needs a proxy or sort() in the model)  @sort  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QTableView.html#PySide6.QtWidgets.QTableView.setSortingEnabled>
-view.setSelectionBehavior(QAbstractItemView.SelectionBehavior.SelectRows)  # click selects the whole row  @row  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QAbstractItemView.html>
-view.setSelectionMode(QAbstractItemView.SelectionMode.SingleSelection)  # allow only one selected item  @single
-view.setSelectionMode(QAbstractItemView.SelectionMode.ExtendedSelection)  # allow Ctrl/Shift multi-select  @multi
-view.setEditTriggers(QAbstractItemView.EditTrigger.NoEditTriggers)  # make a view read-only  @readonly @noedit
-view.setAlternatingRowColors(True)  # stripe the rows  @zebra
-view.horizontalHeader().setStretchLastSection(True)  # last column fills the remaining width  @width  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QHeaderView.html>
-view.horizontalHeader().setSectionResizeMode(QHeaderView.ResizeMode.ResizeToContents)  # fit columns to content (slow on big data)  @autosize
-view.verticalHeader().setVisible(False)  # hide row numbers in a QTableView  @rownumbers
-view.resizeColumnsToContents()      # fit columns once, now  @width
-tree.setRootIsDecorated(False)      # hide expand arrows in a flat QTreeView  @arrows  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QTreeView.html>
-tree.setUniformRowHeights(True)     # speed up big QTreeViews where all rows are one line  @performance @fast
-tree.expandAll() / tree.expand(INDEX)  # open tree branches  @expand
-view.scrollTo(INDEX)                # scroll so an item is visible  @scroll @jump
-view.setCurrentIndex(INDEX)         # move the cursor to an item  @select
+## tree model (QAbstractItemModel)
+def index(self, row, column, parent)  # return self.createIndex(row, column, child_obj) for a child of parent  @tree  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/QAbstractItemModel.html#PySide6.QtCore.QAbstractItemModel.index>
+def parent(self, index)             # return the index of the parent item, or QModelIndex() for top-level items  @tree  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/QAbstractItemModel.html#PySide6.QtCore.QAbstractItemModel.parent>
+self.createIndex(ROW, COL, OBJ)     # make an index that carries a Python object; keep OBJ alive yourself  @tree @pointer  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/QAbstractItemModel.html#PySide6.QtCore.QAbstractItemModel.createIndex>
+index.internalPointer()             # get the Python object stored with createIndex  @tree  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/QModelIndex.html#PySide6.QtCore.QModelIndex.internalPointer>
+QAbstractItemModelTester(model)     # check a model for broken rules while you develop it (QtTest)  @debug @test  <https://doc.qt.io/qtforpython-6/PySide6/QtTest/QAbstractItemModelTester.html>
 
-## selection and clicks
-view.selectionModel().selectedRows()  # list selected rows as indexes (column 0)  @selected  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/QItemSelectionModel.html#PySide6.QtCore.QItemSelectionModel.selectedRows>
-view.currentIndex()                 # index of the item with the cursor  @current
-view.doubleClicked.connect(FN)      # FN(index) on double-click, e.g. navigate to an address  @open @jump
-index.row() / index.column() / index.isValid()  # read where an index points  @position  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/QModelIndex.html>
-index.data(ROLE)                    # read data of an index for a role  @value
-model.index(ROW, COL)               # make an index for a cell  @create
-view.selectionModel().selectionChanged.connect(FN)  # react to selection changes; set the model first  @select
-setModel replaces the selection model  # connect selectionModel() signals after every setModel()  @gotcha
+## QModelIndex
+index = model.index(ROW, COL)       # get the index of a cell (parent= for trees)  @cell  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/QAbstractItemModel.html#PySide6.QtCore.QAbstractItemModel.index>
+index.row() / index.column() / index.parent()  # get its position  @position  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/QModelIndex.html#PySide6.QtCore.QModelIndex.row>
+index.data() / index.data(Qt.ItemDataRole.UserRole)  # read the value of the cell  @value  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/QModelIndex.html#PySide6.QtCore.QModelIndex.data>
+index.isValid()                     # check the index points at a cell (QModelIndex() = the invisible root)  @valid  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/QModelIndex.html#PySide6.QtCore.QModelIndex.isValid>
+index.sibling(ROW, COL) / index.siblingAtColumn(COL)  # get another cell in the same parent  @neighbor  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/QModelIndex.html#PySide6.QtCore.QModelIndex.siblingAtColumn>
+index.model()                       # get the model of the index  @model  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/QModelIndex.html#PySide6.QtCore.QModelIndex.model>
+QPersistentModelIndex(index)        # keep an index that stays right while rows are inserted or removed  @persistent @store  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/QPersistentModelIndex.html>
+model.match(START, ROLE, VALUE, HITS, Qt.MatchFlag.MatchContains)  # find indexes whose data matches  @search @find  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/QAbstractItemModel.html#PySide6.QtCore.QAbstractItemModel.match>
+model.hasChildren(index) / model.hasIndex(ROW, COL)  # check for children / a valid position  @check  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/QAbstractItemModel.html#PySide6.QtCore.QAbstractItemModel.hasChildren>
 
-## proxy: sort and filter
-proxy.setSourceModel(model); view.setModel(proxy)  # put a QSortFilterProxyModel between model and view to sort/filter  @search @filter @sort  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/QSortFilterProxyModel.html>
-proxy.setFilterFixedString(TEXT)    # show only rows containing TEXT  @search @find
-proxy.setFilterRegularExpression(RE)  # show only rows matching a regex  @regex
-proxy.setFilterCaseSensitivity(Qt.CaseSensitivity.CaseInsensitive)  # ignore case when filtering  @case
-proxy.setFilterKeyColumn(-1)        # filter on all columns (default is column 0)  @column
-proxy.setRecursiveFilteringEnabled(True)  # in a tree, keep parents of matching children  @tree
-proxy.setSortRole(Qt.ItemDataRole.UserRole)  # sort by a hidden value (e.g. int address) not the display text  @numeric
-edit.textChanged.connect(proxy.setFilterFixedString)  # live search box  @search @filter
-proxy.mapToSource(INDEX)            # turn a view index back into your model's index before using it  @gotcha @wrongrow  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/QSortFilterProxyModel.html#PySide6.QtCore.QSortFilterProxyModel.mapToSource>
-def filterAcceptsRow(self, row, parent)  # subclass the proxy for custom filter rules; return True to keep  @custom  <https://doc.qt.io/qt-6/model-view-programming.html#custom-filtering-models>
-def lessThan(self, left, right)     # subclass the proxy for custom sort order  @custom
-self.beginFilterChange() / self.endFilterChange()  # re-run a custom filter after its rules change  @refresh @invalidateFilter  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/QSortFilterProxyModel.html>
+## QStandardItemModel / QStandardItem
+model = QStandardItemModel(0, 3)    # make an empty model with 3 columns  @create  <https://doc.qt.io/qtforpython-6/PySide6/QtGui/QStandardItemModel.html>
+model.setHorizontalHeaderLabels(["Name", "Size", "Type"])  # set the column titles  @header  <https://doc.qt.io/qtforpython-6/PySide6/QtGui/QStandardItemModel.html#PySide6.QtGui.QStandardItemModel.setHorizontalHeaderLabels>
+model.appendRow([QStandardItem("a"), QStandardItem("1")])  # add a row of cells  @add @row  <https://doc.qt.io/qtforpython-6/PySide6/QtGui/QStandardItemModel.html#PySide6.QtGui.QStandardItemModel.appendRow>
+item = QStandardItem("TEXT"); item.appendRow(QStandardItem("child"))  # make a tree by appending children to items  @tree @child  <https://doc.qt.io/qtforpython-6/PySide6/QtGui/QStandardItem.html#PySide6.QtGui.QStandardItem.appendRow>
+model.invisibleRootItem()           # get the root item (append top-level rows to it)  @root  <https://doc.qt.io/qtforpython-6/PySide6/QtGui/QStandardItemModel.html#PySide6.QtGui.QStandardItemModel.invisibleRootItem>
+model.item(ROW, COL) / model.setItem(ROW, COL, ITEM)  # get / set a top-level cell  @cell  <https://doc.qt.io/qtforpython-6/PySide6/QtGui/QStandardItemModel.html#PySide6.QtGui.QStandardItemModel.item>
+model.itemFromIndex(INDEX) / model.indexFromItem(ITEM)  # convert between items and indexes  @convert  <https://doc.qt.io/qtforpython-6/PySide6/QtGui/QStandardItemModel.html#PySide6.QtGui.QStandardItemModel.itemFromIndex>
+model.removeRow(ROW) / model.takeRow(ROW) / model.clear()  # delete a row / take it out / delete everything  @remove  <https://doc.qt.io/qtforpython-6/PySide6/QtGui/QStandardItemModel.html#PySide6.QtGui.QStandardItemModel.takeRow>
+model.setRowCount(0)                # delete all rows but keep the headers  @clear  <https://doc.qt.io/qtforpython-6/PySide6/QtGui/QStandardItemModel.html#PySide6.QtGui.QStandardItemModel.setRowCount>
+model.findItems("a", Qt.MatchFlag.MatchContains, COL)  # find items by text  @search  <https://doc.qt.io/qtforpython-6/PySide6/QtGui/QStandardItemModel.html#PySide6.QtGui.QStandardItemModel.findItems>
+model.itemChanged.connect(FN)       # run FN(item) after an item was edited or checked  @signal @edit  <https://doc.qt.io/qtforpython-6/PySide6/QtGui/QStandardItemModel.html#PySide6.QtGui.QStandardItemModel.itemChanged>
+model.setSortRole(ROLE)             # sort by another role (e.g. UserRole holding numbers)  @sort  <https://doc.qt.io/qtforpython-6/PySide6/QtGui/QStandardItemModel.html#PySide6.QtGui.QStandardItemModel.setSortRole>
+item.setData(VALUE, Qt.ItemDataRole.UserRole)  # hide a value in an item (note: value first, role second)  @data @hidden  <https://doc.qt.io/qtforpython-6/PySide6/QtGui/QStandardItem.html#PySide6.QtGui.QStandardItem.setData>
+item.setEditable(False) / item.setSelectable(False) / item.setEnabled(False)  # lock an item  @readonly  <https://doc.qt.io/qtforpython-6/PySide6/QtGui/QStandardItem.html#PySide6.QtGui.QStandardItem.setEditable>
+item.setCheckable(True); item.setCheckState(Qt.CheckState.Checked)  # add a check box to an item  @checkbox  <https://doc.qt.io/qtforpython-6/PySide6/QtGui/QStandardItem.html#PySide6.QtGui.QStandardItem.setCheckable>
+item.setIcon(ICON) / item.setForeground(QColor("red")) / item.setFont(F) / item.setToolTip(T)  # style an item  @style  <https://doc.qt.io/qtforpython-6/PySide6/QtGui/QStandardItem.html#PySide6.QtGui.QStandardItem.setForeground>
+item.child(ROW, COL) / item.rowCount() / item.parent()  # walk a tree of items  @tree  <https://doc.qt.io/qtforpython-6/PySide6/QtGui/QStandardItem.html#PySide6.QtGui.QStandardItem.child>
 
-## delegates
-QStyledItemDelegate                 # subclass to draw or edit one cell your own way  @custom @paint @editor  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QStyledItemDelegate.html>
-view.setItemDelegateForColumn(COL, DELEGATE)  # use a delegate for one column only  @column
-paint(self, painter, option, index)  # override to draw a cell  @draw
-createEditor / setEditorData / setModelData  # override to use your own editor widget in a cell  @edit
+## convenience widgets (QListWidget, QTableWidget, QTreeWidget)
+lw = QListWidget(); lw.addItems(["a", "b"])  # make a list and fill it  @list  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QListWidget.html>
+lw.addItem(QListWidgetItem(QIcon("i.png"), "TEXT"))  # add an item with an icon  @icon  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QListWidget.html#PySide6.QtWidgets.QListWidget.addItem>
+lw.currentItem().text() / lw.currentRow()  # get the selected item / row  @selected  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QListWidget.html#PySide6.QtWidgets.QListWidget.currentItem>
+lw.selectedItems()                  # list the selected items  @selected  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QListWidget.html#PySide6.QtWidgets.QListWidget.selectedItems>
+lw.takeItem(ROW)                    # remove an item and return it  @remove  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QListWidget.html#PySide6.QtWidgets.QListWidget.takeItem>
+lw.itemClicked / itemDoubleClicked / itemChanged / currentRowChanged / itemSelectionChanged  # list signals  @signal  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QListWidget.html#PySide6.QtWidgets.QListWidget.itemDoubleClicked>
+lw.findItems("a", Qt.MatchFlag.MatchContains)  # find items by text  @search  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QListWidget.html#PySide6.QtWidgets.QListWidget.findItems>
+lw.setSelectionMode(QAbstractItemView.SelectionMode.ExtendedSelection)  # allow Ctrl/Shift multi-select  @multi  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QAbstractItemView.html#PySide6.QtWidgets.QAbstractItemView.setSelectionMode>
+lw.setDragDropMode(QAbstractItemView.DragDropMode.InternalMove)  # let the user reorder by dragging  @reorder @dnd  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QAbstractItemView.html#PySide6.QtWidgets.QAbstractItemView.setDragDropMode>
+lw.setViewMode(QListView.ViewMode.IconMode)  # show a grid of icons  @icons @grid  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QListView.html#PySide6.QtWidgets.QListView.setViewMode>
+lw.setItemWidget(ITEM, WIDGET)      # show any widget in a list row  @custom @widget  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QListWidget.html#PySide6.QtWidgets.QListWidget.setItemWidget>
+lw.sortItems(Qt.SortOrder.AscendingOrder)  # sort the list  @sort  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QListWidget.html#PySide6.QtWidgets.QListWidget.sortItems>
+item.setFlags(item.flags() | Qt.ItemFlag.ItemIsEditable)  # make an item editable  @edit  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QListWidgetItem.html#PySide6.QtWidgets.QListWidgetItem.setFlags>
+item.setData(Qt.ItemDataRole.UserRole, VALUE)  # hide a value in a widget item (note: role first, value second)  @data @hidden  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QListWidgetItem.html#PySide6.QtWidgets.QListWidgetItem.setData>
+tw = QTableWidget(ROWS, COLS)       # make a table with a size  @table  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QTableWidget.html>
+tw.setHorizontalHeaderLabels(["A", "B"])  # set column titles  @header  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QTableWidget.html#PySide6.QtWidgets.QTableWidget.setHorizontalHeaderLabels>
+tw.setItem(ROW, COL, QTableWidgetItem("TEXT"))  # put text in a cell  @cell @set  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QTableWidget.html#PySide6.QtWidgets.QTableWidget.setItem>
+tw.item(ROW, COL).text()            # read a cell (item() is None for empty cells)  @cell @get  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QTableWidget.html#PySide6.QtWidgets.QTableWidget.item>
+tw.setRowCount(N) / tw.insertRow(ROW) / tw.removeRow(ROW)  # resize / add / delete rows  @rows  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QTableWidget.html#PySide6.QtWidgets.QTableWidget.insertRow>
+tw.setColumnCount(M) / tw.insertColumn(COL) / tw.removeColumn(COL)  # resize / add / delete columns  @columns  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QTableWidget.html#PySide6.QtWidgets.QTableWidget.setColumnCount>
+tree.setColumnCount(N)              # set how many columns a QTreeWidget has  @columns  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QTreeWidget.html#PySide6.QtWidgets.QTreeWidget.setColumnCount>
+tw.setCellWidget(ROW, COL, QPushButton("x"))  # put a widget in a cell  @widget  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QTableWidget.html#PySide6.QtWidgets.QTableWidget.setCellWidget>
+tw.cellChanged.connect(FN) / tw.cellClicked.connect(FN)  # run FN(row, col) on edit / click  @signal  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QTableWidget.html#PySide6.QtWidgets.QTableWidget.cellChanged>
+tw.clearContents()                  # empty all cells, keep the headers  @clear  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QTableWidget.html#PySide6.QtWidgets.QTableWidget.clearContents>
+tw.setSortingEnabled(True)          # let header clicks sort (turn off while filling, then on)  @sort  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QTableWidget.html#PySide6.QtWidgets.QTableWidget.setSortingEnabled>
+tw.selectedRanges()                 # get the selected blocks  @selected  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QTableWidget.html#PySide6.QtWidgets.QTableWidget.selectedRanges>
+tree = QTreeWidget(); tree.setHeaderLabels(["Name", "Type"])  # make a tree with column titles  @tree  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QTreeWidget.html#PySide6.QtWidgets.QTreeWidget.setHeaderLabels>
+root = QTreeWidgetItem(tree, ["a", "dir"]); QTreeWidgetItem(root, ["b", "file"])  # add a top item and a child (the parent arg adds it)  @child @nest  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QTreeWidgetItem.html>
+tree.addTopLevelItem(ITEM) / item.addChild(CHILD)  # add items explicitly  @add  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QTreeWidget.html#PySide6.QtWidgets.QTreeWidget.addTopLevelItem>
+tree.topLevelItem(I) / item.child(I) / item.childCount() / item.parent()  # walk the tree  @walk  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QTreeWidgetItem.html#PySide6.QtWidgets.QTreeWidgetItem.child>
+item.setExpanded(True) / tree.expandAll() / tree.collapseAll()  # open and close branches  @expand  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QTreeWidgetItem.html#PySide6.QtWidgets.QTreeWidgetItem.setExpanded>
+item.setChildIndicatorPolicy(QTreeWidgetItem.ChildIndicatorPolicy.ShowIndicator)  # show an arrow before children are loaded (lazy)  @lazy  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QTreeWidgetItem.html#PySide6.QtWidgets.QTreeWidgetItem.setChildIndicatorPolicy>
+tree.itemExpanded.connect(FN)       # load children when a branch opens  @lazy @signal  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QTreeWidget.html#PySide6.QtWidgets.QTreeWidget.itemExpanded>
+tree.itemClicked.connect(lambda item, col: ...)  # react to clicks  @signal  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QTreeWidget.html#PySide6.QtWidgets.QTreeWidget.itemClicked>
+it = QTreeWidgetItemIterator(tree); while it.value(): ...; it += 1  # visit every item  @iterate  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QTreeWidgetItemIterator.html>
+item.text(COL) / item.setText(COL, T) / item.setIcon(COL, ICON)  # read / change a column of a tree item  @text  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QTreeWidgetItem.html#PySide6.QtWidgets.QTreeWidgetItem.setText>
+
+## views (QTableView, QTreeView, QListView)
+view.setModel(model)                # show a model; one model can feed many views  @connect  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QAbstractItemView.html#PySide6.QtWidgets.QAbstractItemView.setModel>
+self.model = MyModel(); view.setModel(self.model)  # keep a reference to the model (or give it a parent)  @gc @empty
+view.setSelectionBehavior(QAbstractItemView.SelectionBehavior.SelectRows)  # select whole rows  @rows  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QAbstractItemView.html#PySide6.QtWidgets.QAbstractItemView.setSelectionBehavior>
+view.setSelectionMode(QAbstractItemView.SelectionMode.SingleSelection)  # one item at a time (NoSelection, MultiSelection, ExtendedSelection, ContiguousSelection)  @select  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QAbstractItemView.html#PySide6.QtWidgets.QAbstractItemView.setSelectionMode>
+view.setEditTriggers(QAbstractItemView.EditTrigger.NoEditTriggers)  # make the view read only (or DoubleClicked, EditKeyPressed, AnyKeyPressed)  @readonly  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QAbstractItemView.html#PySide6.QtWidgets.QAbstractItemView.setEditTriggers>
+view.setAlternatingRowColors(True)  # zebra stripes  @stripes  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QAbstractItemView.html#PySide6.QtWidgets.QAbstractItemView.setAlternatingRowColors>
+view.clicked / doubleClicked / activated / pressed / entered  # view signals that pass the QModelIndex  @signal  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QAbstractItemView.html#PySide6.QtWidgets.QAbstractItemView.doubleClicked>
+view.currentIndex() / view.setCurrentIndex(IDX)  # get / set the current cell  @current  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QAbstractItemView.html#PySide6.QtWidgets.QAbstractItemView.currentIndex>
+view.selectionModel().selectedRows()  # get the selected rows (column 0 indexes)  @selected  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/QItemSelectionModel.html#PySide6.QtCore.QItemSelectionModel.selectedRows>
+view.selectionModel().selectedIndexes()  # get every selected cell  @selected  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/QItemSelectionModel.html#PySide6.QtCore.QItemSelectionModel.selectedIndexes>
+view.selectionModel().selectionChanged.connect(FN)  # react to selection changes; set the model first  @signal  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/QItemSelectionModel.html#PySide6.QtCore.QItemSelectionModel.selectionChanged>
+view.selectionModel().currentChanged.connect(FN)  # react when the current cell moves: FN(current, previous)  @signal  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/QItemSelectionModel.html#PySide6.QtCore.QItemSelectionModel.currentChanged>
+view.selectionModel().select(IDX, QItemSelectionModel.SelectionFlag.ClearAndSelect | QItemSelectionModel.SelectionFlag.Rows)  # select from code  @select  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/QItemSelectionModel.html#PySide6.QtCore.QItemSelectionModel.select>
+view.scrollTo(IDX, QAbstractItemView.ScrollHint.PositionAtCenter)  # scroll a cell into view  @scroll  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QAbstractItemView.html#PySide6.QtWidgets.QAbstractItemView.scrollTo>
+view.scrollToBottom()               # scroll to the end (logs)  @scroll @tail  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QAbstractItemView.html#PySide6.QtWidgets.QAbstractItemView.scrollToBottom>
+view.edit(IDX)                      # open the editor of a cell from code  @edit  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QAbstractItemView.html#PySide6.QtWidgets.QAbstractItemView.edit>
+view.openPersistentEditor(IDX)      # keep an editor open in a cell  @editor  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QAbstractItemView.html#PySide6.QtWidgets.QAbstractItemView.openPersistentEditor>
+view.setIndexWidget(IDX, WIDGET)    # show a static widget in a cell (few cells only; use a delegate for many)  @widget  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QAbstractItemView.html#PySide6.QtWidgets.QAbstractItemView.setIndexWidget>
+view.indexAt(POS)                   # get the cell under a point (for context menus)  @hit-test  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QAbstractItemView.html#PySide6.QtWidgets.QAbstractItemView.indexAt>
+view.setRootIndex(IDX)              # show only the children of IDX  @root @folder  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QAbstractItemView.html#PySide6.QtWidgets.QAbstractItemView.setRootIndex>
+view.setIconSize(QSize(32, 32)) / view.setWordWrap(True) / view.setTextElideMode(Qt.TextElideMode.ElideMiddle)  # icon size, wrapping, ... for long text  @look  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QAbstractItemView.html#PySide6.QtWidgets.QAbstractItemView.setTextElideMode>
+view.setVerticalScrollMode(QAbstractItemView.ScrollMode.ScrollPerPixel)  # scroll smoothly instead of item by item  @smooth  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QAbstractItemView.html#PySide6.QtWidgets.QAbstractItemView.setVerticalScrollMode>
+view.setDragEnabled(True); view.setAcceptDrops(True); view.setDropIndicatorShown(True)  # turn on drag and drop  @dnd  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QAbstractItemView.html#PySide6.QtWidgets.QAbstractItemView.setDragEnabled>
+view.setSortingEnabled(True)        # sort by clicking headers (model must implement sort, or use a proxy)  @sort  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QTableView.html#PySide6.QtWidgets.QTableView.setSortingEnabled>
+view.sortByColumn(COL, Qt.SortOrder.AscendingOrder)  # sort from code  @sort  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QTableView.html#PySide6.QtWidgets.QTableView.sortByColumn>
+table.resizeColumnsToContents() / table.resizeRowsToContents()  # fit columns / rows to their contents once  @fit  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QTableView.html#PySide6.QtWidgets.QTableView.resizeColumnsToContents>
+table.setColumnWidth(COL, PX) / table.setRowHeight(ROW, PX)  # set one size  @size  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QTableView.html#PySide6.QtWidgets.QTableView.setColumnWidth>
+table.hideColumn(COL) / table.setColumnHidden(COL, True) / table.hideRow(ROW)  # hide columns or rows  @hide  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QTableView.html#PySide6.QtWidgets.QTableView.hideColumn>
+table.setSpan(ROW, COL, ROWS, COLS)  # merge cells  @merge @span  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QTableView.html#PySide6.QtWidgets.QTableView.setSpan>
+table.setShowGrid(False) / table.setGridStyle(Qt.PenStyle.DotLine)  # hide / style the grid  @grid  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QTableView.html#PySide6.QtWidgets.QTableView.setShowGrid>
+table.selectRow(ROW)                # select a whole row  @select  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QTableView.html#PySide6.QtWidgets.QTableView.selectRow>
+tree.expand(IDX) / tree.expandAll() / tree.expandToDepth(N) / tree.collapseAll()  # open / close branches  @expand  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QTreeView.html#PySide6.QtWidgets.QTreeView.expandToDepth>
+tree.expanded.connect(FN) / tree.collapsed.connect(FN)  # react to branches opening / closing  @signal  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QTreeView.html#PySide6.QtWidgets.QTreeView.expanded>
+tree.setRootIsDecorated(False)      # hide the arrows of top-level items (flat list look)  @flat  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QTreeView.html#PySide6.QtWidgets.QTreeView.setRootIsDecorated>
+tree.setUniformRowHeights(True)     # tell the tree all rows have the same height (much faster)  @performance  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QTreeView.html#PySide6.QtWidgets.QTreeView.setUniformRowHeights>
+tree.setHeaderHidden(True) / tree.setIndentation(PX) / tree.setAnimated(True)  # tree look options  @look  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QTreeView.html#PySide6.QtWidgets.QTreeView.setHeaderHidden>
+tree.setFirstColumnSpanned(ROW, PARENT, True)  # let one row's first column span the whole width  @span  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QTreeView.html#PySide6.QtWidgets.QTreeView.setFirstColumnSpanned>
+lv.setViewMode(QListView.ViewMode.IconMode); lv.setGridSize(QSize(96, 96))  # show a model as an icon grid  @icons  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QListView.html#PySide6.QtWidgets.QListView.setViewMode>
+lv.setUniformItemSizes(True)        # speed up big lists  @performance  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QListView.html#PySide6.QtWidgets.QListView.setUniformItemSizes>
+lv.setModelColumn(COL)              # show another column of the model  @column  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QListView.html#PySide6.QtWidgets.QListView.setModelColumn>
+QColumnView()                       # Finder-like column browser for tree models  @browser @miller  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QColumnView.html>
+
+## QHeaderView
+h = table.horizontalHeader()        # get the column header (verticalHeader for rows, tree.header())  @header  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QTableView.html#PySide6.QtWidgets.QTableView.horizontalHeader>
+h.setSectionResizeMode(QHeaderView.ResizeMode.Stretch)  # make all columns fill the width (Interactive, Fixed, ResizeToContents)  @stretch @fit  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QHeaderView.html#PySide6.QtWidgets.QHeaderView.setSectionResizeMode>
+h.setSectionResizeMode(COL, QHeaderView.ResizeMode.ResizeToContents)  # set the mode of one column  @column  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QHeaderView.html#PySide6.QtWidgets.QHeaderView.setSectionResizeMode>
+h.setStretchLastSection(True)       # let the last column take the rest of the width  @stretch  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QHeaderView.html#PySide6.QtWidgets.QHeaderView.setStretchLastSection>
+h.setSectionsMovable(True)          # let the user reorder columns  @reorder  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QHeaderView.html#PySide6.QtWidgets.QHeaderView.setSectionsMovable>
+h.setSectionsClickable(True); h.sectionClicked.connect(FN)  # react to header clicks  @click  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QHeaderView.html#PySide6.QtWidgets.QHeaderView.sectionClicked>
+h.setSortIndicator(COL, Qt.SortOrder.DescendingOrder)  # show the sort arrow  @sort  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QHeaderView.html#PySide6.QtWidgets.QHeaderView.setSortIndicator>
+h.setDefaultSectionSize(PX) / h.setMinimumSectionSize(PX)  # default / minimum column width (row height for verticalHeader)  @size  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QHeaderView.html#PySide6.QtWidgets.QHeaderView.setDefaultSectionSize>
+table.verticalHeader().setVisible(False)  # hide the row numbers  @hide  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QHeaderView.html#PySide6.QtWidgets.QHeaderView.setVisible>
+h.setDefaultAlignment(Qt.AlignmentFlag.AlignLeft)  # align header text  @align  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QHeaderView.html#PySide6.QtWidgets.QHeaderView.setDefaultAlignment>
+h.saveState() / h.restoreState(BYTES)  # remember column widths and order  @settings  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QHeaderView.html#PySide6.QtWidgets.QHeaderView.saveState>
+h.setContextMenuPolicy(Qt.ContextMenuPolicy.CustomContextMenu)  # add a right-click menu on the header (show/hide columns)  @menu
+
+## QSortFilterProxyModel (sort and filter without touching the data)
+proxy = QSortFilterProxyModel(); proxy.setSourceModel(model); view.setModel(proxy)  # put a sort/filter layer between model and view  @filter @search @sort  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/QSortFilterProxyModel.html>
+proxy.setFilterFixedString(TEXT)    # show only rows whose filter column contains TEXT  @search  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/QSortFilterProxyModel.html#PySide6.QtCore.QSortFilterProxyModel.setFilterFixedString>
+edit.textChanged.connect(proxy.setFilterFixedString)  # live search box over a table  @search @live
+proxy.setFilterRegularExpression(RE) / proxy.setFilterWildcard("*.py")  # filter by regex / glob  @regex  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/QSortFilterProxyModel.html#PySide6.QtCore.QSortFilterProxyModel.setFilterRegularExpression>
+proxy.setFilterCaseSensitivity(Qt.CaseSensitivity.CaseInsensitive)  # ignore case when filtering  @case  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/QSortFilterProxyModel.html#PySide6.QtCore.QSortFilterProxyModel.setFilterCaseSensitivity>
+proxy.setFilterKeyColumn(-1)        # filter on all columns (default 0)  @columns  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/QSortFilterProxyModel.html#PySide6.QtCore.QSortFilterProxyModel.setFilterKeyColumn>
+proxy.setFilterRole(ROLE) / proxy.setSortRole(ROLE)  # filter / sort by another role  @role  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/QSortFilterProxyModel.html#PySide6.QtCore.QSortFilterProxyModel.setSortRole>
+proxy.setRecursiveFilteringEnabled(True)  # keep parents of matching children in trees  @tree  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/QSortFilterProxyModel.html#PySide6.QtCore.QSortFilterProxyModel.setRecursiveFilteringEnabled>
+proxy.setSortCaseSensitivity(...) / proxy.setSortLocaleAware(True)  # sort options  @sort  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/QSortFilterProxyModel.html#PySide6.QtCore.QSortFilterProxyModel.setSortLocaleAware>
+proxy.setDynamicSortFilter(True)    # re-sort and re-filter when the source changes (default on)  @live  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/QSortFilterProxyModel.html#PySide6.QtCore.QSortFilterProxyModel.setDynamicSortFilter>
+def filterAcceptsRow(self, source_row, source_parent)  # override for your own filter rule  @custom  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/QSortFilterProxyModel.html#PySide6.QtCore.QSortFilterProxyModel.filterAcceptsRow>
+def lessThan(self, left, right)     # override for your own sort order (numbers stored as text)  @custom @sort  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/QSortFilterProxyModel.html#PySide6.QtCore.QSortFilterProxyModel.lessThan>
+self.beginFilterChange(); self.min = N; self.endFilterChange()  # wrap changes to your filter settings so the proxy re-filters (new API; invalidateFilter is older)  @refilter  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/QSortFilterProxyModel.html#PySide6.QtCore.QSortFilterProxyModel.beginFilterChange>
+proxy.invalidate()                  # force a full re-sort and re-filter  @refresh  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/QSortFilterProxyModel.html#PySide6.QtCore.QSortFilterProxyModel.invalidate>
+proxy.mapToSource(PROXY_IDX) / proxy.mapFromSource(SRC_IDX)  # convert indexes between proxy and source (always do this before using your data)  @map @index  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/QSortFilterProxyModel.html#PySide6.QtCore.QSortFilterProxyModel.mapToSource>
+QIdentityProxyModel                 # proxy that changes nothing; override data() to reformat values  @format  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/QIdentityProxyModel.html>
+QConcatenateTablesProxyModel        # stack several table models one after another  @merge @union  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/QConcatenateTablesProxyModel.html>
+QTransposeProxyModel                # swap rows and columns  @transpose  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/QTransposeProxyModel.html>
+
+## delegates (draw and edit cells)
+class D(QStyledItemDelegate):       # subclass to draw cells or use your own editor  @custom @render  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QStyledItemDelegate.html>
+    class SpinDelegate(QStyledItemDelegate):
+        def createEditor(self, parent, option, index):
+            e = QSpinBox(parent); e.setRange(0, 100); return e
+        def setEditorData(self, editor, index):
+            editor.setValue(int(index.data(Qt.ItemDataRole.EditRole) or 0))
+        def setModelData(self, editor, model, index):
+            model.setData(index, editor.value(), Qt.ItemDataRole.EditRole)
+    view.setItemDelegateForColumn(1, SpinDelegate(view))
+view.setItemDelegate(D(view)) / view.setItemDelegateForColumn(COL, D(view))  # use a delegate for all cells / one column  @set  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QAbstractItemView.html#PySide6.QtWidgets.QAbstractItemView.setItemDelegateForColumn>
+def createEditor(self, parent, option, index)  # return the editor widget for a cell  @editor  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QStyledItemDelegate.html#PySide6.QtWidgets.QStyledItemDelegate.createEditor>
+def setEditorData(self, editor, index) / def setModelData(self, editor, model, index)  # copy data model -> editor / editor -> model  @editor  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QStyledItemDelegate.html#PySide6.QtWidgets.QStyledItemDelegate.setModelData>
+def paint(self, painter, option, index)  # draw a cell yourself (option.rect, option.state)  @paint @draw  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QStyledItemDelegate.html#PySide6.QtWidgets.QStyledItemDelegate.paint>
+def sizeHint(self, option, index)   # return the cell size  @size  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QStyledItemDelegate.html#PySide6.QtWidgets.QStyledItemDelegate.sizeHint>
+def displayText(self, value, locale)  # change only how a value is shown (format numbers, dates)  @format  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QStyledItemDelegate.html#PySide6.QtWidgets.QStyledItemDelegate.displayText>
+def initStyleOption(self, option, index)  # tweak the default look (option.text, option.icon, option.font) before painting  @style  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QStyledItemDelegate.html#PySide6.QtWidgets.QStyledItemDelegate.initStyleOption>
+def editorEvent(self, event, model, option, index)  # handle clicks in a cell without an editor (buttons, toggles)  @click  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QAbstractItemDelegate.html#PySide6.QtWidgets.QAbstractItemDelegate.editorEvent>
+option.state & QStyle.StateFlag.State_Selected  # check if the cell is selected while painting  @selected  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QStyle.html#PySide6.QtWidgets.QStyle.StateFlag>
+QApplication.style().drawControl(QStyle.ControlElement.CE_ProgressBar, OPT, painter)  # draw a progress bar in a cell  @progress  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QStyle.html#PySide6.QtWidgets.QStyle.drawControl>
+
+## QStringListModel, QRangeModel, QFileSystemModel
+QStringListModel(["a", "b"])        # model over a list of strings; stringList() gets it back  @list  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/QStringListModel.html>
+m.setStringList(LIST)               # replace all strings  @set  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/QStringListModel.html#PySide6.QtCore.QStringListModel.setStringList>
+data = [[1, "a"], [2, "b"]]; m = QRangeModel(data)  # table model from a list of lists (a flat list gives one column)  @list @table  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/QRangeModel.html>
+QRangeModel needs numpy installed   # in PySide6 6.12 the constructor segfaults if numpy cannot be imported  @crash @gotcha
+QRangeModel copies the data         # edits through setData() do not change your Python list  @copy @gotcha
+m.setRoleNames({Qt.ItemDataRole.UserRole + 1: b"name"})  # name roles for QML  @qml  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/QRangeModel.html#PySide6.QtCore.QRangeModel.setRoleNames>
+fs = QFileSystemModel(); fs.setRootPath(QDir.homePath())  # start watching the file system  @files  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QFileSystemModel.html#PySide6.QtWidgets.QFileSystemModel.setRootPath>
+tree.setModel(fs); tree.setRootIndex(fs.index(QDir.homePath()))  # show a folder in a tree  @browser  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QFileSystemModel.html#PySide6.QtWidgets.QFileSystemModel.index>
+fs.setNameFilters(["*.py"]); fs.setNameFilterDisables(False)  # show only matching files (hide, not grey out)  @filter  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QFileSystemModel.html#PySide6.QtWidgets.QFileSystemModel.setNameFilterDisables>
+fs.setFilter(QDir.Filter.AllDirs | QDir.Filter.NoDotAndDotDot)  # show only folders  @dirs  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QFileSystemModel.html#PySide6.QtWidgets.QFileSystemModel.setFilter>
+fs.filePath(IDX) / fs.fileInfo(IDX) / fs.isDir(IDX) / fs.size(IDX)  # get facts about the item at an index  @path  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QFileSystemModel.html#PySide6.QtWidgets.QFileSystemModel.filePath>
+fs.directoryLoaded.connect(FN)      # react when a folder finished loading (it loads in the background)  @async  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QFileSystemModel.html#PySide6.QtWidgets.QFileSystemModel.directoryLoaded>
+fs.setReadOnly(False)               # allow rename / drag-and-drop moves in the view  @edit  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QFileSystemModel.html#PySide6.QtWidgets.QFileSystemModel.setReadOnly>
+fs.mkdir(PARENT_IDX, "name") / fs.remove(IDX)  # create a folder / delete a file through the model  @edit  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QFileSystemModel.html#PySide6.QtWidgets.QFileSystemModel.mkdir>
+
+## QDataWidgetMapper (form view of one row)
+mapper = QDataWidgetMapper(); mapper.setModel(model)  # show one model row in normal widgets  @form @record  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QDataWidgetMapper.html>
+mapper.addMapping(LINE_EDIT, COL)   # link a widget to a column (uses its user property, e.g. text)  @bind  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QDataWidgetMapper.html#PySide6.QtWidgets.QDataWidgetMapper.addMapping>
+mapper.toFirst() / toNext() / toPrevious() / toLast() / setCurrentIndex(ROW)  # move to another row  @navigate  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QDataWidgetMapper.html#PySide6.QtWidgets.QDataWidgetMapper.toNext>
+mapper.setSubmitPolicy(QDataWidgetMapper.SubmitPolicy.ManualSubmit); mapper.submit()  # write edits back only on submit()  @save  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QDataWidgetMapper.html#PySide6.QtWidgets.QDataWidgetMapper.setSubmitPolicy>
+mapper.currentIndexChanged.connect(FN)  # react to row changes (update Prev/Next buttons)  @signal  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QDataWidgetMapper.html#PySide6.QtWidgets.QDataWidgetMapper.currentIndexChanged>

@@ -1,57 +1,103 @@
-title: qt layouts (pyside6)
-url:   https://doc.qt.io/qt-6/layout.html
-tags:  qt qt6 pyside pyside6 python layout box grid form splitter size stretch resize spacing margin
+title: qt layouts and size policies (pyside6)
+url:   https://doc.qt.io/qtforpython-6/overviews/qtwidgets-layout.html
+tags:  qt pyside6 layout qvboxlayout qhboxlayout qgridlayout qformlayout stretch spacing margin size-policy resize align center spacer
 
-; Python only (PySide6). A layout places and resizes the child widgets of one widget.
+; A layout places the widgets of one parent and resizes them with the window. Every container needs one.
 
-## basic layouts
-QVBoxLayout(self)                   # stack widgets top to bottom; passing self installs it on the widget  @vertical @column  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QVBoxLayout.html>
-QHBoxLayout()                       # put widgets left to right  @horizontal @row  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QHBoxLayout.html>
-QGridLayout()                       # put widgets in rows and columns  @table @grid  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QGridLayout.html>
-QFormLayout()                       # two columns: label on the left, field on the right  @form @settings  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QFormLayout.html>
-QStackedLayout() / QStackedWidget()  # show one of several pages at a time (like tabs without tabs)  @pages @switch  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QStackedWidget.html>
-self.setLayout(layout)              # install a layout on a widget  @apply  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QWidget.html#PySide6.QtWidgets.QWidget.setLayout>
-    layout = QVBoxLayout(self)
-    row = QHBoxLayout()
-    row.addWidget(QLabel("Name:")); row.addWidget(self.edit)
-    layout.addLayout(row)
-    layout.addWidget(self.table)
+## box layouts (QVBoxLayout / QHBoxLayout)
+lay = QVBoxLayout(self)             # make a top-to-bottom layout and set it on SELF in one step  @vertical @column  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QVBoxLayout.html>
+lay = QHBoxLayout()                 # make a left-to-right layout  @horizontal @row  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QHBoxLayout.html>
+self.setLayout(lay)                 # set the layout on a widget (the widget takes ownership of children)  @set  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QWidget.html#PySide6.QtWidgets.QWidget.setLayout>
+lay.addWidget(W)                    # add a widget  @add  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QBoxLayout.html#PySide6.QtWidgets.QBoxLayout.addWidget>
+lay.addWidget(W, 1)                 # add a widget with stretch 1 (it takes the extra space; 2 takes twice as much)  @stretch @grow  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QBoxLayout.html#PySide6.QtWidgets.QBoxLayout.addWidget>
+lay.addWidget(W, 0, Qt.AlignmentFlag.AlignRight)  # add a widget aligned inside its cell (it no longer stretches)  @align  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QBoxLayout.html#PySide6.QtWidgets.QBoxLayout.addWidget>
+lay.addLayout(OTHER_LAYOUT)         # nest a layout (rows inside a column)  @nest @nested  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QBoxLayout.html#PySide6.QtWidgets.QBoxLayout.addLayout>
+lay.addStretch()                    # add flexible empty space (push widgets to one side)  @spacer @push  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QBoxLayout.html#PySide6.QtWidgets.QBoxLayout.addStretch>
+lay.addStretch(); lay.addWidget(OK); lay.addWidget(CANCEL)  # right-align buttons in a row  @right @buttons
+lay.addStretch(); lay.addWidget(W); lay.addStretch()  # center a widget  @center
+lay.addSpacing(20)                  # add fixed empty space in pixels  @gap @space  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QBoxLayout.html#PySide6.QtWidgets.QBoxLayout.addSpacing>
+lay.addSpacerItem(QSpacerItem(20, 40, QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Expanding))  # add a spacer with its own size policy  @spacer  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QBoxLayout.html#PySide6.QtWidgets.QBoxLayout.addSpacerItem>
+lay.addStrut(N)                     # make the layout at least N px in the other direction  @min  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QBoxLayout.html#PySide6.QtWidgets.QBoxLayout.addStrut>
+lay.insertWidget(I, W) / lay.insertLayout(I, L) / lay.insertStretch(I)  # insert at a position  @insert  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QBoxLayout.html#PySide6.QtWidgets.QBoxLayout.insertWidget>
+lay.setStretch(I, N)                # change the stretch of item I  @stretch  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QBoxLayout.html#PySide6.QtWidgets.QBoxLayout.setStretch>
+lay.setStretchFactor(W, N)          # change the stretch of a widget  @stretch  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QBoxLayout.html#PySide6.QtWidgets.QBoxLayout.setStretchFactor>
+lay.setSpacing(N)                   # set the gap between items  @gap  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QBoxLayout.html#PySide6.QtWidgets.QBoxLayout.setSpacing>
+lay.setContentsMargins(0, 0, 0, 0)  # remove the border space around the layout (L, T, R, B)  @margin @padding  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QLayout.html#PySide6.QtWidgets.QLayout.setContentsMargins>
+lay.setAlignment(Qt.AlignmentFlag.AlignTop)  # stick all items to the top instead of spreading them  @align @top  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QLayout.html#PySide6.QtWidgets.QLayout.setAlignment>
+lay.setDirection(QBoxLayout.Direction.RightToLeft)  # reverse a box layout  @direction  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QBoxLayout.html#PySide6.QtWidgets.QBoxLayout.setDirection>
 
-## adding things
-layout.addWidget(W)                 # add a widget; the layout reparents it, no parent needed  @add  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QBoxLayout.html#PySide6.QtWidgets.QBoxLayout.addWidget>
-layout.addWidget(W, STRETCH)        # add a widget with a stretch factor (share of extra space)  @grow  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QBoxLayout.html#PySide6.QtWidgets.QBoxLayout.addWidget>
-layout.addWidget(W, alignment=Qt.AlignmentFlag.AlignRight)  # add a widget aligned inside its cell  @align
-layout.addLayout(INNER)             # nest a layout inside another  @nest  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QBoxLayout.html#PySide6.QtWidgets.QBoxLayout.addLayout>
-layout.insertWidget(INDEX, W)       # add a widget at a position  @insert
-layout.addStretch()                 # add empty space that pushes widgets to one side  @spacer @push @center  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QBoxLayout.html#PySide6.QtWidgets.QBoxLayout.addStretch>
-layout.addSpacing(PX)               # add fixed empty space  @gap
-grid.addWidget(W, ROW, COL)         # put a widget in a grid cell  @cell  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QGridLayout.html#PySide6.QtWidgets.QGridLayout.addWidget>
-grid.addWidget(W, ROW, COL, ROWSPAN, COLSPAN)  # make a widget span several cells  @span @merge
-form.addRow("Label:", W)            # add a labeled row to a form  @field  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QFormLayout.html#PySide6.QtWidgets.QFormLayout.addRow>
-layout.removeWidget(W); W.deleteLater()  # take a widget out of a layout and delete it  @remove @delete
-while layout.count(): layout.takeAt(0).widget().deleteLater()  # empty a layout (check widget() is not None for nested layouts)  @clear
+## QGridLayout
+grid = QGridLayout(self)            # make a rows x columns layout  @grid @table  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QGridLayout.html>
+grid.addWidget(W, ROW, COL)         # put a widget in a cell  @cell  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QGridLayout.html#PySide6.QtWidgets.QGridLayout.addWidget>
+grid.addWidget(W, ROW, COL, ROWSPAN, COLSPAN)  # make a widget cover several cells (-1 = to the end)  @span @merge  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QGridLayout.html#PySide6.QtWidgets.QGridLayout.addWidget>
+grid.addWidget(W, ROW, COL, Qt.AlignmentFlag.AlignCenter)  # put a widget in a cell, aligned  @align  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QGridLayout.html#PySide6.QtWidgets.QGridLayout.addWidget>
+grid.addLayout(L, ROW, COL)         # put a layout in a cell  @nest  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QGridLayout.html#PySide6.QtWidgets.QGridLayout.addLayout>
+grid.setColumnStretch(COL, 1) / grid.setRowStretch(ROW, 1)  # let a column / row take extra space  @stretch  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QGridLayout.html#PySide6.QtWidgets.QGridLayout.setColumnStretch>
+grid.setColumnMinimumWidth(COL, PX) / grid.setRowMinimumHeight(ROW, PX)  # set a minimum column width / row height  @min  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QGridLayout.html#PySide6.QtWidgets.QGridLayout.setColumnMinimumWidth>
+grid.setHorizontalSpacing(N) / grid.setVerticalSpacing(N)  # set the gaps between columns / rows  @gap  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QGridLayout.html#PySide6.QtWidgets.QGridLayout.setHorizontalSpacing>
+grid.rowCount() / grid.columnCount()  # get the grid size  @count  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QGridLayout.html#PySide6.QtWidgets.QGridLayout.rowCount>
+grid.itemAtPosition(ROW, COL).widget()  # get the widget in a cell (itemAtPosition returns None if empty)  @get  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QGridLayout.html#PySide6.QtWidgets.QGridLayout.itemAtPosition>
+grid.getItemPosition(I)             # get (row, col, rowspan, colspan) of item I  @position  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QGridLayout.html#PySide6.QtWidgets.QGridLayout.getItemPosition>
+grid.setOriginCorner(Qt.Corner.BottomLeftCorner)  # count rows from the bottom  @corner  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QGridLayout.html#PySide6.QtWidgets.QGridLayout.setOriginCorner>
 
-## space and size
-layout.setContentsMargins(0, 0, 0, 0)  # remove the border space around a layout  @margin @padding @tight  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QLayout.html#PySide6.QtWidgets.QLayout.setContentsMargins>
-layout.setSpacing(PX)               # set the gap between widgets  @gap  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QLayout.html#PySide6.QtWidgets.QLayout.setSpacing>
-layout.setStretch(INDEX, N)         # change the stretch of an item already in a box layout  @grow
-grid.setColumnStretch(COL, N)       # let a grid column take extra space  @grow  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QGridLayout.html#PySide6.QtWidgets.QGridLayout.setColumnStretch>
-w.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Fixed)  # grow wide, keep fixed height  @expand @fill  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QSizePolicy.html>
-QSizePolicy.Policy.Expanding / Preferred / Fixed / Minimum / Maximum  # how a widget reacts to more or less space  @policy
-w.setFixedWidth(PX) / w.setFixedSize(W, H)  # lock a widget's size  @size
-w.setMinimumWidth(PX) / w.setMaximumHeight(PX)  # limit how small or big a widget can get  @min @max
-def sizeHint(self): return QSize(W, H)  # tell layouts the preferred size of your custom widget  @custom  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QWidget.html#PySide6.QtWidgets.QWidget.sizeHint>
-w.updateGeometry()                  # tell the layout your sizeHint or size policy changed  @relayout
-widget is invisible in QScrollArea  # set the layout on the inner widget before scroll.setWidget(inner)  @gotcha @missing  <https://doc.qt.io/qt-6/layout.html#layout-issues>
-scroll.setWidgetResizable(True)     # make the inner widget of a QScrollArea fill the area  @scroll  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QScrollArea.html>
-doc.qt.io/qt-6/layout.html          # read how layouts give out space (size hints, policies, stretch)  @guide  <https://doc.qt.io/qt-6/layout.html>
+## QFormLayout (label: field rows)
+form = QFormLayout(self)            # make a two-column "Label: field" layout  @form @label  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QFormLayout.html>
+form.addRow("Name:", QLineEdit())   # add a label + field row  @row  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QFormLayout.html#PySide6.QtWidgets.QFormLayout.addRow>
+form.addRow("&Email:", edit)        # & in the label gives Alt+E focus to the field (buddy is set for you)  @mnemonic
+form.addRow(W)                      # add a widget across both columns  @span  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QFormLayout.html#PySide6.QtWidgets.QFormLayout.addRow>
+form.addRow(LABEL_WIDGET, FIELD_LAYOUT)  # use your own label widget or a layout as the field  @row
+form.insertRow(I, "Label", W) / form.removeRow(I)  # insert / delete a row (removeRow deletes the widgets)  @edit  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QFormLayout.html#PySide6.QtWidgets.QFormLayout.removeRow>
+form.takeRow(I)                     # take a row out without deleting its widgets  @remove  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QFormLayout.html#PySide6.QtWidgets.QFormLayout.takeRow>
+form.setRowVisible(I, False)        # hide a whole row (label and field)  @hide  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QFormLayout.html#PySide6.QtWidgets.QFormLayout.setRowVisible>
+form.labelForField(W)               # get the label of a field  @label  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QFormLayout.html#PySide6.QtWidgets.QFormLayout.labelForField>
+form.setLabelAlignment(Qt.AlignmentFlag.AlignRight)  # right-align the labels  @align  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QFormLayout.html#PySide6.QtWidgets.QFormLayout.setLabelAlignment>
+form.setFieldGrowthPolicy(QFormLayout.FieldGrowthPolicy.AllNonFixedFieldsGrow)  # let fields grow to the full width  @grow  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QFormLayout.html#PySide6.QtWidgets.QFormLayout.setFieldGrowthPolicy>
+form.setRowWrapPolicy(QFormLayout.RowWrapPolicy.WrapAllRows)  # put each label above its field  @wrap @mobile  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QFormLayout.html#PySide6.QtWidgets.QFormLayout.setRowWrapPolicy>
+form.rowCount()                     # get the number of rows  @count  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QFormLayout.html#PySide6.QtWidgets.QFormLayout.rowCount>
 
-## containers
-QSplitter(Qt.Orientation.Horizontal)  # put widgets side by side with a draggable divider  @divider @resize @pane  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QSplitter.html>
-splitter.addWidget(W)               # add a widget to a splitter  @add
-splitter.setSizes([200, 600])       # set the initial size of each splitter part  @width
-splitter.setStretchFactor(INDEX, N)  # choose which splitter part grows on resize  @grow
-QTabWidget().addTab(W, "TITLE")     # put widgets in tabs  @tabs  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QTabWidget.html>
-QGroupBox("TITLE")                  # draw a titled frame around a group of widgets; give it its own layout  @frame @section  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QGroupBox.html>
-QScrollArea()                       # make a widget scrollable when it is bigger than the space  @scroll  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QScrollArea.html>
-QFrame(frameShape=QFrame.Shape.HLine)  # draw a horizontal separator line  @separator @line  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QFrame.html>
+## QStackedLayout
+stack = QStackedLayout()            # show one child at a time (like QStackedWidget, as a layout)  @pages  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QStackedLayout.html>
+stack.addWidget(W) / stack.setCurrentIndex(I)  # add a page / show one  @switch  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QStackedLayout.html#PySide6.QtWidgets.QStackedLayout.setCurrentIndex>
+stack.setStackingMode(QStackedLayout.StackingMode.StackAll)  # show all children on top of each other (overlays)  @overlay  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QStackedLayout.html#PySide6.QtWidgets.QStackedLayout.setStackingMode>
+
+## size policies (how a widget grows)
+w.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Preferred)  # set horizontal and vertical policy  @grow @resize  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QWidget.html#PySide6.QtWidgets.QWidget.setSizePolicy>
+QSizePolicy.Policy.Fixed            # size is exactly sizeHint(); never grows or shrinks  @fixed  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QSizePolicy.html#PySide6.QtWidgets.QSizePolicy.Policy>
+QSizePolicy.Policy.Preferred        # sizeHint is best; may grow or shrink (default for most widgets)  @default  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QSizePolicy.html#PySide6.QtWidgets.QSizePolicy.Policy>
+QSizePolicy.Policy.Expanding        # wants as much space as possible; can shrink  @fill @grow  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QSizePolicy.html#PySide6.QtWidgets.QSizePolicy.Policy>
+QSizePolicy.Policy.Minimum          # sizeHint is the minimum; may grow  @min  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QSizePolicy.html#PySide6.QtWidgets.QSizePolicy.Policy>
+QSizePolicy.Policy.Maximum          # sizeHint is the maximum; may shrink  @max  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QSizePolicy.html#PySide6.QtWidgets.QSizePolicy.Policy>
+QSizePolicy.Policy.MinimumExpanding  # sizeHint is the minimum and it wants more space  @grow  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QSizePolicy.html#PySide6.QtWidgets.QSizePolicy.Policy>
+QSizePolicy.Policy.Ignored          # ignore sizeHint; take whatever space there is  @ignore  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QSizePolicy.html#PySide6.QtWidgets.QSizePolicy.Policy>
+sp = w.sizePolicy(); sp.setHorizontalStretch(2); w.setSizePolicy(sp)  # set a stretch factor through the policy  @stretch  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QSizePolicy.html#PySide6.QtWidgets.QSizePolicy.setHorizontalStretch>
+sp.setRetainSizeWhenHidden(True)    # keep the space of a hidden widget (no layout jump)  @hide @jump  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QSizePolicy.html#PySide6.QtWidgets.QSizePolicy.setRetainSizeWhenHidden>
+sp.setHeightForWidth(True)          # tell layouts the height depends on the width (wrapped text)  @wrap  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QSizePolicy.html#PySide6.QtWidgets.QSizePolicy.setHeightForWidth>
+lay.setSizeConstraint(QLayout.SizeConstraint.SetFixedSize)  # make the window always exactly as big as its content  @fixed @shrink  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QLayout.html#PySide6.QtWidgets.QLayout.setSizeConstraint>
+lay.setSizeConstraint(QLayout.SizeConstraint.SetMinimumSize)  # stop the window from getting smaller than its content  @min  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QLayout.html#PySide6.QtWidgets.QLayout.setSizeConstraint>
+
+## manage items
+lay.count()                         # get the number of items  @count  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QLayout.html#PySide6.QtWidgets.QLayout.count>
+lay.itemAt(I).widget()              # get the widget of item I (None for spacers and layouts)  @get  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QLayout.html#PySide6.QtWidgets.QLayout.itemAt>
+lay.itemAt(I).layout()              # get the nested layout of item I  @nested  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QLayoutItem.html#PySide6.QtWidgets.QLayoutItem.layout>
+lay.indexOf(W)                      # get the index of a widget  @find  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QLayout.html#PySide6.QtWidgets.QLayout.indexOf>
+lay.removeWidget(W)                 # take a widget out of the layout (it stays on screen until deleted or reparented)  @remove  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QLayout.html#PySide6.QtWidgets.QLayout.removeWidget>
+lay.replaceWidget(OLD, NEW)         # put NEW where OLD was  @swap  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QLayout.html#PySide6.QtWidgets.QLayout.replaceWidget>
+lay.takeAt(I)                       # remove item I and return it  @remove  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QLayout.html#PySide6.QtWidgets.QLayout.takeAt>
+while lay.count(): item = lay.takeAt(0); w = item.widget(); w and w.deleteLater()  # remove and delete everything in a layout  @clear @empty
+    def clear_layout(lay):
+        while lay.count():
+            item = lay.takeAt(0)
+            if item.widget(): item.widget().deleteLater()
+            elif item.layout(): clear_layout(item.layout())
+lay.invalidate() / lay.activate()   # force the layout to recompute now  @refresh  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QLayout.html#PySide6.QtWidgets.QLayout.activate>
+lay.setEnabled(False)               # stop the layout from moving widgets  @freeze  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QLayout.html#PySide6.QtWidgets.QLayout.setEnabled>
+lay.parentWidget()                  # get the widget the layout manages  @parent  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QLayout.html#PySide6.QtWidgets.QLayout.parentWidget>
+lay.setMenuBar(MENUBAR)             # put a menu bar at the top of a plain widget  @menu  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QLayout.html#PySide6.QtWidgets.QLayout.setMenuBar>
+
+## tips
+QWidget::setLayout: Attempting to set QLayout "" on X, which already has a layout  # a widget has one layout; nest more with addLayout  @error
+widgets not showing                 # you created them without adding them to a layout or giving them a parent  @invisible @missing
+window will not shrink              # a child has a large minimumSize or a Fixed/Minimum policy  @resize
+QMainWindow                         # never call setLayout on it; give setCentralWidget a QWidget that has the layout  @mainwindow
+hide() and show()                   # hidden widgets give up their space in the layout; setRetainSizeWhenHidden keeps it  @hide
+Qt Designer                         # build layouts visually: select widgets, right click > Lay out  @designer

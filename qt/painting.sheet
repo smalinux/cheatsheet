@@ -1,0 +1,182 @@
+title: qt painting: QPainter, pens, brushes, colors, fonts, images, icons, paths, printing, svg (pyside6)
+url:   https://doc.qt.io/qtforpython-6/PySide6/QtGui/QPainter.html
+tags:  qt pyside6 qtgui painter draw paint paintevent pen brush color qcolor font qfont image qimage pixmap qpixmap icon qicon path transform gradient pdf print svg canvas
+
+## paintEvent and QPainter
+def paintEvent(self, event): p = QPainter(self)  # draw a custom widget: open a painter on self inside paintEvent  @paint @draw @custom  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QWidget.html#PySide6.QtWidgets.QWidget.paintEvent>
+    class Canvas(QWidget):
+        def paintEvent(self, event):
+            with QPainter(self) as p:
+                p.setRenderHint(QPainter.RenderHint.Antialiasing)
+                p.setPen(QPen(QColor("steelblue"), 2))
+                p.setBrush(QColor("#ffcc00"))
+                p.drawEllipse(self.rect().adjusted(10, 10, -10, -10))
+                p.drawText(self.rect(), Qt.AlignmentFlag.AlignCenter, "Hi")
+with QPainter(DEVICE) as p:         # open a painter and end it automatically (widget, QImage, QPixmap, QPrinter, QPdfWriter)  @context @end  <https://doc.qt.io/qtforpython-6/PySide6/QtGui/QPainter.html>
+p.begin(DEVICE) / p.end()           # open / finish painting by hand  @begin @end  <https://doc.qt.io/qtforpython-6/PySide6/QtGui/QPainter.html#PySide6.QtGui.QPainter.begin>
+QPainter::begin: Paint device returned engine == 0  # you painted on a widget outside paintEvent; call update() and paint in paintEvent  @error
+w.update()                          # ask for a repaint; Qt calls paintEvent soon  @repaint @redraw  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QWidget.html#PySide6.QtWidgets.QWidget.update>
+event.rect() / event.region()       # get the area that needs repainting (paint only that for speed)  @dirty  <https://doc.qt.io/qtforpython-6/PySide6/QtGui/QPaintEvent.html#PySide6.QtGui.QPaintEvent.rect>
+p.setRenderHint(QPainter.RenderHint.Antialiasing)  # smooth edges of shapes  @smooth @antialias  <https://doc.qt.io/qtforpython-6/PySide6/QtGui/QPainter.html#PySide6.QtGui.QPainter.setRenderHint>
+p.setRenderHint(QPainter.RenderHint.SmoothPixmapTransform)  # smooth scaled images  @smooth @image  <https://doc.qt.io/qtforpython-6/PySide6/QtGui/QPainter.html#PySide6.QtGui.QPainter.setRenderHint>
+p.setRenderHints(QPainter.RenderHint.Antialiasing | QPainter.RenderHint.TextAntialiasing)  # set several hints  @smooth  <https://doc.qt.io/qtforpython-6/PySide6/QtGui/QPainter.html#PySide6.QtGui.QPainter.setRenderHints>
+p.save() / p.restore()              # push / pop the painter state (pen, brush, transform, clip)  @state  <https://doc.qt.io/qtforpython-6/PySide6/QtGui/QPainter.html#PySide6.QtGui.QPainter.save>
+with QPainterStateGuard(p):         # save the state and restore it at the end of the block (new in 6.9)  @state @context  <https://doc.qt.io/qtforpython-6/PySide6/QtGui/QPainterStateGuard.html>
+
+## draw shapes and text
+p.drawLine(X1, Y1, X2, Y2) / p.drawLine(QPointF(), QPointF())  # draw a line  @line  <https://doc.qt.io/qtforpython-6/PySide6/QtGui/QPainter.html#PySide6.QtGui.QPainter.drawLine>
+p.drawRect(X, Y, W, H) / p.drawRect(QRectF())  # draw a rectangle (outline with pen, filled with brush)  @rect  <https://doc.qt.io/qtforpython-6/PySide6/QtGui/QPainter.html#PySide6.QtGui.QPainter.drawRect>
+p.drawRoundedRect(RECT, 8, 8)       # draw a rectangle with round corners  @rounded  <https://doc.qt.io/qtforpython-6/PySide6/QtGui/QPainter.html#PySide6.QtGui.QPainter.drawRoundedRect>
+p.fillRect(RECT, QColor("white"))   # fill a rect without a border  @fill @background  <https://doc.qt.io/qtforpython-6/PySide6/QtGui/QPainter.html#PySide6.QtGui.QPainter.fillRect>
+p.eraseRect(RECT)                   # fill with the background brush  @clear  <https://doc.qt.io/qtforpython-6/PySide6/QtGui/QPainter.html#PySide6.QtGui.QPainter.eraseRect>
+p.drawEllipse(RECT) / p.drawEllipse(CENTER, RX, RY)  # draw an ellipse or circle  @circle  <https://doc.qt.io/qtforpython-6/PySide6/QtGui/QPainter.html#PySide6.QtGui.QPainter.drawEllipse>
+p.drawArc(RECT, START*16, SPAN*16)  # draw an arc; angles in 1/16 degree, 0 = 3 o'clock, counter-clockwise  @arc @angle  <https://doc.qt.io/qtforpython-6/PySide6/QtGui/QPainter.html#PySide6.QtGui.QPainter.drawArc>
+p.drawPie(RECT, START*16, SPAN*16) / p.drawChord(...)  # draw a pie slice / chord  @pie @chart  <https://doc.qt.io/qtforpython-6/PySide6/QtGui/QPainter.html#PySide6.QtGui.QPainter.drawPie>
+p.drawPolygon(QPolygonF([QPointF(0, 0), QPointF(10, 0), QPointF(5, 8)]))  # draw a closed polygon  @triangle  <https://doc.qt.io/qtforpython-6/PySide6/QtGui/QPainter.html#PySide6.QtGui.QPainter.drawPolygon>
+p.drawPolyline(POLYGON)             # draw connected lines, not closed  @polyline  <https://doc.qt.io/qtforpython-6/PySide6/QtGui/QPainter.html#PySide6.QtGui.QPainter.drawPolyline>
+p.drawPoint(P) / p.drawPoints(POLYGON)  # draw points  @point @pixel  <https://doc.qt.io/qtforpython-6/PySide6/QtGui/QPainter.html#PySide6.QtGui.QPainter.drawPoint>
+p.drawPath(PATH) / p.fillPath(PATH, BRUSH) / p.strokePath(PATH, PEN)  # draw a QPainterPath  @path  <https://doc.qt.io/qtforpython-6/PySide6/QtGui/QPainter.html#PySide6.QtGui.QPainter.drawPath>
+p.drawText(X, Y, "TEXT")            # draw text with its baseline at Y  @text  <https://doc.qt.io/qtforpython-6/PySide6/QtGui/QPainter.html#PySide6.QtGui.QPainter.drawText>
+p.drawText(RECT, Qt.AlignmentFlag.AlignCenter | Qt.TextFlag.TextWordWrap, "TEXT")  # draw text aligned and wrapped in a rect  @text @center  <https://doc.qt.io/qtforpython-6/PySide6/QtGui/QPainter.html#PySide6.QtGui.QPainter.drawText>
+p.boundingRect(RECT, FLAGS, "TEXT")  # measure where drawText would put text  @measure  <https://doc.qt.io/qtforpython-6/PySide6/QtGui/QPainter.html#PySide6.QtGui.QPainter.boundingRect>
+p.drawStaticText(P, QStaticText("TEXT"))  # draw text that rarely changes, faster  @text @fast  <https://doc.qt.io/qtforpython-6/PySide6/QtGui/QPainter.html#PySide6.QtGui.QPainter.drawStaticText>
+p.drawPixmap(X, Y, PIXMAP) / p.drawPixmap(TARGET_RECT, PIXMAP, SOURCE_RECT)  # draw a pixmap (scaled to TARGET)  @image  <https://doc.qt.io/qtforpython-6/PySide6/QtGui/QPainter.html#PySide6.QtGui.QPainter.drawPixmap>
+p.drawImage(P, IMAGE)               # draw a QImage  @image  <https://doc.qt.io/qtforpython-6/PySide6/QtGui/QPainter.html#PySide6.QtGui.QPainter.drawImage>
+p.drawTiledPixmap(RECT, PIXMAP)     # tile a pixmap over an area  @pattern @tile  <https://doc.qt.io/qtforpython-6/PySide6/QtGui/QPainter.html#PySide6.QtGui.QPainter.drawTiledPixmap>
+p.setOpacity(0.5)                   # draw everything after this half transparent  @alpha  <https://doc.qt.io/qtforpython-6/PySide6/QtGui/QPainter.html#PySide6.QtGui.QPainter.setOpacity>
+p.setCompositionMode(QPainter.CompositionMode.CompositionMode_Multiply)  # change how colors blend (SourceOver default, Clear, Xor...)  @blend  <https://doc.qt.io/qtforpython-6/PySide6/QtGui/QPainter.html#PySide6.QtGui.QPainter.setCompositionMode>
+p.setClipRect(RECT) / p.setClipPath(PATH) / p.setClipping(False)  # draw only inside an area  @clip @mask  <https://doc.qt.io/qtforpython-6/PySide6/QtGui/QPainter.html#PySide6.QtGui.QPainter.setClipRect>
+
+## coordinates and transforms
+p.translate(DX, DY)                 # move the origin  @move @offset  <https://doc.qt.io/qtforpython-6/PySide6/QtGui/QPainter.html#PySide6.QtGui.QPainter.translate>
+p.rotate(DEG)                       # rotate around the origin (clockwise degrees)  @rotate  <https://doc.qt.io/qtforpython-6/PySide6/QtGui/QPainter.html#PySide6.QtGui.QPainter.rotate>
+p.scale(SX, SY)                     # scale everything drawn after  @zoom  <https://doc.qt.io/qtforpython-6/PySide6/QtGui/QPainter.html#PySide6.QtGui.QPainter.scale>
+p.translate(c); p.rotate(a); p.translate(-c)  # rotate around a center point c  @rotate @pivot
+p.setTransform(QTransform()) / p.resetTransform()  # set / clear the full transform  @matrix  <https://doc.qt.io/qtforpython-6/PySide6/QtGui/QPainter.html#PySide6.QtGui.QPainter.setTransform>
+p.setWindow(0, 0, 100, 100)         # use logical coordinates 0..100 whatever the widget size  @scale @logical  <https://doc.qt.io/qtforpython-6/PySide6/QtGui/QPainter.html#PySide6.QtGui.QPainter.setWindow>
+p.setViewport(RECT)                 # map the logical window to this device area  @viewport  <https://doc.qt.io/qtforpython-6/PySide6/QtGui/QPainter.html#PySide6.QtGui.QPainter.setViewport>
+QTransform().translate(X, Y).rotate(A).scale(S, S)  # build a transform step by step  @matrix  <https://doc.qt.io/qtforpython-6/PySide6/QtGui/QTransform.html>
+t.map(POINT) / t.mapRect(RECT) / t.inverted()  # transform a point / rect, get the inverse (returns (t, ok))  @map  <https://doc.qt.io/qtforpython-6/PySide6/QtGui/QTransform.html#PySide6.QtGui.QTransform.map>
+QTransform.fromScale(SX, SY) / QTransform.fromTranslate(DX, DY)  # quick scale / move transforms  @matrix  <https://doc.qt.io/qtforpython-6/PySide6/QtGui/QTransform.html#PySide6.QtGui.QTransform.fromScale>
+
+## pens and brushes
+QPen(QColor("red"), 2)              # make a 2 px red outline pen  @pen @stroke @line  <https://doc.qt.io/qtforpython-6/PySide6/QtGui/QPen.html>
+pen.setStyle(Qt.PenStyle.DashLine)  # dashed line (SolidLine, DotLine, DashDotLine, NoPen)  @dash  <https://doc.qt.io/qtforpython-6/PySide6/QtGui/QPen.html#PySide6.QtGui.QPen.setStyle>
+pen.setCapStyle(Qt.PenCapStyle.RoundCap) / pen.setJoinStyle(Qt.PenJoinStyle.RoundJoin)  # line ends / corners  @cap @join  <https://doc.qt.io/qtforpython-6/PySide6/QtGui/QPen.html#PySide6.QtGui.QPen.setCapStyle>
+pen.setWidthF(1.5) / pen.setCosmetic(True)  # set width / keep the width the same when zoomed  @width  <https://doc.qt.io/qtforpython-6/PySide6/QtGui/QPen.html#PySide6.QtGui.QPen.setCosmetic>
+pen.setDashPattern([4, 2])          # custom dash: 4 on, 2 off (in pen widths)  @dash  <https://doc.qt.io/qtforpython-6/PySide6/QtGui/QPen.html#PySide6.QtGui.QPen.setDashPattern>
+p.setPen(Qt.PenStyle.NoPen)         # draw shapes without an outline  @nooutline  <https://doc.qt.io/qtforpython-6/PySide6/QtGui/QPainter.html#PySide6.QtGui.QPainter.setPen>
+QBrush(QColor("blue"))              # make a solid fill  @fill @brush  <https://doc.qt.io/qtforpython-6/PySide6/QtGui/QBrush.html>
+QBrush(Qt.BrushStyle.DiagCrossPattern)  # make a hatch pattern fill (CrossPattern, HorPattern, Dense4Pattern...)  @pattern @hatch  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/Qt.html#PySide6.QtCore.Qt.BrushStyle>
+QBrush(PIXMAP) / brush.setTexture(PIXMAP)  # fill with a tiled image  @texture  <https://doc.qt.io/qtforpython-6/PySide6/QtGui/QBrush.html#PySide6.QtGui.QBrush.setTexture>
+p.setBrush(Qt.BrushStyle.NoBrush)   # draw shapes without a fill  @nofill  <https://doc.qt.io/qtforpython-6/PySide6/QtGui/QPainter.html#PySide6.QtGui.QPainter.setBrush>
+g = QLinearGradient(0, 0, 0, H); g.setColorAt(0, C1); g.setColorAt(1, C2); p.setBrush(g)  # fill with a linear gradient  @gradient  <https://doc.qt.io/qtforpython-6/PySide6/QtGui/QLinearGradient.html>
+QRadialGradient(CENTER, RADIUS) / QConicalGradient(CENTER, ANGLE)  # radial / angle gradients  @gradient  <https://doc.qt.io/qtforpython-6/PySide6/QtGui/QRadialGradient.html>
+g.setSpread(QGradient.Spread.ReflectSpread)  # repeat / reflect the gradient past its ends  @gradient  <https://doc.qt.io/qtforpython-6/PySide6/QtGui/QGradient.html#PySide6.QtGui.QGradient.setSpread>
+QGradient(QGradient.Preset.DeepBlue)  # use one of 180 ready-made gradients  @gradient @preset  <https://doc.qt.io/qtforpython-6/PySide6/QtGui/QGradient.html#PySide6.QtGui.QGradient.Preset>
+
+## QColor
+QColor("red") / QColor("#ff8800") / QColor("#80ff8800")  # make a color from a name or hex (#AARRGGBB with alpha)  @color @hex  <https://doc.qt.io/qtforpython-6/PySide6/QtGui/QColor.html>
+QColor(255, 128, 0, 200)            # make a color from RGB(A) ints 0..255  @rgb  <https://doc.qt.io/qtforpython-6/PySide6/QtGui/QColor.html>
+QColor.fromRgbF(1.0, 0.5, 0.0) / QColor.fromHsv(H, S, V) / QColor.fromHsl(H, S, L)  # make a color from floats / HSV / HSL  @hsv @hsl  <https://doc.qt.io/qtforpython-6/PySide6/QtGui/QColor.html#PySide6.QtGui.QColor.fromHsv>
+QColor.fromString("steelblue")      # parse a color name (SVG names, #rgb, #rrggbb...)  @parse  <https://doc.qt.io/qtforpython-6/PySide6/QtGui/QColor.html#PySide6.QtGui.QColor.fromString>
+QColor.isValidColorName("navy")     # check a color name  @validate  <https://doc.qt.io/qtforpython-6/PySide6/QtGui/QColor.html#PySide6.QtGui.QColor.isValidColorName>
+c.name() / c.name(QColor.NameFormat.HexArgb)  # get "#rrggbb" / "#aarrggbb"  @hex @string  <https://doc.qt.io/qtforpython-6/PySide6/QtGui/QColor.html#PySide6.QtGui.QColor.name>
+c.red() / c.green() / c.blue() / c.alpha() / c.getRgb()  # read channels  @rgb  <https://doc.qt.io/qtforpython-6/PySide6/QtGui/QColor.html#PySide6.QtGui.QColor.getRgb>
+c.setAlpha(128) / c.setAlphaF(0.5)  # change the transparency  @alpha  <https://doc.qt.io/qtforpython-6/PySide6/QtGui/QColor.html#PySide6.QtGui.QColor.setAlpha>
+c.lighter(150) / c.darker(150)      # get a lighter / darker color (percent)  @shade @tint  <https://doc.qt.io/qtforpython-6/PySide6/QtGui/QColor.html#PySide6.QtGui.QColor.lighter>
+c.hue() / c.saturation() / c.value() / c.lightness()  # read HSV / HSL parts  @hsv  <https://doc.qt.io/qtforpython-6/PySide6/QtGui/QColor.html#PySide6.QtGui.QColor.hue>
+c.toTuple()                         # get (r, g, b, a)  @tuple  <https://doc.qt.io/qtforpython-6/PySide6/QtGui/QColor.html#PySide6.QtGui.QColor.toTuple>
+QColor.colorNames()                 # list all known color names  @list  <https://doc.qt.io/qtforpython-6/PySide6/QtGui/QColor.html#PySide6.QtGui.QColor.colorNames>
+QColorConstants.Svg.cornflowerblue  # use an SVG named color constant  @named  <https://doc.qt.io/qtforpython-6/PySide6/QtGui/QColorConstants.html#PySide6.QtGui.QColorConstants.Svg>
+Qt.GlobalColor.darkGray / transparent / white  # quick predefined colors  @named  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/Qt.html#PySide6.QtCore.Qt.GlobalColor>
+
+## QFont and QFontMetrics
+QFont("Sans", 12)                   # make a font: family and point size  @font @family  <https://doc.qt.io/qtforpython-6/PySide6/QtGui/QFont.html>
+f.setBold(True) / f.setItalic(True) / f.setUnderline(True) / f.setStrikeOut(True)  # style a font  @bold @italic  <https://doc.qt.io/qtforpython-6/PySide6/QtGui/QFont.html#PySide6.QtGui.QFont.setBold>
+f.setWeight(QFont.Weight.DemiBold)  # pick a weight (Thin, Light, Normal, Medium, DemiBold, Bold, Black)  @weight  <https://doc.qt.io/qtforpython-6/PySide6/QtGui/QFont.html#PySide6.QtGui.QFont.setWeight>
+f.setPointSize(N) / f.setPointSizeF(X) / f.setPixelSize(PX)  # set the size in points / pixels  @size  <https://doc.qt.io/qtforpython-6/PySide6/QtGui/QFont.html#PySide6.QtGui.QFont.setPointSize>
+f.setFamilies(["JetBrains Mono", "monospace"])  # list fallback families  @fallback  <https://doc.qt.io/qtforpython-6/PySide6/QtGui/QFont.html#PySide6.QtGui.QFont.setFamilies>
+f.setStyleHint(QFont.StyleHint.Monospace)  # hint the kind of font for fallback (Monospace, Serif, SansSerif)  @monospace  <https://doc.qt.io/qtforpython-6/PySide6/QtGui/QFont.html#PySide6.QtGui.QFont.setStyleHint>
+f.setLetterSpacing(QFont.SpacingType.PercentageSpacing, 110)  # spread letters  @tracking  <https://doc.qt.io/qtforpython-6/PySide6/QtGui/QFont.html#PySide6.QtGui.QFont.setLetterSpacing>
+f.setCapitalization(QFont.Capitalization.SmallCaps)  # draw small caps / all upper  @caps  <https://doc.qt.io/qtforpython-6/PySide6/QtGui/QFont.html#PySide6.QtGui.QFont.setCapitalization>
+QFontDatabase.systemFont(QFontDatabase.SystemFont.FixedFont)  # get the system monospace font  @monospace @code  <https://doc.qt.io/qtforpython-6/PySide6/QtGui/QFontDatabase.html#PySide6.QtGui.QFontDatabase.systemFont>
+QFontDatabase.families()            # list installed font families  @list  <https://doc.qt.io/qtforpython-6/PySide6/QtGui/QFontDatabase.html#PySide6.QtGui.QFontDatabase.families>
+QFontDatabase.addApplicationFont("font.ttf")  # load a font file for this app; returns an id (-1 on error)  @ttf @custom  <https://doc.qt.io/qtforpython-6/PySide6/QtGui/QFontDatabase.html#PySide6.QtGui.QFontDatabase.addApplicationFont>
+QFontDatabase.applicationFontFamilies(ID)  # get the family names from a loaded font file  @ttf  <https://doc.qt.io/qtforpython-6/PySide6/QtGui/QFontDatabase.html#PySide6.QtGui.QFontDatabase.applicationFontFamilies>
+fm = QFontMetrics(font)             # measure text in a font (QFontMetricsF for floats)  @measure @width  <https://doc.qt.io/qtforpython-6/PySide6/QtGui/QFontMetrics.html>
+fm.horizontalAdvance("TEXT")        # get the text width in pixels  @width  <https://doc.qt.io/qtforpython-6/PySide6/QtGui/QFontMetrics.html#PySide6.QtGui.QFontMetrics.horizontalAdvance>
+fm.height() / fm.ascent() / fm.descent() / fm.lineSpacing()  # get line metrics  @height  <https://doc.qt.io/qtforpython-6/PySide6/QtGui/QFontMetrics.html#PySide6.QtGui.QFontMetrics.height>
+fm.boundingRect("TEXT") / fm.boundingRect(RECT, FLAGS, "TEXT")  # get the rect the text covers (wrapped)  @size  <https://doc.qt.io/qtforpython-6/PySide6/QtGui/QFontMetrics.html#PySide6.QtGui.QFontMetrics.boundingRect>
+fm.elidedText(TEXT, Qt.TextElideMode.ElideMiddle, WIDTH)  # shorten text with "..." to fit WIDTH  @elide @truncate  <https://doc.qt.io/qtforpython-6/PySide6/QtGui/QFontMetrics.html#PySide6.QtGui.QFontMetrics.elidedText>
+QFontInfo(font).family()            # get the family actually used after fallback  @resolve  <https://doc.qt.io/qtforpython-6/PySide6/QtGui/QFontInfo.html>
+
+## QPixmap, QImage, QIcon
+QPixmap("img.png")                  # load an image for showing on screen (GUI thread only)  @image @load  <https://doc.qt.io/qtforpython-6/PySide6/QtGui/QPixmap.html>
+pm.isNull()                         # check if loading failed  @error  <https://doc.qt.io/qtforpython-6/PySide6/QtGui/QPixmap.html#PySide6.QtGui.QPixmap.isNull>
+pm.scaled(W, H, Qt.AspectRatioMode.KeepAspectRatio, Qt.TransformationMode.SmoothTransformation)  # get a resized copy keeping the ratio  @resize @thumbnail  <https://doc.qt.io/qtforpython-6/PySide6/QtGui/QPixmap.html#PySide6.QtGui.QPixmap.scaled>
+pm.scaledToWidth(W) / pm.scaledToHeight(H)  # resize to one side  @resize  <https://doc.qt.io/qtforpython-6/PySide6/QtGui/QPixmap.html#PySide6.QtGui.QPixmap.scaledToWidth>
+pm.copy(RECT)                       # crop  @crop  <https://doc.qt.io/qtforpython-6/PySide6/QtGui/QPixmap.html#PySide6.QtGui.QPixmap.copy>
+pm.save("out.png") / pm.save("out.jpg", "JPG", 90)  # save to a file (format from the name, quality 0..100)  @save @export  <https://doc.qt.io/qtforpython-6/PySide6/QtGui/QPixmap.html#PySide6.QtGui.QPixmap.save>
+QPixmap(W, H); pm.fill(Qt.GlobalColor.transparent)  # make an empty transparent pixmap to paint on  @canvas @blank  <https://doc.qt.io/qtforpython-6/PySide6/QtGui/QPixmap.html#PySide6.QtGui.QPixmap.fill>
+pm.loadFromData(BYTES)              # load from bytes (network replies)  @bytes  <https://doc.qt.io/qtforpython-6/PySide6/QtGui/QPixmap.html#PySide6.QtGui.QPixmap.loadFromData>
+pm.toImage() / QPixmap.fromImage(IMG)  # convert between QPixmap and QImage  @convert  <https://doc.qt.io/qtforpython-6/PySide6/QtGui/QPixmap.html#PySide6.QtGui.QPixmap.fromImage>
+pm.setDevicePixelRatio(2.0)         # mark a pixmap as high-DPI (@2x)  @hidpi  <https://doc.qt.io/qtforpython-6/PySide6/QtGui/QPixmap.html#PySide6.QtGui.QPixmap.setDevicePixelRatio>
+pm.transformed(QTransform().rotate(90))  # rotate or skew a pixmap  @rotate  <https://doc.qt.io/qtforpython-6/PySide6/QtGui/QPixmap.html#PySide6.QtGui.QPixmap.transformed>
+QImage("img.png")                   # load an image for pixel access; safe in worker threads  @image @pixels @thread  <https://doc.qt.io/qtforpython-6/PySide6/QtGui/QImage.html>
+QImage(W, H, QImage.Format.Format_ARGB32)  # make an empty image with alpha  @create  <https://doc.qt.io/qtforpython-6/PySide6/QtGui/QImage.html>
+img.pixelColor(X, Y) / img.setPixelColor(X, Y, C)  # read / write one pixel  @pixel  <https://doc.qt.io/qtforpython-6/PySide6/QtGui/QImage.html#PySide6.QtGui.QImage.pixelColor>
+img.pixel(X, Y) / qRed(RGB) / qGreen(RGB) / qBlue(RGB) / qAlpha(RGB)  # read a pixel as an int and split it  @pixel @rgb  <https://doc.qt.io/qtforpython-6/PySide6/QtGui/QImage.html#PySide6.QtGui.QImage.pixel>
+img.convertToFormat(QImage.Format.Format_Grayscale8)  # convert to gray (or other formats)  @grayscale  <https://doc.qt.io/qtforpython-6/PySide6/QtGui/QImage.html#PySide6.QtGui.QImage.convertToFormat>
+img.mirrored(H, V) / img.flipped(Qt.Orientation.Horizontal)  # flip an image  @mirror @flip  <https://doc.qt.io/qtforpython-6/PySide6/QtGui/QImage.html#PySide6.QtGui.QImage.flipped>
+img.invertPixels()                  # invert colors in place  @invert @negative  <https://doc.qt.io/qtforpython-6/PySide6/QtGui/QImage.html#PySide6.QtGui.QImage.invertPixels>
+img.bits() / img.constBits() / img.bytesPerLine()  # get raw pixel memory (numpy: np.frombuffer(img.constBits(), np.uint8))  @numpy @raw  <https://doc.qt.io/qtforpython-6/PySide6/QtGui/QImage.html#PySide6.QtGui.QImage.constBits>
+QImage(DATA, W, H, BYTES_PER_LINE, QImage.Format.Format_RGB888)  # wrap raw bytes (numpy array) as an image; keep DATA alive  @numpy  <https://doc.qt.io/qtforpython-6/PySide6/QtGui/QImage.html>
+img.save(PATH) / img.save(BUFFER, "PNG")  # save to a file or a QBuffer  @save  <https://doc.qt.io/qtforpython-6/PySide6/QtGui/QImage.html#PySide6.QtGui.QImage.save>
+QImageReader(PATH).size()           # read the image size without loading it  @size @fast  <https://doc.qt.io/qtforpython-6/PySide6/QtGui/QImageReader.html#PySide6.QtGui.QImageReader.size>
+reader = QImageReader(PATH); reader.setScaledSize(QSize(200, 200)); reader.read()  # load a big image already scaled down  @thumbnail  <https://doc.qt.io/qtforpython-6/PySide6/QtGui/QImageReader.html#PySide6.QtGui.QImageReader.setScaledSize>
+reader.setAutoTransform(True)       # apply the EXIF rotation of photos  @exif @rotate  <https://doc.qt.io/qtforpython-6/PySide6/QtGui/QImageReader.html#PySide6.QtGui.QImageReader.setAutoTransform>
+QImageReader.supportedImageFormats()  # list the formats Qt can read  @formats  <https://doc.qt.io/qtforpython-6/PySide6/QtGui/QImageReader.html#PySide6.QtGui.QImageReader.supportedImageFormats>
+QIcon("icon.png")                   # make an icon from a file  @icon  <https://doc.qt.io/qtforpython-6/PySide6/QtGui/QIcon.html>
+QIcon.fromTheme("document-open")    # get an icon from the desktop theme by name  @theme  <https://doc.qt.io/qtforpython-6/PySide6/QtGui/QIcon.html#PySide6.QtGui.QIcon.fromTheme>
+QIcon.fromTheme(QIcon.ThemeIcon.DocumentOpen)  # get a theme icon by enum (DocumentSave, EditCopy, ...)  @theme  <https://doc.qt.io/qtforpython-6/PySide6/QtGui/QIcon.html#PySide6.QtGui.QIcon.ThemeIcon>
+QIcon.fromTheme("x", QIcon("fallback.png"))  # use a fallback when the theme lacks the icon  @fallback  <https://doc.qt.io/qtforpython-6/PySide6/QtGui/QIcon.html#PySide6.QtGui.QIcon.fromTheme>
+icon.addFile("i-16.png", QSize(16, 16)); icon.addFile("i-32.png", QSize(32, 32))  # add sizes to one icon  @sizes  <https://doc.qt.io/qtforpython-6/PySide6/QtGui/QIcon.html#PySide6.QtGui.QIcon.addFile>
+icon.addPixmap(PM, QIcon.Mode.Disabled)  # set the picture for the disabled state (Normal, Active, Selected)  @state  <https://doc.qt.io/qtforpython-6/PySide6/QtGui/QIcon.html#PySide6.QtGui.QIcon.addPixmap>
+icon.pixmap(QSize(32, 32))          # get a pixmap of the icon at a size  @pixmap  <https://doc.qt.io/qtforpython-6/PySide6/QtGui/QIcon.html#PySide6.QtGui.QIcon.pixmap>
+QApplication.style().standardIcon(QStyle.StandardPixmap.SP_DialogSaveButton)  # get a built-in style icon (SP_DirIcon, SP_TrashIcon, SP_MessageBoxWarning...)  @builtin  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QStyle.html#PySide6.QtWidgets.QStyle.standardIcon>
+QIcon.setThemeName("breeze") / QIcon.setThemeSearchPaths([...])  # choose an icon theme  @theme  <https://doc.qt.io/qtforpython-6/PySide6/QtGui/QIcon.html#PySide6.QtGui.QIcon.setThemeName>
+QMovie("anim.gif")                  # play an animated GIF/WebP; frameChanged, start(), stop(), setSpeed()  @gif @animation  <https://doc.qt.io/qtforpython-6/PySide6/QtGui/QMovie.html>
+QPixmapCache.find(KEY) / QPixmapCache.insert(KEY, PM)  # cache pixmaps you make often  @cache  <https://doc.qt.io/qtforpython-6/PySide6/QtGui/QPixmapCache.html#PySide6.QtGui.QPixmapCache.find>
+
+## QPainterPath
+path = QPainterPath(); path.moveTo(0, 0); path.lineTo(50, 0); path.cubicTo(...)  # build any shape from lines and curves  @path @bezier  <https://doc.qt.io/qtforpython-6/PySide6/QtGui/QPainterPath.html>
+path.quadTo(CTRL, END) / path.arcTo(RECT, START, SPAN)  # add a quad curve / an arc (degrees here, not 1/16)  @curve @arc  <https://doc.qt.io/qtforpython-6/PySide6/QtGui/QPainterPath.html#PySide6.QtGui.QPainterPath.arcTo>
+path.addRect(R) / path.addRoundedRect(R, RX, RY) / path.addEllipse(R) / path.addText(P, FONT, T)  # add closed shapes  @shape  <https://doc.qt.io/qtforpython-6/PySide6/QtGui/QPainterPath.html#PySide6.QtGui.QPainterPath.addRoundedRect>
+path.closeSubpath()                 # close the current figure  @close  <https://doc.qt.io/qtforpython-6/PySide6/QtGui/QPainterPath.html#PySide6.QtGui.QPainterPath.closeSubpath>
+path.contains(POINT)                # hit-test a shape  @hit-test  <https://doc.qt.io/qtforpython-6/PySide6/QtGui/QPainterPath.html#PySide6.QtGui.QPainterPath.contains>
+path.united(OTHER) / path.intersected(OTHER) / path.subtracted(OTHER)  # boolean shape operations  @boolean  <https://doc.qt.io/qtforpython-6/PySide6/QtGui/QPainterPath.html#PySide6.QtGui.QPainterPath.subtracted>
+path.boundingRect() / path.length() / path.pointAtPercent(T)  # measure a path / walk along it  @measure  <https://doc.qt.io/qtforpython-6/PySide6/QtGui/QPainterPath.html#PySide6.QtGui.QPainterPath.pointAtPercent>
+path.setFillRule(Qt.FillRule.WindingFill)  # choose how holes are filled  @fill  <https://doc.qt.io/qtforpython-6/PySide6/QtGui/QPainterPath.html#PySide6.QtGui.QPainterPath.setFillRule>
+QPainterPathStroker(PEN).createStroke(PATH)  # get the outline of a stroked path (for hit-testing lines)  @stroke  <https://doc.qt.io/qtforpython-6/PySide6/QtGui/QPainterPathStroker.html>
+
+## render to files, PDF, printer
+img = QImage(800, 600, QImage.Format.Format_ARGB32); img.fill(0); p = QPainter(img); ...; p.end(); img.save("out.png")  # paint off-screen and save as PNG  @offscreen @export
+w.grab().save("widget.png")         # save a screenshot of a widget  @screenshot  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QWidget.html#PySide6.QtWidgets.QWidget.grab>
+pdf = QPdfWriter("out.pdf"); pdf.setPageSize(QPageSize(QPageSize.PageSizeId.A4)); p = QPainter(pdf)  # paint into a PDF  @pdf @export  <https://doc.qt.io/qtforpython-6/PySide6/QtGui/QPdfWriter.html>
+pdf.setResolution(300) / pdf.newPage() / pdf.setTitle("T")  # PDF resolution, next page, metadata  @pdf  <https://doc.qt.io/qtforpython-6/PySide6/QtGui/QPdfWriter.html#PySide6.QtGui.QPdfWriter.newPage>
+pdf.setPageLayout(QPageLayout(QPageSize(QPageSize.PageSizeId.A4), QPageLayout.Orientation.Landscape, QMarginsF(10, 10, 10, 10)))  # set paper, orientation, margins  @page @landscape  <https://doc.qt.io/qtforpython-6/PySide6/QtGui/QPageLayout.html>
+printer = QPrinter(QPrinter.PrinterMode.HighResolution)  # make a printer (QtPrintSupport)  @print  <https://doc.qt.io/qtforpython-6/PySide6/QtPrintSupport/QPrinter.html>
+printer.setOutputFormat(QPrinter.OutputFormat.PdfFormat); printer.setOutputFileName("out.pdf")  # print to a PDF file  @pdf  <https://doc.qt.io/qtforpython-6/PySide6/QtPrintSupport/QPrinter.html#PySide6.QtPrintSupport.QPrinter.setOutputFileName>
+if QPrintDialog(printer, self).exec(): doc.print_(printer)  # ask and print a QTextDocument (print_ because print is a builtin)  @print  <https://doc.qt.io/qtforpython-6/PySide6/QtGui/QTextDocument.html#PySide6.QtGui.QTextDocument.print_>
+p = QPainter(printer); ...; printer.newPage(); ...; p.end()  # print several pages by painting  @pages  <https://doc.qt.io/qtforpython-6/PySide6/QtPrintSupport/QPrinter.html#PySide6.QtPrintSupport.QPrinter.newPage>
+printer.pageRect(QPrinter.Unit.DevicePixel)  # get the printable area  @margins  <https://doc.qt.io/qtforpython-6/PySide6/QtPrintSupport/QPrinter.html#PySide6.QtPrintSupport.QPrinter.pageRect>
+QPrinterInfo.availablePrinterNames()  # list installed printers  @list  <https://doc.qt.io/qtforpython-6/PySide6/QtPrintSupport/QPrinterInfo.html#PySide6.QtPrintSupport.QPrinterInfo.availablePrinterNames>
+
+## SVG (QtSvg, QtSvgWidgets)
+QSvgWidget("icon.svg")              # show an SVG file as a widget  @svg @vector  <https://doc.qt.io/qtforpython-6/PySide6/QtSvgWidgets/QSvgWidget.html>
+r = QSvgRenderer("icon.svg"); r.render(p, RECT)  # draw an SVG with a painter at any size  @svg  <https://doc.qt.io/qtforpython-6/PySide6/QtSvg/QSvgRenderer.html#PySide6.QtSvg.QSvgRenderer.render>
+r.defaultSize() / r.isValid() / r.elementExists("id") / r.boundsOnElement("id")  # read SVG facts  @svg  <https://doc.qt.io/qtforpython-6/PySide6/QtSvg/QSvgRenderer.html#PySide6.QtSvg.QSvgRenderer.boundsOnElement>
+QIcon("icon.svg")                   # SVG files work as icons (needs the QtSvg image plugin, shipped with PySide6)  @svg @icon  <https://doc.qt.io/qtforpython-6/PySide6/QtGui/QIcon.html>
+gen = QSvgGenerator(); gen.setFileName("out.svg"); gen.setSize(QSize(W, H)); p = QPainter(gen)  # export your drawing as an SVG file  @svg @export  <https://doc.qt.io/qtforpython-6/PySide6/QtSvg/QSvgGenerator.html>
+QGraphicsSvgItem("icon.svg")        # put an SVG into a QGraphicsScene  @svg @scene  <https://doc.qt.io/qtforpython-6/PySide6/QtSvgWidgets/QGraphicsSvgItem.html>

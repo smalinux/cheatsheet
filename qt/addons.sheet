@@ -1,0 +1,173 @@
+title: qt add-on modules: multimedia, web engine, charts, pdf, serial, dbus, bluetooth, tts, gps, oauth, opengl, 3d (pyside6)
+url:   https://doc.qt.io/qtforpython-6/api.html
+tags:  qt pyside6 addons multimedia audio video camera webengine browser charts plot pdf serial dbus bluetooth tts speech gps oauth opengl 3d sensors xml dom
+
+## multimedia: play audio and video (QtMultimedia)
+player = QMediaPlayer(); audio = QAudioOutput(); player.setAudioOutput(audio)  # make a player with sound output  @audio @play  <https://doc.qt.io/qtforpython-6/PySide6/QtMultimedia/QMediaPlayer.html>
+player.setVideoOutput(QVideoWidget())  # show video in a widget (QtMultimediaWidgets)  @video  <https://doc.qt.io/qtforpython-6/PySide6/QtMultimedia/QMediaPlayer.html#PySide6.QtMultimedia.QMediaPlayer.setVideoOutput>
+player.setSource(QUrl.fromLocalFile("song.mp3")); player.play()  # load and play a file or URL  @play @mp3  <https://doc.qt.io/qtforpython-6/PySide6/QtMultimedia/QMediaPlayer.html#PySide6.QtMultimedia.QMediaPlayer.setSource>
+player.pause() / player.stop()      # pause / stop  @control  <https://doc.qt.io/qtforpython-6/PySide6/QtMultimedia/QMediaPlayer.html#PySide6.QtMultimedia.QMediaPlayer.pause>
+player.setPosition(MS) / player.position() / player.duration()  # seek / where / length in ms  @seek  <https://doc.qt.io/qtforpython-6/PySide6/QtMultimedia/QMediaPlayer.html#PySide6.QtMultimedia.QMediaPlayer.setPosition>
+player.positionChanged.connect(slider.setValue); player.durationChanged.connect(lambda d: slider.setRange(0, d))  # drive a seek slider  @slider  <https://doc.qt.io/qtforpython-6/PySide6/QtMultimedia/QMediaPlayer.html#PySide6.QtMultimedia.QMediaPlayer.positionChanged>
+audio.setVolume(0.5) / audio.setMuted(True)  # volume 0.0..1.0 / mute  @volume  <https://doc.qt.io/qtforpython-6/PySide6/QtMultimedia/QAudioOutput.html#PySide6.QtMultimedia.QAudioOutput.setVolume>
+player.setPlaybackRate(1.5) / player.setLoops(QMediaPlayer.Loops.Infinite)  # speed / loop forever  @speed @loop  <https://doc.qt.io/qtforpython-6/PySide6/QtMultimedia/QMediaPlayer.html#PySide6.QtMultimedia.QMediaPlayer.setPlaybackRate>
+player.mediaStatusChanged.connect(FN) / player.errorOccurred.connect(FN)  # react to EndOfMedia, LoadedMedia, errors  @status  <https://doc.qt.io/qtforpython-6/PySide6/QtMultimedia/QMediaPlayer.html#PySide6.QtMultimedia.QMediaPlayer.mediaStatusChanged>
+player.metaData().stringValue(QMediaMetaData.Key.Title)  # read title / artist tags  @metadata  <https://doc.qt.io/qtforpython-6/PySide6/QtMultimedia/QMediaMetaData.html>
+effect = QSoundEffect(); effect.setSource(QUrl.fromLocalFile("click.wav")); effect.play()  # play a short WAV with low latency  @sound @beep  <https://doc.qt.io/qtforpython-6/PySide6/QtMultimedia/QSoundEffect.html>
+QMediaDevices.audioOutputs() / QMediaDevices.defaultAudioOutput()  # list speakers / get the default  @devices  <https://doc.qt.io/qtforpython-6/PySide6/QtMultimedia/QMediaDevices.html#PySide6.QtMultimedia.QMediaDevices.audioOutputs>
+QMediaDevices.videoInputs()         # list cameras  @camera @devices  <https://doc.qt.io/qtforpython-6/PySide6/QtMultimedia/QMediaDevices.html#PySide6.QtMultimedia.QMediaDevices.videoInputs>
+
+## multimedia: camera, recording, screen capture
+session = QMediaCaptureSession(); cam = QCamera(); session.setCamera(cam); session.setVideoOutput(VIDEO_WIDGET); cam.start()  # show a live camera  @camera @webcam  <https://doc.qt.io/qtforpython-6/PySide6/QtMultimedia/QMediaCaptureSession.html>
+cap = QImageCapture(); session.setImageCapture(cap); cap.captureToFile("photo.jpg")  # take a photo  @photo @snapshot  <https://doc.qt.io/qtforpython-6/PySide6/QtMultimedia/QImageCapture.html#PySide6.QtMultimedia.QImageCapture.captureToFile>
+cap.imageCaptured.connect(lambda id, img: ...)  # get the photo as a QImage  @photo  <https://doc.qt.io/qtforpython-6/PySide6/QtMultimedia/QImageCapture.html#PySide6.QtMultimedia.QImageCapture.imageCaptured>
+rec = QMediaRecorder(); session.setRecorder(rec); session.setAudioInput(QAudioInput()); rec.setOutputLocation(QUrl.fromLocalFile("out.mp4")); rec.record()  # record video and audio  @record  <https://doc.qt.io/qtforpython-6/PySide6/QtMultimedia/QMediaRecorder.html#PySide6.QtMultimedia.QMediaRecorder.record>
+rec.stop() / rec.recorderStateChanged.connect(FN)  # stop / react to state  @record  <https://doc.qt.io/qtforpython-6/PySide6/QtMultimedia/QMediaRecorder.html#PySide6.QtMultimedia.QMediaRecorder.stop>
+sc = QScreenCapture(); sc.setScreen(QGuiApplication.primaryScreen()); session.setScreenCapture(sc); sc.start()  # capture the screen (record it with a QMediaRecorder)  @screen @record  <https://doc.qt.io/qtforpython-6/PySide6/QtMultimedia/QScreenCapture.html>
+QWindowCapture                      # capture one window instead of the screen  @window  <https://doc.qt.io/qtforpython-6/PySide6/QtMultimedia/QWindowCapture.html>
+sink = QVideoSink(); sink.videoFrameChanged.connect(lambda f: f.toImage())  # get raw video frames as images  @frames @opencv  <https://doc.qt.io/qtforpython-6/PySide6/QtMultimedia/QVideoSink.html>
+QAudioSource(FORMAT) / QAudioSink(FORMAT)  # record / play raw PCM audio through a QIODevice  @pcm @raw  <https://doc.qt.io/qtforpython-6/PySide6/QtMultimedia/QAudioSource.html>
+QMediaFormat().supportedFileFormats(QMediaFormat.ConversionMode.Encode)  # list formats that can be recorded  @formats  <https://doc.qt.io/qtforpython-6/PySide6/QtMultimedia/QMediaFormat.html#PySide6.QtMultimedia.QMediaFormat.supportedFileFormats>
+QT_MEDIA_BACKEND=ffmpeg             # choose the media backend (FFmpeg is the default and is shipped with the wheel)  @backend @env
+
+## web engine (Chromium)
+view = QWebEngineView(); view.load(QUrl("https://example.com")); view.show()  # show a web page in a widget (QtWebEngineWidgets)  @browser @html  <https://doc.qt.io/qtforpython-6/PySide6/QtWebEngineWidgets/QWebEngineView.html#PySide6.QtWebEngineWidgets.QWebEngineView.load>
+view.setHtml("<h1>Hi</h1>", QUrl("file:///base/"))  # show HTML text; base URL lets it load local files  @html  <https://doc.qt.io/qtforpython-6/PySide6/QtWebEngineWidgets/QWebEngineView.html#PySide6.QtWebEngineWidgets.QWebEngineView.setHtml>
+view.loadFinished.connect(lambda ok: ...) / view.urlChanged / view.titleChanged  # react to loading and navigation  @signal  <https://doc.qt.io/qtforpython-6/PySide6/QtWebEngineWidgets/QWebEngineView.html#PySide6.QtWebEngineWidgets.QWebEngineView.loadFinished>
+view.back() / view.forward() / view.reload() / view.stop()  # navigate  @history  <https://doc.qt.io/qtforpython-6/PySide6/QtWebEngineWidgets/QWebEngineView.html#PySide6.QtWebEngineWidgets.QWebEngineView.back>
+view.page().runJavaScript("document.title", lambda r: print(r))  # run JavaScript and get the result in a callback  @javascript @eval  <https://doc.qt.io/qtforpython-6/PySide6/QtWebEngineCore/QWebEnginePage.html#PySide6.QtWebEngineCore.QWebEnginePage.runJavaScript>
+view.page().toHtml(lambda html: ...)  # get the page source (async)  @source  <https://doc.qt.io/qtforpython-6/PySide6/QtWebEngineCore/QWebEnginePage.html#PySide6.QtWebEngineCore.QWebEnginePage.toHtml>
+view.setZoomFactor(1.25) / view.findText("word")  # zoom / find in page  @zoom @find  <https://doc.qt.io/qtforpython-6/PySide6/QtWebEngineWidgets/QWebEngineView.html#PySide6.QtWebEngineWidgets.QWebEngineView.setZoomFactor>
+view.page().printToPdf("page.pdf")  # save the page as PDF  @pdf  <https://doc.qt.io/qtforpython-6/PySide6/QtWebEngineCore/QWebEnginePage.html#PySide6.QtWebEngineCore.QWebEnginePage.printToPdf>
+view.settings().setAttribute(QWebEngineSettings.WebAttribute.LocalContentCanAccessRemoteUrls, True)  # change browser settings (JavascriptEnabled, PluginsEnabled...)  @settings  <https://doc.qt.io/qtforpython-6/PySide6/QtWebEngineCore/QWebEngineSettings.html#PySide6.QtWebEngineCore.QWebEngineSettings.setAttribute>
+QWebEngineProfile.defaultProfile().downloadRequested.connect(lambda d: d.accept())  # handle downloads  @download  <https://doc.qt.io/qtforpython-6/PySide6/QtWebEngineCore/QWebEngineProfile.html#PySide6.QtWebEngineCore.QWebEngineProfile.downloadRequested>
+profile = QWebEngineProfile("name"); profile.setPersistentStoragePath(DIR)  # keep cookies and storage in your own folder  @cookies @profile  <https://doc.qt.io/qtforpython-6/PySide6/QtWebEngineCore/QWebEngineProfile.html#PySide6.QtWebEngineCore.QWebEngineProfile.setPersistentStoragePath>
+profile.setHttpUserAgent("myapp") / profile.cookieStore()  # change the user agent / read cookies  @useragent  <https://doc.qt.io/qtforpython-6/PySide6/QtWebEngineCore/QWebEngineProfile.html#PySide6.QtWebEngineCore.QWebEngineProfile.setHttpUserAgent>
+class Page(QWebEnginePage): def acceptNavigationRequest(self, url, type, isMain)  # block or redirect navigation  @navigation  <https://doc.qt.io/qtforpython-6/PySide6/QtWebEngineCore/QWebEnginePage.html#PySide6.QtWebEngineCore.QWebEnginePage.acceptNavigationRequest>
+page.javaScriptConsoleMessage       # override to see console.log of the page  @console @debug  <https://doc.qt.io/qtforpython-6/PySide6/QtWebEngineCore/QWebEnginePage.html#PySide6.QtWebEngineCore.QWebEnginePage.javaScriptConsoleMessage>
+QWebEngineScript() + page.scripts().insert(script)  # inject a user script on every page  @userscript  <https://doc.qt.io/qtforpython-6/PySide6/QtWebEngineCore/QWebEngineScript.html>
+channel = QWebChannel(); channel.registerObject("py", obj); page.setWebChannel(channel)  # call Python from page JavaScript (qwebchannel.js)  @bridge @javascript  <https://doc.qt.io/qtforpython-6/PySide6/QtWebChannel/QWebChannel.html#PySide6.QtWebChannel.QWebChannel.registerObject>
+QTWEBENGINE_CHROMIUM_FLAGS="--disable-gpu"  # pass flags to Chromium (GPU problems in VMs)  @gpu @env
+QTWEBENGINE_REMOTE_DEBUGGING=9222   # open Chrome DevTools at http://localhost:9222  @devtools @debug
+QtWebEngineQuick.initialize()       # call before QGuiApplication when using WebEngineView in QML  @qml  <https://doc.qt.io/qtforpython-6/PySide6/QtWebEngineQuick/QtWebEngineQuick.html>
+
+## charts (QtCharts, widgets)
+from PySide6.QtCharts import QChart, QChartView, QLineSeries  # import 2D charts for widgets  @charts @import  <https://doc.qt.io/qtforpython-6/PySide6/QtCharts/index.html>
+    series = QLineSeries(); series.append(0, 1); series.append(1, 3); series.append(2, 2)
+    chart = QChart(); chart.addSeries(series); chart.createDefaultAxes(); chart.setTitle("Data")
+    view = QChartView(chart); view.setRenderHint(QPainter.RenderHint.Antialiasing)
+series.append(X, Y) / series.replace([QPointF(...)]) / series.clear()  # add points / replace all (fast) / clear  @data  <https://doc.qt.io/qtforpython-6/PySide6/QtCharts/QXYSeries.html#PySide6.QtCharts.QXYSeries.replace>
+QLineSeries / QSplineSeries / QScatterSeries / QAreaSeries  # line, smooth line, dots, filled area  @series @kind  <https://doc.qt.io/qtforpython-6/PySide6/QtCharts/QLineSeries.html>
+s = QBarSeries(); bs = QBarSet("2026"); bs.append([1, 2, 3]); s.append(bs)  # bar chart data  @bar  <https://doc.qt.io/qtforpython-6/PySide6/QtCharts/QBarSet.html>
+QBarCategoryAxis(); ax.append(["Jan", "Feb", "Mar"])  # text categories on an axis  @axis @category  <https://doc.qt.io/qtforpython-6/PySide6/QtCharts/QBarCategoryAxis.html>
+pie = QPieSeries(); pie.append("A", 30); pie.slices()[0].setExploded(True)  # pie chart with a pulled-out slice  @pie  <https://doc.qt.io/qtforpython-6/PySide6/QtCharts/QPieSeries.html>
+ax = QValueAxis(); ax.setRange(0, 10); ax.setLabelFormat("%.1f"); chart.addAxis(ax, Qt.AlignmentFlag.AlignLeft); series.attachAxis(ax)  # set up an axis by hand  @axis  <https://doc.qt.io/qtforpython-6/PySide6/QtCharts/QValueAxis.html>
+QDateTimeAxis(); ax.setFormat("hh:mm")  # time on the x axis (x values = ms since epoch)  @time @axis  <https://doc.qt.io/qtforpython-6/PySide6/QtCharts/QDateTimeAxis.html>
+QLogValueAxis()                     # logarithmic axis  @log @axis  <https://doc.qt.io/qtforpython-6/PySide6/QtCharts/QLogValueAxis.html>
+chart.legend().setAlignment(Qt.AlignmentFlag.AlignBottom) / chart.legend().hide()  # place / hide the legend  @legend  <https://doc.qt.io/qtforpython-6/PySide6/QtCharts/QLegend.html>
+chart.setTheme(QChart.ChartTheme.ChartThemeDark)  # dark chart theme  @theme  <https://doc.qt.io/qtforpython-6/PySide6/QtCharts/QChart.html#PySide6.QtCharts.QChart.setTheme>
+chart.setAnimationOptions(QChart.AnimationOption.SeriesAnimations)  # animate changes  @animate  <https://doc.qt.io/qtforpython-6/PySide6/QtCharts/QChart.html#PySide6.QtCharts.QChart.setAnimationOptions>
+view.setRubberBand(QChartView.RubberBand.RectangleRubberBand)  # zoom by dragging a box  @zoom  <https://doc.qt.io/qtforpython-6/PySide6/QtCharts/QChartView.html#PySide6.QtCharts.QChartView.setRubberBand>
+chart.zoomIn() / chart.zoomReset() / chart.scroll(DX, DY)  # zoom and pan  @zoom  <https://doc.qt.io/qtforpython-6/PySide6/QtCharts/QChart.html#PySide6.QtCharts.QChart.zoomReset>
+series.hovered.connect(lambda point, state: ...)  # show values on hover  @tooltip  <https://doc.qt.io/qtforpython-6/PySide6/QtCharts/QXYSeries.html#PySide6.QtCharts.QXYSeries.hovered>
+series.setUseOpenGL(True)           # draw big line/scatter series with OpenGL  @performance  <https://doc.qt.io/qtforpython-6/PySide6/QtCharts/QAbstractSeries.html#PySide6.QtCharts.QAbstractSeries.setUseOpenGL>
+view.grab().save("chart.png")       # export a chart as PNG  @export  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QWidget.html#PySide6.QtWidgets.QWidget.grab>
+QtGraphs                            # newer graphs module for Qt Quick (2D and 3D); QtGraphsWidgets has 3D bars/scatter/surface for widgets  @graphs  <https://doc.qt.io/qtforpython-6/PySide6/QtGraphs/index.html>
+
+## pdf (QtPdf, QtPdfWidgets)
+doc = QPdfDocument(self); doc.load("file.pdf")  # open a PDF  @pdf @open  <https://doc.qt.io/qtforpython-6/PySide6/QtPdf/QPdfDocument.html#PySide6.QtPdf.QPdfDocument.load>
+view = QPdfView(); view.setDocument(doc)  # show it in a viewer widget  @viewer  <https://doc.qt.io/qtforpython-6/PySide6/QtPdfWidgets/QPdfView.html#PySide6.QtPdfWidgets.QPdfView.setDocument>
+view.setPageMode(QPdfView.PageMode.MultiPage) / view.setZoomMode(QPdfView.ZoomMode.FitToWidth)  # scroll all pages / fit width  @view  <https://doc.qt.io/qtforpython-6/PySide6/QtPdfWidgets/QPdfView.html#PySide6.QtPdfWidgets.QPdfView.setZoomMode>
+doc.pageCount() / doc.pagePointSize(I)  # number of pages / page size  @pages  <https://doc.qt.io/qtforpython-6/PySide6/QtPdf/QPdfDocument.html#PySide6.QtPdf.QPdfDocument.pageCount>
+doc.render(PAGE, QSize(W, H))       # render a page to a QImage (thumbnails)  @render @image  <https://doc.qt.io/qtforpython-6/PySide6/QtPdf/QPdfDocument.html#PySide6.QtPdf.QPdfDocument.render>
+doc.getAllText(PAGE).text()         # extract the text of a page  @text @extract  <https://doc.qt.io/qtforpython-6/PySide6/QtPdf/QPdfDocument.html#PySide6.QtPdf.QPdfDocument.getAllText>
+doc.metaData(QPdfDocument.MetaDataField.Title)  # read title / author  @metadata  <https://doc.qt.io/qtforpython-6/PySide6/QtPdf/QPdfDocument.html#PySide6.QtPdf.QPdfDocument.metaData>
+doc.setPassword("pw")               # open an encrypted PDF  @password  <https://doc.qt.io/qtforpython-6/PySide6/QtPdf/QPdfDocument.html#PySide6.QtPdf.QPdfDocument.setPassword>
+model = QPdfSearchModel(); model.setDocument(doc); model.setSearchString("word"); view.setSearchModel(model)  # search and highlight  @search  <https://doc.qt.io/qtforpython-6/PySide6/QtPdf/QPdfSearchModel.html>
+view.pageNavigator().jump(PAGE, QPointF())  # go to a page  @navigate  <https://doc.qt.io/qtforpython-6/PySide6/QtPdf/QPdfPageNavigator.html#PySide6.QtPdf.QPdfPageNavigator.jump>
+QPdfBookmarkModel(); m.setDocument(doc)  # table of contents as a tree model  @toc @bookmarks  <https://doc.qt.io/qtforpython-6/PySide6/QtPdf/QPdfBookmarkModel.html>
+
+## serial port (QtSerialPort)
+[p.portName() for p in QSerialPortInfo.availablePorts()]  # list serial ports (ttyUSB0, COM3...)  @serial @list  <https://doc.qt.io/qtforpython-6/PySide6/QtSerialPort/QSerialPortInfo.html#PySide6.QtSerialPort.QSerialPortInfo.availablePorts>
+info.description() / info.manufacturer() / info.vendorIdentifier() / info.productIdentifier()  # identify a USB serial device  @usb @vid  <https://doc.qt.io/qtforpython-6/PySide6/QtSerialPort/QSerialPortInfo.html#PySide6.QtSerialPort.QSerialPortInfo.vendorIdentifier>
+port = QSerialPort("/dev/ttyUSB0"); port.setBaudRate(115200)  # make a port and set the speed  @serial @baud  <https://doc.qt.io/qtforpython-6/PySide6/QtSerialPort/QSerialPort.html#PySide6.QtSerialPort.QSerialPort.setBaudRate>
+port.setDataBits(QSerialPort.DataBits.Data8); port.setParity(QSerialPort.Parity.NoParity); port.setStopBits(QSerialPort.StopBits.OneStop)  # 8N1 settings  @8n1  <https://doc.qt.io/qtforpython-6/PySide6/QtSerialPort/QSerialPort.html#PySide6.QtSerialPort.QSerialPort.setParity>
+port.setFlowControl(QSerialPort.FlowControl.NoFlowControl)  # flow control (HardwareControl = RTS/CTS)  @flow  <https://doc.qt.io/qtforpython-6/PySide6/QtSerialPort/QSerialPort.html#PySide6.QtSerialPort.QSerialPort.setFlowControl>
+port.open(QIODevice.OpenModeFlag.ReadWrite)  # open; check port.errorString() on False  @open  <https://doc.qt.io/qtforpython-6/PySide6/QtSerialPort/QSerialPort.html#PySide6.QtSerialPort.QSerialPort.open>
+port.readyRead.connect(lambda: buf.extend(port.readAll().data()))  # read data as it arrives  @read  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/QIODevice.html#PySide6.QtCore.QIODevice.readyRead>
+port.write(b"AT\r\n")               # send bytes  @write  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/QIODevice.html#PySide6.QtCore.QIODevice.write>
+port.setDataTerminalReady(True) / port.setRequestToSend(True)  # set DTR / RTS lines (reset boards)  @dtr @rts  <https://doc.qt.io/qtforpython-6/PySide6/QtSerialPort/QSerialPort.html#PySide6.QtSerialPort.QSerialPort.setDataTerminalReady>
+port.errorOccurred.connect(FN)      # react to errors (ResourceError = unplugged)  @error  <https://doc.qt.io/qtforpython-6/PySide6/QtSerialPort/QSerialPort.html#PySide6.QtSerialPort.QSerialPort.errorOccurred>
+QCanBus.instance().createDevice("socketcan", "can0")  # open a CAN bus device (QtSerialBus)  @can @bus  <https://doc.qt.io/qtforpython-6/PySide6/QtSerialBus/QCanBus.html#PySide6.QtSerialBus.QCanBus.createDevice>
+QModbusTcpClient() / QModbusRtuSerialClient()  # Modbus client over TCP / serial (QtSerialBus)  @modbus  <https://doc.qt.io/qtforpython-6/PySide6/QtSerialBus/QModbusTcpClient.html>
+
+## d-bus (QtDBus, Linux)
+bus = QDBusConnection.sessionBus()  # connect to the user session bus (systemBus() for system services)  @dbus @ipc  <https://doc.qt.io/qtforpython-6/PySide6/QtDBus/QDBusConnection.html#PySide6.QtDBus.QDBusConnection.sessionBus>
+iface = QDBusInterface("org.freedesktop.Notifications", "/org/freedesktop/Notifications", "org.freedesktop.Notifications", bus)  # talk to a service  @interface  <https://doc.qt.io/qtforpython-6/PySide6/QtDBus/QDBusInterface.html>
+reply = iface.call("GetServerInformation")  # call a method and wait; reply.arguments() has the results  @call  <https://doc.qt.io/qtforpython-6/PySide6/QtDBus/QDBusAbstractInterface.html#PySide6.QtDBus.QDBusAbstractInterface.call>
+iface.asyncCall("Method", ARGS)     # call without waiting (QDBusPendingCall + QDBusPendingCallWatcher)  @async  <https://doc.qt.io/qtforpython-6/PySide6/QtDBus/QDBusAbstractInterface.html#PySide6.QtDBus.QDBusAbstractInterface.asyncCall>
+bus.registerService("com.example.app") / bus.registerObject("/", obj, QDBusConnection.RegisterOption.ExportAllSlots)  # offer your own service (single instance apps)  @service @export  <https://doc.qt.io/qtforpython-6/PySide6/QtDBus/QDBusConnection.html#PySide6.QtDBus.QDBusConnection.registerObject>
+bus.connect(SERVICE, PATH, IFACE, "SignalName", self.on_signal)  # listen to a D-Bus signal  @signal  <https://doc.qt.io/qtforpython-6/PySide6/QtDBus/QDBusConnection.html#PySide6.QtDBus.QDBusConnection.connect>
+QDBusMessage.createMethodCall(SERVICE, PATH, IFACE, METHOD)  # build a raw message; bus.call(msg)  @message  <https://doc.qt.io/qtforpython-6/PySide6/QtDBus/QDBusMessage.html#PySide6.QtDBus.QDBusMessage.createMethodCall>
+bus.lastError().message()           # get why a call failed  @error  <https://doc.qt.io/qtforpython-6/PySide6/QtDBus/QDBusError.html>
+
+## bluetooth (QtBluetooth)
+agent = QBluetoothDeviceDiscoveryAgent(); agent.deviceDiscovered.connect(FN); agent.start()  # scan for devices (classic + BLE)  @scan @bluetooth  <https://doc.qt.io/qtforpython-6/PySide6/QtBluetooth/QBluetoothDeviceDiscoveryAgent.html>
+agent.start(QBluetoothDeviceDiscoveryAgent.DiscoveryMethod.LowEnergyMethod)  # scan only for BLE devices  @ble  <https://doc.qt.io/qtforpython-6/PySide6/QtBluetooth/QBluetoothDeviceDiscoveryAgent.html#PySide6.QtBluetooth.QBluetoothDeviceDiscoveryAgent.start>
+info.name() / info.address() / info.rssi()  # read a discovered device  @device  <https://doc.qt.io/qtforpython-6/PySide6/QtBluetooth/QBluetoothDeviceInfo.html>
+ctl = QLowEnergyController.createCentral(info); ctl.connectToDevice()  # connect to a BLE device  @ble @connect  <https://doc.qt.io/qtforpython-6/PySide6/QtBluetooth/QLowEnergyController.html#PySide6.QtBluetooth.QLowEnergyController.createCentral>
+ctl.discoverServices(); ctl.createServiceObject(UUID)  # find GATT services  @gatt  <https://doc.qt.io/qtforpython-6/PySide6/QtBluetooth/QLowEnergyController.html#PySide6.QtBluetooth.QLowEnergyController.createServiceObject>
+svc.characteristic(UUID).value() / svc.writeCharacteristic(CH, DATA)  # read / write a characteristic  @gatt  <https://doc.qt.io/qtforpython-6/PySide6/QtBluetooth/QLowEnergyService.html#PySide6.QtBluetooth.QLowEnergyService.writeCharacteristic>
+QBluetoothLocalDevice().hostMode()  # check if the local adapter is on  @adapter  <https://doc.qt.io/qtforpython-6/PySide6/QtBluetooth/QBluetoothLocalDevice.html#PySide6.QtBluetooth.QBluetoothLocalDevice.hostMode>
+
+## text to speech (QtTextToSpeech)
+tts = QTextToSpeech(); tts.say("Hello")  # speak text with the system voice  @tts @speak  <https://doc.qt.io/qtforpython-6/PySide6/QtTextToSpeech/QTextToSpeech.html#PySide6.QtTextToSpeech.QTextToSpeech.say>
+tts.enqueue("next")                 # queue text after the current  @queue  <https://doc.qt.io/qtforpython-6/PySide6/QtTextToSpeech/QTextToSpeech.html#PySide6.QtTextToSpeech.QTextToSpeech.enqueue>
+tts.availableVoices() / tts.setVoice(V) / tts.setLocale(QLocale("de"))  # pick a voice / language  @voice  <https://doc.qt.io/qtforpython-6/PySide6/QtTextToSpeech/QTextToSpeech.html#PySide6.QtTextToSpeech.QTextToSpeech.availableVoices>
+tts.setRate(0.2) / tts.setPitch(0.0) / tts.setVolume(0.8)  # speed, pitch -1..1, volume 0..1  @speed  <https://doc.qt.io/qtforpython-6/PySide6/QtTextToSpeech/QTextToSpeech.html#PySide6.QtTextToSpeech.QTextToSpeech.setRate>
+tts.stop() / tts.pause() / tts.resume()  # control speech  @control  <https://doc.qt.io/qtforpython-6/PySide6/QtTextToSpeech/QTextToSpeech.html#PySide6.QtTextToSpeech.QTextToSpeech.stop>
+QTextToSpeech.availableEngines()    # list engines (speechd, flite, ...)  @engine  <https://doc.qt.io/qtforpython-6/PySide6/QtTextToSpeech/QTextToSpeech.html#PySide6.QtTextToSpeech.QTextToSpeech.availableEngines>
+tts.stateChanged.connect(FN) / tts.sayingWord.connect(FN)  # react to Speaking/Ready / highlight words  @signal  <https://doc.qt.io/qtforpython-6/PySide6/QtTextToSpeech/QTextToSpeech.html#PySide6.QtTextToSpeech.QTextToSpeech.sayingWord>
+
+## position, maps, sensors
+src = QGeoPositionInfoSource.createDefaultSource(self); src.positionUpdated.connect(FN); src.startUpdates()  # get GPS / network position updates  @gps @location  <https://doc.qt.io/qtforpython-6/PySide6/QtPositioning/QGeoPositionInfoSource.html#PySide6.QtPositioning.QGeoPositionInfoSource.createDefaultSource>
+info.coordinate().latitude() / .longitude() / .altitude()  # read a position  @coordinates  <https://doc.qt.io/qtforpython-6/PySide6/QtPositioning/QGeoCoordinate.html>
+QGeoCoordinate(LAT1, LON1).distanceTo(QGeoCoordinate(LAT2, LON2))  # distance in meters  @distance  <https://doc.qt.io/qtforpython-6/PySide6/QtPositioning/QGeoCoordinate.html#PySide6.QtPositioning.QGeoCoordinate.distanceTo>
+QNmeaPositionInfoSource(QNmeaPositionInfoSource.UpdateMode.RealTimeMode); s.setDevice(SERIAL_PORT)  # read NMEA from a GPS receiver  @nmea @serial  <https://doc.qt.io/qtforpython-6/PySide6/QtPositioning/QNmeaPositionInfoSource.html>
+QGeoServiceProvider("osm").geocodingManager().geocode(ADDRESS)  # look up an address (QtLocation)  @geocode @maps  <https://doc.qt.io/qtforpython-6/PySide6/QtLocation/QGeoServiceProvider.html>
+acc = QAccelerometer(); acc.readingChanged.connect(lambda: acc.reading().x()); acc.start()  # read a sensor (QtSensors)  @sensor @accelerometer  <https://doc.qt.io/qtforpython-6/PySide6/QtSensors/QAccelerometer.html>
+QSensor.sensorTypes()               # list sensor types this device has  @sensor  <https://doc.qt.io/qtforpython-6/PySide6/QtSensors/QSensor.html#PySide6.QtSensors.QSensor.sensorTypes>
+
+## oauth (QtNetworkAuth)
+flow = QOAuth2AuthorizationCodeFlow(); flow.setAuthorizationUrl(QUrl(AUTH)); flow.setTokenUrl(QUrl(TOKEN)); flow.setClientIdentifier(ID)  # set up OAuth 2 login  @oauth @login  <https://doc.qt.io/qtforpython-6/PySide6/QtNetworkAuth/QOAuth2AuthorizationCodeFlow.html>
+flow.setReplyHandler(QOAuthHttpServerReplyHandler(1234, self))  # catch the redirect on http://localhost:1234  @redirect  <https://doc.qt.io/qtforpython-6/PySide6/QtNetworkAuth/QOAuthHttpServerReplyHandler.html>
+flow.authorizeWithBrowser.connect(QDesktopServices.openUrl); flow.grant()  # open the browser and start the login  @browser  <https://doc.qt.io/qtforpython-6/PySide6/QtNetworkAuth/QAbstractOAuth.html#PySide6.QtNetworkAuth.QAbstractOAuth.grant>
+flow.granted.connect(lambda: flow.token())  # get the access token after login  @token  <https://doc.qt.io/qtforpython-6/PySide6/QtNetworkAuth/QAbstractOAuth.html#PySide6.QtNetworkAuth.QAbstractOAuth.granted>
+flow.setRequestedScopeTokens({b"read"})  # ask for scopes  @scope  <https://doc.qt.io/qtforpython-6/PySide6/QtNetworkAuth/QAbstractOAuth2.html#PySide6.QtNetworkAuth.QAbstractOAuth2.setRequestedScopeTokens>
+flow.refreshTokens()                # refresh an expired token  @refresh  <https://doc.qt.io/qtforpython-6/PySide6/QtNetworkAuth/QAbstractOAuth2.html#PySide6.QtNetworkAuth.QAbstractOAuth2.refreshTokens>
+
+## xml dom (QtXml)
+doc = QDomDocument(); doc.setContent(BYTES)  # parse XML into a tree; returns a result with errorMessage when it fails  @xml @parse  <https://doc.qt.io/qtforpython-6/PySide6/QtXml/QDomDocument.html#PySide6.QtXml.QDomDocument.setContent>
+root = doc.documentElement(); root.tagName()  # get the root element  @root  <https://doc.qt.io/qtforpython-6/PySide6/QtXml/QDomDocument.html#PySide6.QtXml.QDomDocument.documentElement>
+e = root.firstChildElement("item"); while not e.isNull(): ...; e = e.nextSiblingElement("item")  # loop over child elements  @loop  <https://doc.qt.io/qtforpython-6/PySide6/QtXml/QDomNode.html#PySide6.QtXml.QDomNode.firstChildElement>
+e.attribute("id", "default") / e.setAttribute("id", "1") / e.text()  # read / write attributes and text  @attribute  <https://doc.qt.io/qtforpython-6/PySide6/QtXml/QDomElement.html#PySide6.QtXml.QDomElement.attribute>
+doc.elementsByTagName("item")       # find all elements by tag  @find  <https://doc.qt.io/qtforpython-6/PySide6/QtXml/QDomDocument.html#PySide6.QtXml.QDomDocument.elementsByTagName>
+el = doc.createElement("x"); el.appendChild(doc.createTextNode("t")); root.appendChild(el)  # build XML  @create  <https://doc.qt.io/qtforpython-6/PySide6/QtXml/QDomDocument.html#PySide6.QtXml.QDomDocument.createElement>
+doc.toString(2)                     # serialize with 2-space indent  @write @save  <https://doc.qt.io/qtforpython-6/PySide6/QtXml/QDomDocument.html#PySide6.QtXml.QDomDocument.toString>
+
+## opengl and 3d
+class GL(QOpenGLWidget): def initializeGL(self) / def resizeGL(self, w, h) / def paintGL(self)  # draw with OpenGL inside a widget  @opengl @gl  <https://doc.qt.io/qtforpython-6/PySide6/QtOpenGLWidgets/QOpenGLWidget.html>
+self.context().functions().glClearColor(0, 0, 0, 1)  # call GL functions through the context (or use PyOpenGL)  @gl  <https://doc.qt.io/qtforpython-6/PySide6/QtGui/QOpenGLContext.html#PySide6.QtGui.QOpenGLContext.functions>
+prog = QOpenGLShaderProgram(); prog.addShaderFromSourceCode(QOpenGLShader.ShaderTypeBit.Vertex, SRC); prog.link()  # compile and link shaders  @shader  <https://doc.qt.io/qtforpython-6/PySide6/QtOpenGL/QOpenGLShaderProgram.html>
+QOpenGLBuffer / QOpenGLVertexArrayObject / QOpenGLTexture / QOpenGLFramebufferObject  # GL object helpers  @buffer @vbo  <https://doc.qt.io/qtforpython-6/PySide6/QtOpenGL/QOpenGLBuffer.html>
+fmt = QSurfaceFormat(); fmt.setVersion(4, 1); fmt.setProfile(QSurfaceFormat.OpenGLContextProfile.CoreProfile); QSurfaceFormat.setDefaultFormat(fmt)  # ask for a GL version before creating the app window  @version @core  <https://doc.qt.io/qtforpython-6/PySide6/QtGui/QSurfaceFormat.html#PySide6.QtGui.QSurfaceFormat.setDefaultFormat>
+QRhiWidget                          # draw with Vulkan / Metal / D3D / GL through Qt's RHI in a widget  @rhi @vulkan  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QRhiWidget.html>
+view = Qt3DExtras.Qt3DWindow(); root = Qt3DCore.QEntity(); view.setRootEntity(root)  # start a Qt 3D scene (QSphereMesh, QPhongMaterial, QTransform components)  @3d  <https://doc.qt.io/qtforpython-6/PySide6/Qt3DExtras/index.html>
+View3D { } in QML (QtQuick3D)       # usually the easier way to do 3D today  @3d @quick3d  <https://doc.qt.io/qtforpython-6/PySide6/QtQuick3D/index.html>
+
+## other modules
+QRemoteObjectHost(QUrl("local:registry")).enableRemoting(obj)  # share a QObject with other processes (QtRemoteObjects)  @ipc @rpc  <https://doc.qt.io/qtforpython-6/PySide6/QtRemoteObjects/QRemoteObjectHost.html>
+QRemoteObjectNode(QUrl("local:registry")).acquireDynamic("Name")  # get a replica of a remote object  @ipc  <https://doc.qt.io/qtforpython-6/PySide6/QtRemoteObjects/QRemoteObjectNode.html#PySide6.QtRemoteObjects.QRemoteObjectNode.acquireDynamic>
+QNearFieldManager().startTargetDetection(QNearFieldTarget.AccessMethod.NdefAccess)  # read NFC tags (QtNfc)  @nfc  <https://doc.qt.io/qtforpython-6/PySide6/QtNfc/QNearFieldManager.html#PySide6.QtNfc.QNearFieldManager.startTargetDetection>
+engine = QAudioEngine(); s = QSpatialSound(engine); s.setSource(URL); s.setPosition(QVector3D(1, 0, 0)); s.play()  # play a sound at a 3D position (QtSpatialAudio)  @3d @audio  <https://doc.qt.io/qtforpython-6/PySide6/QtSpatialAudio/QSpatialSound.html>
+QHelpEngine("app.qhc").setupData()  # load a compiled help collection (QtHelp)  @help  <https://doc.qt.io/qtforpython-6/PySide6/QtHelp/QHelpEngine.html>

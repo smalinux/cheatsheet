@@ -1,0 +1,96 @@
+title: qt container widgets: group box, tabs, stacked, splitter, scroll area, tool box, mdi (pyside6)
+url:   https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/index.html
+tags:  qt pyside6 container qgroupbox qtabwidget tabs qstackedwidget pages qsplitter qscrollarea scroll qtoolbox accordion qmdiarea mdi
+
+## QGroupBox
+box = QGroupBox("Options")          # draw a titled frame around a group of widgets  @frame @group  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QGroupBox.html>
+box.setLayout(LAYOUT)               # put widgets inside the group box  @layout  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QWidget.html#PySide6.QtWidgets.QWidget.setLayout>
+box.setCheckable(True)              # add a check box to the title that enables/disables the content  @toggle  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QGroupBox.html#PySide6.QtWidgets.QGroupBox.setCheckable>
+box.setChecked(False) / box.toggled.connect(FN)  # set / react to the title check box  @toggle  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QGroupBox.html#PySide6.QtWidgets.QGroupBox.toggled>
+box.setFlat(True)                   # draw only the top line  @flat  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QGroupBox.html#PySide6.QtWidgets.QGroupBox.setFlat>
+box.setAlignment(Qt.AlignmentFlag.AlignHCenter)  # center the title  @align  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QGroupBox.html#PySide6.QtWidgets.QGroupBox.setAlignment>
+
+## QTabWidget
+tabs = QTabWidget()                 # make a widget with tabs, one page per tab  @tabs @pages  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QTabWidget.html>
+tabs.addTab(PAGE, "Title")          # add a page; returns its index  @add  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QTabWidget.html#PySide6.QtWidgets.QTabWidget.addTab>
+tabs.addTab(PAGE, QIcon("i.png"), "Title")  # add a page with an icon  @icon  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QTabWidget.html#PySide6.QtWidgets.QTabWidget.addTab>
+tabs.insertTab(I, PAGE, "Title") / tabs.removeTab(I)  # insert / remove a tab (removeTab does not delete the page)  @edit  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QTabWidget.html#PySide6.QtWidgets.QTabWidget.removeTab>
+tabs.setCurrentIndex(I) / tabs.setCurrentWidget(PAGE)  # switch to a tab  @select  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QTabWidget.html#PySide6.QtWidgets.QTabWidget.setCurrentIndex>
+tabs.currentIndex() / tabs.currentWidget() / tabs.count()  # get the current tab / number of tabs  @current  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QTabWidget.html#PySide6.QtWidgets.QTabWidget.currentIndex>
+tabs.currentChanged.connect(FN)     # run FN(index) when the tab changes  @signal  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QTabWidget.html#PySide6.QtWidgets.QTabWidget.currentChanged>
+tabs.setTabsClosable(True); tabs.tabCloseRequested.connect(tabs.removeTab)  # show x buttons that close tabs  @close  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QTabWidget.html#PySide6.QtWidgets.QTabWidget.tabCloseRequested>
+tabs.setMovable(True)               # let the user reorder tabs by dragging  @reorder  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QTabWidget.html#PySide6.QtWidgets.QTabWidget.setMovable>
+tabs.setTabPosition(QTabWidget.TabPosition.West)  # put the tabs on the left (North, South, East)  @position @vertical  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QTabWidget.html#PySide6.QtWidgets.QTabWidget.setTabPosition>
+tabs.setDocumentMode(True)          # draw tabs flat like a browser  @look  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QTabWidget.html#PySide6.QtWidgets.QTabWidget.setDocumentMode>
+tabs.setTabText(I, T) / tabs.setTabIcon(I, ICON) / tabs.setTabToolTip(I, T)  # change a tab label  @label  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QTabWidget.html#PySide6.QtWidgets.QTabWidget.setTabText>
+tabs.setTabEnabled(I, False) / tabs.setTabVisible(I, False)  # disable / hide one tab  @disable @hide  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QTabWidget.html#PySide6.QtWidgets.QTabWidget.setTabVisible>
+tabs.indexOf(PAGE) / tabs.widget(I)  # map between page and index  @lookup  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QTabWidget.html#PySide6.QtWidgets.QTabWidget.indexOf>
+tabs.setCornerWidget(BUTTON, Qt.Corner.TopRightCorner)  # put a "+" button next to the tabs  @corner @new-tab  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QTabWidget.html#PySide6.QtWidgets.QTabWidget.setCornerWidget>
+tabs.setTabBarAutoHide(True)        # hide the tab bar when there is only one tab  @autohide  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QTabWidget.html#PySide6.QtWidgets.QTabWidget.setTabBarAutoHide>
+tabs.setElideMode(Qt.TextElideMode.ElideRight)  # cut long tab titles with ...  @elide  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QTabWidget.html#PySide6.QtWidgets.QTabWidget.setElideMode>
+tabs.tabBar()                       # get the QTabBar for more control  @tabbar  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QTabWidget.html#PySide6.QtWidgets.QTabWidget.tabBar>
+tabs.tabBarDoubleClicked.connect(FN)  # run FN(index) on a tab double click (rename)  @signal  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QTabWidget.html#PySide6.QtWidgets.QTabWidget.tabBarDoubleClicked>
+QTabBar()                           # tab strip without pages; pair it with QStackedWidget yourself  @tabbar  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QTabBar.html>
+bar.setTabButton(I, QTabBar.ButtonPosition.RightSide, W)  # put a widget (button) inside a tab  @button  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QTabBar.html#PySide6.QtWidgets.QTabBar.setTabButton>
+bar.setTabData(I, DATA) / bar.tabData(I)  # attach data to a tab  @data  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QTabBar.html#PySide6.QtWidgets.QTabBar.setTabData>
+bar.tabMoved.connect(FN)            # run FN(from, to) when the user drags a tab  @reorder  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QTabBar.html#PySide6.QtWidgets.QTabBar.tabMoved>
+
+## QStackedWidget (pages without tabs)
+stack = QStackedWidget()            # show one of many pages at a time (wizards, sidebars)  @pages @switch  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QStackedWidget.html>
+stack.addWidget(PAGE)               # add a page; returns its index  @add  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QStackedWidget.html#PySide6.QtWidgets.QStackedWidget.addWidget>
+stack.setCurrentIndex(I) / stack.setCurrentWidget(PAGE)  # show a page  @switch  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QStackedWidget.html#PySide6.QtWidgets.QStackedWidget.setCurrentIndex>
+stack.currentIndex() / stack.currentWidget() / stack.count()  # get the shown page  @current  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QStackedWidget.html#PySide6.QtWidgets.QStackedWidget.currentIndex>
+stack.removeWidget(PAGE)            # remove a page (not deleted)  @remove  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QStackedWidget.html#PySide6.QtWidgets.QStackedWidget.removeWidget>
+stack.currentChanged.connect(FN)    # run FN(index) when the page changes  @signal  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QStackedWidget.html#PySide6.QtWidgets.QStackedWidget.currentChanged>
+list.currentRowChanged.connect(stack.setCurrentIndex)  # drive pages from a side QListWidget (settings dialog)  @sidebar @settings
+QStackedLayout                      # the same idea as a layout; setStackingMode(StackAll) shows all pages on top of each other  @overlay  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QStackedLayout.html>
+
+## QToolBox (accordion)
+tb = QToolBox()                     # stack pages with clickable headers, one open at a time  @accordion @collapse  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QToolBox.html>
+tb.addItem(PAGE, "Title")           # add a page with a header  @add  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QToolBox.html#PySide6.QtWidgets.QToolBox.addItem>
+tb.setCurrentIndex(I) / tb.currentChanged.connect(FN)  # open a page / react to opening  @switch  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QToolBox.html#PySide6.QtWidgets.QToolBox.currentChanged>
+tb.setItemText(I, T) / tb.setItemEnabled(I, False)  # rename / disable a page  @edit  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QToolBox.html#PySide6.QtWidgets.QToolBox.setItemText>
+
+## QSplitter
+split = QSplitter(Qt.Orientation.Horizontal)  # place widgets side by side with draggable dividers  @pane @divider @resize  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QSplitter.html>
+split.addWidget(W) / split.insertWidget(I, W)  # add a pane  @add  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QSplitter.html#PySide6.QtWidgets.QSplitter.addWidget>
+split.setSizes([200, 600])          # set pane sizes in pixels  @size @width  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QSplitter.html#PySide6.QtWidgets.QSplitter.setSizes>
+split.sizes()                       # get pane sizes  @size  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QSplitter.html#PySide6.QtWidgets.QSplitter.sizes>
+split.setStretchFactor(I, 1)        # make pane I take the extra space on resize  @stretch  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QSplitter.html#PySide6.QtWidgets.QSplitter.setStretchFactor>
+split.setCollapsible(I, False)      # stop pane I from collapsing to zero  @collapse  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QSplitter.html#PySide6.QtWidgets.QSplitter.setCollapsible>
+split.setChildrenCollapsible(False)  # stop all panes from collapsing  @collapse  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QSplitter.html#PySide6.QtWidgets.QSplitter.setChildrenCollapsible>
+split.setHandleWidth(N)             # set the divider width  @handle  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QSplitter.html#PySide6.QtWidgets.QSplitter.setHandleWidth>
+split.setOpaqueResize(False)        # move panes only when the drag ends  @drag  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QSplitter.html#PySide6.QtWidgets.QSplitter.setOpaqueResize>
+split.splitterMoved.connect(FN)     # run FN(pos, index) while the divider moves  @signal  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QSplitter.html#PySide6.QtWidgets.QSplitter.splitterMoved>
+split.saveState() / split.restoreState(BYTES)  # remember pane sizes in QSettings  @settings @remember  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QSplitter.html#PySide6.QtWidgets.QSplitter.saveState>
+split.replaceWidget(I, W)           # swap one pane  @replace  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QSplitter.html#PySide6.QtWidgets.QSplitter.replaceWidget>
+QSplitter(Qt.Orientation.Vertical) inside a horizontal one  # nest splitters for an IDE-like layout  @nested
+
+## QScrollArea
+area = QScrollArea()                # add scroll bars around a widget bigger than the view  @scroll @overflow  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QScrollArea.html>
+area.setWidget(INNER)               # set the widget to scroll (give INNER a layout)  @content  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QScrollArea.html#PySide6.QtWidgets.QScrollArea.setWidget>
+area.setWidgetResizable(True)       # let the inner widget grow to the view width (almost always wanted)  @resize  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QScrollArea.html#PySide6.QtWidgets.QScrollArea.setWidgetResizable>
+    area = QScrollArea(); area.setWidgetResizable(True)
+    inner = QWidget(); col = QVBoxLayout(inner)
+    for i in range(100): col.addWidget(QLabel(f"row {i}"))
+    area.setWidget(inner)
+area.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)  # hide a scroll bar (AlwaysOn, AsNeeded)  @scrollbar  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QAbstractScrollArea.html#PySide6.QtWidgets.QAbstractScrollArea.setHorizontalScrollBarPolicy>
+area.ensureWidgetVisible(CHILD)     # scroll so a child is visible  @scroll-to  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QScrollArea.html#PySide6.QtWidgets.QScrollArea.ensureWidgetVisible>
+area.ensureVisible(X, Y)            # scroll so a point is visible  @scroll-to  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QScrollArea.html#PySide6.QtWidgets.QScrollArea.ensureVisible>
+area.verticalScrollBar().setValue(area.verticalScrollBar().maximum())  # scroll to the bottom  @bottom @log  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QAbstractScrollArea.html#PySide6.QtWidgets.QAbstractScrollArea.verticalScrollBar>
+area.verticalScrollBar().rangeChanged.connect(lambda lo, hi: bar.setValue(hi))  # stay at the bottom while content grows  @autoscroll @tail  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QAbstractSlider.html#PySide6.QtWidgets.QAbstractSlider.rangeChanged>
+area.viewport()                     # get the widget that shows the content (paint/mouse go here in subclasses)  @viewport  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QAbstractScrollArea.html#PySide6.QtWidgets.QAbstractScrollArea.viewport>
+area.setFrameShape(QFrame.Shape.NoFrame)  # remove the border  @border  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QFrame.html#PySide6.QtWidgets.QFrame.setFrameShape>
+area.takeWidget()                   # remove the inner widget and give it back  @remove  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QScrollArea.html#PySide6.QtWidgets.QScrollArea.takeWidget>
+QScroller.grabGesture(area.viewport(), QScroller.ScrollerGestureType.LeftMouseButtonGesture)  # kinetic (touch-like) scrolling by mouse drag  @kinetic @touch  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QScroller.html#PySide6.QtWidgets.QScroller.grabGesture>
+
+## QMdiArea (windows inside a window)
+mdi = QMdiArea()                    # make an area that holds sub-windows  @mdi @subwindow  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QMdiArea.html>
+sub = mdi.addSubWindow(WIDGET); sub.show()  # add a sub-window  @add  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QMdiArea.html#PySide6.QtWidgets.QMdiArea.addSubWindow>
+mdi.setViewMode(QMdiArea.ViewMode.TabbedView)  # show sub-windows as tabs  @tabs  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QMdiArea.html#PySide6.QtWidgets.QMdiArea.setViewMode>
+mdi.tileSubWindows() / mdi.cascadeSubWindows()  # arrange sub-windows  @arrange  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QMdiArea.html#PySide6.QtWidgets.QMdiArea.tileSubWindows>
+mdi.activeSubWindow() / mdi.subWindowList()  # get the active / all sub-windows  @list  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QMdiArea.html#PySide6.QtWidgets.QMdiArea.subWindowList>
+mdi.subWindowActivated.connect(FN)  # run FN(sub) when another sub-window is activated  @signal  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QMdiArea.html#PySide6.QtWidgets.QMdiArea.subWindowActivated>
+mdi.closeAllSubWindows()            # close every sub-window  @close  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QMdiArea.html#PySide6.QtWidgets.QMdiArea.closeAllSubWindows>
+mdi.setTabsClosable(True) / mdi.setTabsMovable(True)  # tab options in TabbedView  @tabs  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QMdiArea.html#PySide6.QtWidgets.QMdiArea.setTabsClosable>
+sub.widget() / sub.setWidget(W)     # get / set the content of a sub-window  @content  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QMdiSubWindow.html#PySide6.QtWidgets.QMdiSubWindow.widget>

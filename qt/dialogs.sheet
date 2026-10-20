@@ -1,0 +1,136 @@
+title: qt dialogs: QDialog, message box, file / color / font / input / progress dialogs, wizard (pyside6)
+url:   https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QDialog.html
+tags:  qt pyside6 dialog qdialog modal popup qmessagebox alert confirm qfiledialog open save qinputdialog prompt qcolordialog qfontdialog qprogressdialog qwizard
+
+## QDialog
+class MyDialog(QDialog):            # subclass QDialog for your own popup with OK/Cancel  @custom @modal  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QDialog.html>
+    class MyDialog(QDialog):
+        def __init__(self, parent=None):
+            super().__init__(parent)
+            self.name = QLineEdit()
+            bb = QDialogButtonBox(QDialogButtonBox.StandardButton.Ok | QDialogButtonBox.StandardButton.Cancel)
+            bb.accepted.connect(self.accept)
+            bb.rejected.connect(self.reject)
+            lay = QVBoxLayout(self); lay.addWidget(self.name); lay.addWidget(bb)
+    dlg = MyDialog(self)
+    if dlg.exec() == QDialog.DialogCode.Accepted:
+        print(dlg.name.text())
+dlg.exec()                          # show modal and wait; returns QDialog.DialogCode.Accepted (1) or Rejected (0)  @modal @blocking @wait  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QDialog.html#PySide6.QtWidgets.QDialog.exec>
+dlg.open()                          # show window-modal without blocking; react with finished/accepted signals  @async @modal  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QDialog.html#PySide6.QtWidgets.QDialog.open>
+dlg.show()                          # show modeless (user can keep using other windows)  @modeless  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QWidget.html#PySide6.QtWidgets.QWidget.show>
+dlg.accept() / dlg.reject()         # close with OK / Cancel result  @close @ok @cancel  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QDialog.html#PySide6.QtWidgets.QDialog.accept>
+dlg.done(CODE)                      # close with any int result  @close  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QDialog.html#PySide6.QtWidgets.QDialog.done>
+dlg.accepted.connect(FN) / dlg.rejected.connect(FN) / dlg.finished.connect(FN)  # react to the result (finished gets the code)  @signal  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QDialog.html#PySide6.QtWidgets.QDialog.finished>
+dlg.result()                        # get the last result code  @result  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QDialog.html#PySide6.QtWidgets.QDialog.result>
+dlg.setModal(True)                  # make show() modal too  @modal  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QDialog.html#PySide6.QtWidgets.QDialog.setModal>
+dlg.setSizeGripEnabled(True)        # show a resize grip  @resize  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QDialog.html#PySide6.QtWidgets.QDialog.setSizeGripEnabled>
+def accept(self): if valid: super().accept()  # override accept() to validate before closing  @validate
+Esc key                             # calls reject(); Enter presses the default button  @keyboard
+QDialog(parent)                     # a parent centers the dialog on it and keeps it on top  @parent @center
+
+## QDialogButtonBox
+bb = QDialogButtonBox(QDialogButtonBox.StandardButton.Ok | QDialogButtonBox.StandardButton.Cancel)  # standard buttons in the platform's order  @ok @cancel  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QDialogButtonBox.html>
+bb.accepted.connect(dlg.accept); bb.rejected.connect(dlg.reject)  # wire OK/Cancel (Yes/No/Save... map to these too)  @wire  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QDialogButtonBox.html#PySide6.QtWidgets.QDialogButtonBox.accepted>
+QDialogButtonBox.StandardButton.Save / Discard / Apply / Close / Help / Reset / RestoreDefaults / Yes / No  # other standard buttons  @buttons  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QDialogButtonBox.html#PySide6.QtWidgets.QDialogButtonBox.StandardButton>
+bb.button(QDialogButtonBox.StandardButton.Ok)  # get the QPushButton for a standard button (to disable it)  @get @disable  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QDialogButtonBox.html#PySide6.QtWidgets.QDialogButtonBox.button>
+bb.addButton("Run", QDialogButtonBox.ButtonRole.AcceptRole)  # add your own button with a role  @custom  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QDialogButtonBox.html#PySide6.QtWidgets.QDialogButtonBox.addButton>
+bb.clicked.connect(lambda b: bb.buttonRole(b))  # react to any button, e.g. Apply (ApplyRole)  @apply  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QDialogButtonBox.html#PySide6.QtWidgets.QDialogButtonBox.clicked>
+bb.helpRequested.connect(FN)        # react to the Help button  @help  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QDialogButtonBox.html#PySide6.QtWidgets.QDialogButtonBox.helpRequested>
+bb.setOrientation(Qt.Orientation.Vertical)  # stack buttons vertically  @vertical  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QDialogButtonBox.html#PySide6.QtWidgets.QDialogButtonBox.setOrientation>
+bb.setCenterButtons(True)           # center the buttons  @center  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QDialogButtonBox.html#PySide6.QtWidgets.QDialogButtonBox.setCenterButtons>
+
+## QMessageBox (static helpers)
+QMessageBox.information(self, "Title", "Text")  # show an info box with OK  @info @alert  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QMessageBox.html#PySide6.QtWidgets.QMessageBox.information>
+QMessageBox.warning(self, "Title", "Text")  # show a warning box  @warn @alert  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QMessageBox.html#PySide6.QtWidgets.QMessageBox.warning>
+QMessageBox.critical(self, "Title", "Text")  # show an error box  @error @alert  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QMessageBox.html#PySide6.QtWidgets.QMessageBox.critical>
+QMessageBox.question(self, "Title", "Delete?")  # ask Yes/No; returns the StandardButton clicked  @confirm @ask @yesno  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QMessageBox.html#PySide6.QtWidgets.QMessageBox.question>
+    r = QMessageBox.question(self, "Quit", "Save changes?",
+            QMessageBox.StandardButton.Save | QMessageBox.StandardButton.Discard | QMessageBox.StandardButton.Cancel,
+            QMessageBox.StandardButton.Save)
+    if r == QMessageBox.StandardButton.Save: self.save()
+QMessageBox.about(self, "About", "<b>App</b> 1.0")  # show an about box with the app icon  @about  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QMessageBox.html#PySide6.QtWidgets.QMessageBox.about>
+QMessageBox.aboutQt(self)           # show the "About Qt" box  @about  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QMessageBox.html#PySide6.QtWidgets.QMessageBox.aboutQt>
+QMessageBox.StandardButton.Ok / Cancel / Yes / No / Save / Discard / Retry / Abort / Ignore / YesToAll / NoToAll  # buttons for message boxes  @buttons  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QMessageBox.html#PySide6.QtWidgets.QMessageBox.StandardButton>
+
+## QMessageBox (object)
+box = QMessageBox(self)             # build a message box step by step  @custom  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QMessageBox.html>
+box.setIcon(QMessageBox.Icon.Warning)  # set the icon: Information, Warning, Critical, Question, NoIcon  @icon  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QMessageBox.html#PySide6.QtWidgets.QMessageBox.setIcon>
+box.setText("Main text") / box.setInformativeText("Smaller text below")  # set the texts  @text  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QMessageBox.html#PySide6.QtWidgets.QMessageBox.setInformativeText>
+box.setDetailedText("Long log...")  # add a "Show Details..." area  @details @traceback  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QMessageBox.html#PySide6.QtWidgets.QMessageBox.setDetailedText>
+box.setStandardButtons(QMessageBox.StandardButton.Ok | QMessageBox.StandardButton.Cancel)  # choose buttons  @buttons  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QMessageBox.html#PySide6.QtWidgets.QMessageBox.setStandardButtons>
+box.setDefaultButton(QMessageBox.StandardButton.Cancel)  # choose the Enter button  @default  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QMessageBox.html#PySide6.QtWidgets.QMessageBox.setDefaultButton>
+btn = box.addButton("Retry later", QMessageBox.ButtonRole.ActionRole)  # add a custom button  @custom  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QMessageBox.html#PySide6.QtWidgets.QMessageBox.addButton>
+box.exec(); box.clickedButton() is btn  # show and find which button was clicked  @result  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QMessageBox.html#PySide6.QtWidgets.QMessageBox.clickedButton>
+box.setCheckBox(QCheckBox("Don't ask again"))  # add a check box to the box  @dont-ask  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QMessageBox.html#PySide6.QtWidgets.QMessageBox.setCheckBox>
+box.setTextFormat(Qt.TextFormat.RichText)  # allow HTML and links in the text  @html  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QMessageBox.html#PySide6.QtWidgets.QMessageBox.setTextFormat>
+box.setTextInteractionFlags(Qt.TextInteractionFlag.TextSelectableByMouse)  # let the user copy the text  @copy  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QMessageBox.html#PySide6.QtWidgets.QMessageBox.setTextInteractionFlags>
+box.setEscapeButton(QMessageBox.StandardButton.Cancel)  # choose what Esc does  @escape  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QMessageBox.html#PySide6.QtWidgets.QMessageBox.setEscapeButton>
+box.setIconPixmap(QPixmap("logo.png"))  # use your own icon image  @icon  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QMessageBox.html#PySide6.QtWidgets.QMessageBox.setIconPixmap>
+QErrorMessage(self).showMessage("TEXT")  # show an error with a "show this again" check box  @error  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QErrorMessage.html#PySide6.QtWidgets.QErrorMessage.showMessage>
+
+## QFileDialog
+path, flt = QFileDialog.getOpenFileName(self, "Open", "", "Images (*.png *.jpg);;All files (*)")  # ask for a file to open; path is "" if cancelled  @open @browse @pick  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QFileDialog.html#PySide6.QtWidgets.QFileDialog.getOpenFileName>
+paths, flt = QFileDialog.getOpenFileNames(self, "Open", DIR, FILTER)  # ask for several files  @multi @open  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QFileDialog.html#PySide6.QtWidgets.QFileDialog.getOpenFileNames>
+path, flt = QFileDialog.getSaveFileName(self, "Save", "untitled.txt", "Text (*.txt)")  # ask where to save; asks before overwriting  @save @saveas  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QFileDialog.html#PySide6.QtWidgets.QFileDialog.getSaveFileName>
+d = QFileDialog.getExistingDirectory(self, "Pick folder", START)  # ask for a folder  @folder @directory  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QFileDialog.html#PySide6.QtWidgets.QFileDialog.getExistingDirectory>
+url, flt = QFileDialog.getOpenFileUrl(self)  # ask for a file as a QUrl (remote files too)  @url  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QFileDialog.html#PySide6.QtWidgets.QFileDialog.getOpenFileUrl>
+"Images (*.png *.jpg);;Text (*.txt)"  # filter string: name (patterns), several filters joined by ;;  @filter @extension
+QFileDialog.Option.DontUseNativeDialog  # use Qt's own dialog (same on all OSes, works with custom widgets)  @native  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QFileDialog.html#PySide6.QtWidgets.QFileDialog.Option>
+QFileDialog.Option.ShowDirsOnly / DontConfirmOverwrite / ReadOnly / DontResolveSymlinks  # other options for the static calls  @options  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QFileDialog.html#PySide6.QtWidgets.QFileDialog.Option>
+QFileDialog.saveFileContent(BYTES, "name.txt")  # offer bytes for download/saving (needed on WebAssembly)  @wasm @download  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QFileDialog.html#PySide6.QtWidgets.QFileDialog.saveFileContent>
+dlg = QFileDialog(self); dlg.setFileMode(QFileDialog.FileMode.ExistingFiles)  # build a file dialog object (AnyFile, ExistingFile, Directory)  @custom  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QFileDialog.html#PySide6.QtWidgets.QFileDialog.setFileMode>
+dlg.setAcceptMode(QFileDialog.AcceptMode.AcceptSave)  # make it a save dialog  @save  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QFileDialog.html#PySide6.QtWidgets.QFileDialog.setAcceptMode>
+dlg.setNameFilters(["Images (*.png)", "Any (*)"]) / dlg.setMimeTypeFilters(["image/png"])  # set filters  @filter  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QFileDialog.html#PySide6.QtWidgets.QFileDialog.setNameFilters>
+dlg.setDefaultSuffix("txt")         # add .txt if the user types no extension  @extension  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QFileDialog.html#PySide6.QtWidgets.QFileDialog.setDefaultSuffix>
+dlg.setDirectory(DIR) / dlg.selectFile(NAME)  # start folder / preselected name  @start  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QFileDialog.html#PySide6.QtWidgets.QFileDialog.setDirectory>
+dlg.exec() and dlg.selectedFiles()  # show and get the chosen paths  @result  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QFileDialog.html#PySide6.QtWidgets.QFileDialog.selectedFiles>
+dlg.setSidebarUrls([QUrl.fromLocalFile(DIR)])  # set the sidebar places  @sidebar  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QFileDialog.html#PySide6.QtWidgets.QFileDialog.setSidebarUrls>
+dlg.setViewMode(QFileDialog.ViewMode.Detail)  # show details (size, date)  @view  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QFileDialog.html#PySide6.QtWidgets.QFileDialog.setViewMode>
+
+## QInputDialog
+text, ok = QInputDialog.getText(self, "Title", "Name:")  # ask for a line of text; ok is False on Cancel  @prompt @ask @input  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QInputDialog.html#PySide6.QtWidgets.QInputDialog.getText>
+text, ok = QInputDialog.getText(self, "Login", "Password:", QLineEdit.EchoMode.Password)  # ask for a password  @password  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QInputDialog.html#PySide6.QtWidgets.QInputDialog.getText>
+n, ok = QInputDialog.getInt(self, "Title", "Count:", 1, 0, 100, 1)  # ask for an int (value, min, max, step)  @number @int  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QInputDialog.html#PySide6.QtWidgets.QInputDialog.getInt>
+x, ok = QInputDialog.getDouble(self, "Title", "Value:", 0.5, 0, 1, 3)  # ask for a float (value, min, max, decimals)  @float  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QInputDialog.html#PySide6.QtWidgets.QInputDialog.getDouble>
+item, ok = QInputDialog.getItem(self, "Title", "Pick:", ["a", "b"], 0, False)  # ask to pick from a list (current, editable)  @choice @select  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QInputDialog.html#PySide6.QtWidgets.QInputDialog.getItem>
+text, ok = QInputDialog.getMultiLineText(self, "Title", "Notes:", "start text")  # ask for several lines  @multiline  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QInputDialog.html#PySide6.QtWidgets.QInputDialog.getMultiLineText>
+
+## QColorDialog / QFontDialog
+c = QColorDialog.getColor(Qt.GlobalColor.red, self, "Pick color")  # ask for a color; check c.isValid() (False on Cancel)  @color @picker  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QColorDialog.html#PySide6.QtWidgets.QColorDialog.getColor>
+QColorDialog.getColor(C, self, "T", QColorDialog.ColorDialogOption.ShowAlphaChannel)  # ask for a color with transparency  @alpha  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QColorDialog.html#PySide6.QtWidgets.QColorDialog.ColorDialogOption>
+QColorDialog.setCustomColor(I, COLOR)  # fill the "custom colors" row  @custom  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QColorDialog.html#PySide6.QtWidgets.QColorDialog.setCustomColor>
+ok, font = QFontDialog.getFont(self)  # ask for a font; NOTE: returns (ok, font), the other way round from QInputDialog  @font  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QFontDialog.html#PySide6.QtWidgets.QFontDialog.getFont>
+ok, font = QFontDialog.getFont(CURRENT_FONT, self, "Font")  # ask for a font starting from the current one  @font  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QFontDialog.html#PySide6.QtWidgets.QFontDialog.getFont>
+QFontDialog.FontDialogOption.MonospacedFonts  # show only fixed-width fonts  @monospace  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QFontDialog.html#PySide6.QtWidgets.QFontDialog.FontDialogOption>
+dlg = QColorDialog(self); dlg.currentColorChanged.connect(preview)  # live preview while picking  @preview  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QColorDialog.html#PySide6.QtWidgets.QColorDialog.currentColorChanged>
+
+## QProgressDialog
+p = QProgressDialog("Copying...", "Cancel", 0, N, self)  # show progress with a Cancel button  @progress @busy  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QProgressDialog.html>
+p.setWindowModality(Qt.WindowModality.WindowModal)  # block the parent while it runs  @modal  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QWidget.html#PySide6.QtWidgets.QWidget.setWindowModality>
+p.setValue(I)                       # move the bar (also processes events when modal)  @update  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QProgressDialog.html#PySide6.QtWidgets.QProgressDialog.setValue>
+p.wasCanceled()                     # check if the user pressed Cancel  @cancel  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QProgressDialog.html#PySide6.QtWidgets.QProgressDialog.wasCanceled>
+p.canceled.connect(FN)              # react to Cancel  @cancel  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QProgressDialog.html#PySide6.QtWidgets.QProgressDialog.canceled>
+p.setMinimumDuration(500)           # show it only if the work takes longer than 500 ms (default 4000)  @delay  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QProgressDialog.html#PySide6.QtWidgets.QProgressDialog.setMinimumDuration>
+p.setAutoClose(True) / p.setAutoReset(True)  # close / reset when value reaches max  @close  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QProgressDialog.html#PySide6.QtWidgets.QProgressDialog.setAutoClose>
+p.setLabelText("Step 2")            # change the text  @label  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QProgressDialog.html#PySide6.QtWidgets.QProgressDialog.setLabelText>
+p.setCancelButton(None)             # hide the Cancel button  @nocancel  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QProgressDialog.html#PySide6.QtWidgets.QProgressDialog.setCancelButton>
+
+## QWizard
+wiz = QWizard(); wiz.addPage(PAGE)  # make a step-by-step wizard  @wizard @steps @assistant  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QWizard.html>
+page = QWizardPage(); page.setTitle("Step 1"); page.setSubTitle("...")  # make a wizard page  @page  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QWizardPage.html>
+page.registerField("name*", LINE_EDIT)  # share a value between pages; * makes it required (Next stays disabled)  @field @required  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QWizardPage.html#PySide6.QtWidgets.QWizardPage.registerField>
+wiz.field("name")                   # read a registered field  @field  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QWizard.html#PySide6.QtWidgets.QWizard.field>
+def isComplete(self): ... ; self.completeChanged.emit()  # decide when Next is enabled  @validate  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QWizardPage.html#PySide6.QtWidgets.QWizardPage.isComplete>
+def validatePage(self): return True  # check a page when Next / Finish is pressed  @validate  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QWizardPage.html#PySide6.QtWidgets.QWizardPage.validatePage>
+def initializePage(self): ...       # fill a page right before it shows  @init  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QWizardPage.html#PySide6.QtWidgets.QWizardPage.initializePage>
+def nextId(self): return PAGE_ID    # pick the next page yourself (branching wizard; use setPage(ID, page))  @branch  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QWizardPage.html#PySide6.QtWidgets.QWizardPage.nextId>
+wiz.setWizardStyle(QWizard.WizardStyle.ModernStyle)  # choose the look: ClassicStyle, ModernStyle, MacStyle, AeroStyle  @style  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QWizard.html#PySide6.QtWidgets.QWizard.setWizardStyle>
+wiz.setOption(QWizard.WizardOption.HaveHelpButton)  # turn on wizard options (NoBackButtonOnStartPage, IndependentPages...)  @options  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QWizard.html#PySide6.QtWidgets.QWizard.setOption>
+wiz.setButtonText(QWizard.WizardButton.FinishButton, "Install")  # rename a wizard button  @button  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QWizard.html#PySide6.QtWidgets.QWizard.setButtonText>
+wiz.setPixmap(QWizard.WizardPixmap.LogoPixmap, PIXMAP)  # set the logo / banner / watermark image  @image  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QWizard.html#PySide6.QtWidgets.QWizard.setPixmap>
+wiz.currentIdChanged.connect(FN)    # react to page changes  @signal  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QWizard.html#PySide6.QtWidgets.QWizard.currentIdChanged>
+
+## printing dialogs (QtPrintSupport)
+dlg = QPrintDialog(printer, self); dlg.exec()  # ask which printer and pages  @print  <https://doc.qt.io/qtforpython-6/PySide6/QtPrintSupport/QPrintDialog.html>
+prev = QPrintPreviewDialog(printer, self); prev.paintRequested.connect(doc.print_); prev.exec()  # show a print preview  @preview  <https://doc.qt.io/qtforpython-6/PySide6/QtPrintSupport/QPrintPreviewDialog.html>
+QPageSetupDialog(printer, self).exec()  # ask for paper size and margins  @page  <https://doc.qt.io/qtforpython-6/PySide6/QtPrintSupport/QPageSetupDialog.html>

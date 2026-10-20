@@ -1,0 +1,149 @@
+title: qt tools (pyside6-*): designer, uic, rcc, project, deploy, linguist
+url:   https://doc.qt.io/qtforpython-6/tools/index.html
+tags:  qt pyside6 tools designer uic rcc qrc ui resources deploy nuitka linguist lupdate lrelease translate qml cli
+
+; All tools are console scripts in .venv/bin, made by PySide6/scripts/pyside_tool.py.
+
+## qt designer (.ui files)
+pyside6-designer                    # open Qt Designer to draw a form and save it as a .ui file (XML)  @gui-builder @ui @form
+pyside6-designer FILE.ui            # open an existing form in Designer  @edit
+Designer: Form > Preview (Ctrl+R)   # try the form without writing code  @preview
+Designer: objectName                # this name becomes the Python attribute: self.ui.NAME or self.NAME  @name @attribute
+Designer: right click > Lay out     # give the form (and every container) a layout, or widgets will not resize  @layout @resize
+Designer: right click > Promote to...  # use your own QWidget subclass in place of a standard widget  @custom @promote
+Designer: Edit Signals/Slots (F4)   # connect signals to slots inside the form  @signals
+Designer: Resource Browser > pencil icon  # add a .qrc file to the form so images can be used  @qrc @images
+PYSIDE_DESIGNER_PLUGINS=DIR pyside6-designer  # load Python custom widget plugins (register*.py) from DIR  @plugin @custom-widget
+QPyDesignerCustomWidgetCollection.registerCustomWidget(MyWidget, module="mywidget")  # make a Python widget show up in Designer's widget box  @plugin  <https://doc.qt.io/qtforpython-6/PySide6/QtDesigner/QPyDesignerCustomWidgetCollection.html#PySide6.QtDesigner.QPyDesignerCustomWidgetCollection.registerCustomWidget>
+
+## uic: .ui -> Python
+pyside6-uic FILE.ui -o ui_FILE.py   # compile a form to a Python class Ui_<FormName>  @compile @convert @generate
+pyside6-uic FILE.ui                 # print the generated Python to stdout  @stdout
+pyside6-uic --from-imports FILE.ui -o ui_FILE.py  # import resource modules with "from . import X_rc" (inside packages)  @import @package
+pyside6-uic --absolute-imports FILE.ui -o ui_FILE.py  # import resource modules with absolute imports  @import
+pyside6-uic --rc-prefix FILE.ui -o ui_FILE.py  # import resources as rc_X instead of X_rc  @qrc @naming
+pyside6-uic --star-imports FILE.ui -o ui_FILE.py  # generate "from PySide6.QtWidgets import *"  @import
+pyside6-uic -a FILE.ui -o ui_FILE.py  # do not call QMetaObject.connectSlotsByName() in setupUi  @autoconnect
+pyside6-uic --tr MYTR FILE.ui       # use your own function for translatable strings  @i18n
+pyside6-uic --idbased FILE.ui       # use qtTrId() id-based translations  @i18n
+pyside6-uic -d FILE.ui              # list the files the form depends on  @dependencies
+class Widget(QWidget, Ui_Widget):   # use the generated form by multiple inheritance; widgets become self.NAME  @setupUi @inherit
+    from ui_widget import Ui_Widget
+    class Widget(QWidget, Ui_Widget):
+        def __init__(self):
+            super().__init__()
+            self.setupUi(self)
+            self.plus_button.clicked.connect(self.plus)
+self.ui = Ui_Widget(); self.ui.setupUi(self)  # use the generated form by composition; widgets become self.ui.NAME  @setupUi
+self.retranslateUi(self)            # re-apply translated strings (call after a language change)  @i18n
+QMetaObject.connectSlotsByName(self)  # auto-connect methods named on_<objectName>_<signal> (setupUi does this)  @autoconnect  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/QMetaObject.html#PySide6.QtCore.QMetaObject.connectSlotsByName>
+@Slot() def on_okButton_clicked(self)  # a slot that connectSlotsByName finds by its name  @autoconnect @slot
+
+## QUiLoader: load .ui at run time
+from PySide6.QtUiTools import QUiLoader  # import the run-time .ui loader  @import  <https://doc.qt.io/qtforpython-6/PySide6/QtUiTools/QUiLoader.html>
+window = QUiLoader().load("form.ui", None)  # build the widget tree from a .ui file at run time; widgets become window.NAME  @load @dynamic  <https://doc.qt.io/qtforpython-6/PySide6/QtUiTools/QUiLoader.html#PySide6.QtUiTools.QUiLoader.load>
+    from PySide6.QtUiTools import QUiLoader
+    loader = QUiLoader()
+    ui = loader.load("widget.ui", None)
+    ui.submit_button.clicked.connect(on_submit)
+    ui.show()
+loader.load(QFile("form.ui"), PARENT)  # load from a QFile (also works with ":/form.ui" resources)  @load  <https://doc.qt.io/qtforpython-6/PySide6/QtUiTools/QUiLoader.html#PySide6.QtUiTools.QUiLoader.load>
+loader.registerCustomWidget(MyWidget)  # let the loader create a promoted custom widget class  @promote @custom  <https://doc.qt.io/qtforpython-6/PySide6/QtUiTools/QUiLoader.html#PySide6.QtUiTools.QUiLoader.registerCustomWidget>
+loader.errorString()                # get why load() returned None  @error  <https://doc.qt.io/qtforpython-6/PySide6/QtUiTools/QUiLoader.html#PySide6.QtUiTools.QUiLoader.errorString>
+loader.availableWidgets()           # list widget class names the loader can create  @list  <https://doc.qt.io/qtforpython-6/PySide6/QtUiTools/QUiLoader.html#PySide6.QtUiTools.QUiLoader.availableWidgets>
+loader.setWorkingDirectory(QDir(DIR))  # set where relative paths in the .ui (images) are resolved  @path  <https://doc.qt.io/qtforpython-6/PySide6/QtUiTools/QUiLoader.html#PySide6.QtUiTools.QUiLoader.setWorkingDirectory>
+loadUiType("form.ui")               # get (FormClass, BaseClass) from a .ui file at run time; needs pyside6-uic on PATH  @dynamic  <https://doc.qt.io/qtforpython-6/PySide6/QtUiTools/index.html>
+
+## resources (.qrc, rcc)
+FILE.qrc                            # XML list of files to embed into the program (images, icons, .ui, translations)  @resources @embed
+    <RCC>
+        <qresource prefix="/">
+            <file>images/plus.png</file>
+            <file alias="logo.png">images/big-logo.png</file>
+        </qresource>
+    </RCC>
+pyside6-rcc FILE.qrc -o FILE_rc.py  # compile a .qrc to a Python module holding the data  @compile @resources
+import FILE_rc                      # register the resources (import it once, before using ":/..." paths)  @import @register
+QIcon(":/images/plus.png")          # open an embedded file by its ":/prefix/path" name  @path @colon
+QUrl("qrc:/main.qml")               # refer to an embedded file as a URL (QML, web)  @qml @url
+pyside6-rcc --binary FILE.qrc -o FILE.rcc  # make a binary .rcc file to load at run time  @binary
+QResource.registerResource("FILE.rcc")  # load a binary .rcc at run time  @binary @load  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/QResource.html#PySide6.QtCore.QResource.registerResource>
+pyside6-rcc --list FILE.qrc         # list the files in a .qrc without compiling  @list
+pyside6-rcc --no-compress FILE.qrc -o FILE_rc.py  # store files without compression  @compress
+pyside6-rcc --compress-algo zlib FILE.qrc -o FILE_rc.py  # pick the compression (zstd, zlib, none)  @compress
+pyside6-rcc --project -o FILE.qrc   # write a .qrc that lists all files in the current folder  @generate
+QDirIterator(":", QDirIterator.IteratorFlag.Subdirectories)  # list every embedded resource path at run time  @debug @list  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/QDirIterator.html>
+QFile.exists(":/images/plus.png")   # check that a resource path is right  @debug  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/QFile.html#PySide6.QtCore.QFile.exists>
+
+## pyside6-project (pyproject.toml)
+pyside6-project new-widget NAME     # create a new Qt Widgets project folder  @new @scaffold
+pyside6-project new-ui NAME         # create a new Qt Widgets project with a Designer .ui form  @new @designer
+pyside6-project new-quick NAME      # create a new Qt Quick (QML) project  @new @qml
+pyside6-project new-widget NAME --legacy-pyproject  # create the old *.pyproject JSON file instead of pyproject.toml  @legacy
+pyside6-project build               # compile .ui -> ui_*.py, .qrc -> rc_*.py, .ts -> .qm when the sources are newer  @build @compile
+pyside6-project run                 # build, then run the main Python file  @run
+pyside6-project run PROJECT_DIR ARG1 ARG2  # build and run the project, passing arguments to the program  @run @argv
+pyside6-project clean               # delete the generated files  @clean
+pyside6-project qmllint             # run qmllint on the project's .qml files  @lint @qml
+pyside6-project deploy              # build a standalone app with pyside6-deploy (Nuitka)  @deploy @package
+pyside6-project lupdate             # update the .ts translation files from the sources  @i18n
+pyside6-project migrate-pyproject   # convert a *.pyproject JSON file to pyproject.toml  @migrate
+pyside6-project -n build            # print the commands without running them  @dry-run
+pyside6-project -f build            # rebuild everything even if up to date  @force
+[tool.pyside6-project]              # pyproject.toml table that lists the project files  @config @toml
+    [tool.pyside6-project]
+    files = ["main.py", "widget.py", "widget.ui", "resources.qrc", "app_de.ts"]
+
+## pyside6-deploy (Nuitka packaging)
+pyside6-deploy main.py              # build a standalone executable folder with Nuitka  @package @exe @freeze
+pyside6-deploy --init main.py       # only write pysidedeploy.spec so you can edit it  @config @spec
+pyside6-deploy -c pysidedeploy.spec  # build using the settings in a spec file  @config
+pyside6-deploy --mode onefile main.py  # build one single executable file (default: standalone folder)  @onefile
+pyside6-deploy --name NAME main.py  # set the application name  @name
+pyside6-deploy --extra-modules QtSvg,QtCharts main.py  # include Qt modules the scanner missed  @modules @missing
+pyside6-deploy --extra-ignore-dirs DIR1,DIR2 main.py  # skip folders when scanning for imports  @ignore
+pyside6-deploy --dry-run main.py    # print the Nuitka command without running it  @dry-run
+pyside6-deploy --keep-deployment-files main.py  # keep the temporary build folder for debugging  @debug
+pyside6-deploy -v main.py           # print verbose output  @verbose
+pyside6-deploy --no-install main.py  # do not pip-install Nuitka and other build tools  @offline
+pyside6-deploy --nuitka-version 4.1.1 main.py  # pick the Nuitka version to install  @version
+pysidedeploy.spec [app]             # set title, project_dir, input_file, exec_directory, icon  @spec  <file:/src/notes-goblin/qt/.venv/lib/python3.12/site-packages/PySide6/scripts/deploy_lib/default.spec>
+pysidedeploy.spec [qt] modules =    # list Qt modules to ship; qml_files, excluded_qml_plugins, plugins  @spec @modules  <file:/src/notes-goblin/qt/.venv/lib/python3.12/site-packages/PySide6/scripts/deploy_lib/default.spec#L29>
+pysidedeploy.spec [nuitka] mode = / extra_args =  # pick standalone or onefile and pass extra Nuitka options  @spec @nuitka  <file:/src/notes-goblin/qt/.venv/lib/python3.12/site-packages/PySide6/scripts/deploy_lib/default.spec#L91>
+pyside6-android-deploy              # build an Android .apk with buildozer  @android @mobile
+
+## translations: lupdate, linguist, lrelease
+pyside6-lupdate main.py widget.ui -ts app_de.ts  # extract tr() strings from sources into a .ts file  @i18n @extract
+pyside6-lupdate -no-obsolete main.py -ts app_de.ts  # drop strings that are no longer in the code  @i18n @clean
+pyside6-lupdate -source-language en -target-language de main.py -ts app_de.ts  # set the languages in a new .ts file  @i18n
+pyside6-linguist app_de.ts          # open Qt Linguist to translate the strings  @i18n @translate
+pyside6-lrelease app_de.ts -qm app_de.qm  # compile a .ts file to a binary .qm file for QTranslator  @i18n @compile
+pyside6-lrelease -nounfinished app_de.ts  # leave out translations not marked as done  @i18n
+
+## qml tools
+pyside6-qml main.qml                # run a .qml file directly, no Python code needed  @qml @run @preview
+pyside6-qml -I DIR main.qml         # add a QML module import path  @qml @import
+pyside6-qml --apptype widget main.qml  # run with a QApplication (core, gui, widget)  @qml
+pyside6-qml -v main.qml             # print which files are loaded  @qml @verbose
+pyside6-qmllint main.qml            # check QML for errors and bad patterns  @qml @lint
+pyside6-qmllint -f main.qml         # apply automatic fixes  @qml @lint @fix
+pyside6-qmllint --json out.json main.qml  # write the lint results as JSON  @qml @lint
+pyside6-qmlformat -i main.qml       # format a QML file in place  @qml @format
+pyside6-qmlformat -w 2 -i main.qml  # format with 2-space indentation  @qml @format
+pyside6-qmlls                       # run the QML language server (for nvim / VS Code LSP)  @qml @lsp @editor
+pyside6-qmltyperegistrar            # generate .qmltypes for QML modules (used by pyside6-project)  @qml @types
+pyside6-qmlimportscanner            # list the QML imports used by a project (used by deploy)  @qml @deploy
+pyside6-qmlcachegen                 # compile QML ahead of time to byte code  @qml @compile
+pyside6-metaobjectdump FILE.py      # dump the Qt meta-object info (QmlElement, signals, properties) of a .py file as JSON  @qml @types
+pyside6-svgtoqml FILE.svg           # convert an SVG to a QML shape file  @svg @qml
+pyside6-qsb                         # compile shaders to .qsb for Qt Quick and QRhi  @shader @gpu
+pyside6-balsam FILE.gltf            # convert 3D assets to QtQuick3D QML  @3d
+pyside6-balsamui                    # open the GUI for the 3D asset converter  @3d
+
+## other tools
+pyside6-assistant                   # open Qt Assistant, the offline help viewer  @help @docs
+pyside6-genpyi all                  # regenerate the .pyi stub files  @stubs @typing
+pyside6-genpyi all --feature snake_case  # generate stubs that match snake_case (and/or true_property)  @stubs @feature
+pyside6-qtpy2cpp main.py            # translate a PySide6 Python file to C++ (rough first draft)  @cpp @convert
+pyside6-qtpy2cpp -s main.py         # print the C++ translation to stdout  @cpp
+uv run pyside6-designer             # run any of the tools from a uv project without activating the venv  @uv @venv

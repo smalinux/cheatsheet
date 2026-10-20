@@ -1,0 +1,113 @@
+title: qt graphics view: QGraphicsScene, QGraphicsView, QGraphicsItem, effects (pyside6)
+url:   https://doc.qt.io/qt-6/graphicsview.html
+tags:  qt pyside6 graphics scene view item qgraphicsscene qgraphicsview qgraphicsitem canvas diagram node-editor zoom pan drag shadow effect
+
+; Scene = the world with items, view = a scrollable, zoomable window onto the scene, item = one shape.
+
+## scene and view
+scene = QGraphicsScene(0, 0, 800, 600)  # make a scene with a fixed area (or let it grow with items)  @scene @canvas  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QGraphicsScene.html>
+view = QGraphicsView(scene)         # show a scene; add the view to a layout  @view  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QGraphicsView.html>
+    scene = QGraphicsScene()
+    r = scene.addRect(0, 0, 100, 60, QPen(Qt.GlobalColor.black), QBrush(QColor("orange")))
+    r.setFlag(QGraphicsItem.GraphicsItemFlag.ItemIsMovable)
+    r.setFlag(QGraphicsItem.GraphicsItemFlag.ItemIsSelectable)
+    scene.addText("hello").setPos(10, 80)
+    view = QGraphicsView(scene)
+    view.setRenderHint(QPainter.RenderHint.Antialiasing)
+    view.show()
+scene.addRect(X, Y, W, H, PEN, BRUSH)  # add a rectangle item and return it  @rect  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QGraphicsScene.html#PySide6.QtWidgets.QGraphicsScene.addRect>
+scene.addEllipse(...) / addLine(...) / addPolygon(...) / addPath(...)  # add other shape items  @shape  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QGraphicsScene.html#PySide6.QtWidgets.QGraphicsScene.addEllipse>
+scene.addText("TEXT") / scene.addSimpleText("TEXT")  # add rich / simple text items  @text  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QGraphicsScene.html#PySide6.QtWidgets.QGraphicsScene.addText>
+scene.addPixmap(PIXMAP)             # add an image item  @image  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QGraphicsScene.html#PySide6.QtWidgets.QGraphicsScene.addPixmap>
+scene.addWidget(QPushButton("x"))   # put a real widget into the scene (returns a QGraphicsProxyWidget)  @widget @proxy  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QGraphicsScene.html#PySide6.QtWidgets.QGraphicsScene.addWidget>
+scene.addItem(ITEM) / scene.removeItem(ITEM)  # add / take out any item  @add @remove  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QGraphicsScene.html#PySide6.QtWidgets.QGraphicsScene.addItem>
+scene.clear()                       # delete all items  @clear  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QGraphicsScene.html#PySide6.QtWidgets.QGraphicsScene.clear>
+scene.items() / scene.selectedItems()  # list all / selected items  @list  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QGraphicsScene.html#PySide6.QtWidgets.QGraphicsScene.items>
+scene.itemAt(SCENE_POS, QTransform())  # get the top item at a scene point  @hit-test  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QGraphicsScene.html#PySide6.QtWidgets.QGraphicsScene.itemAt>
+scene.items(RECT) / scene.collidingItems(ITEM)  # find items in an area / touching an item  @collision  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QGraphicsScene.html#PySide6.QtWidgets.QGraphicsScene.collidingItems>
+scene.itemsBoundingRect()           # get the rect that holds every item  @bounds  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QGraphicsScene.html#PySide6.QtWidgets.QGraphicsScene.itemsBoundingRect>
+scene.setSceneRect(RECT)            # fix the scene area (scroll range of views)  @bounds  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QGraphicsScene.html#PySide6.QtWidgets.QGraphicsScene.setSceneRect>
+scene.setBackgroundBrush(QColor("#202020"))  # fill the background  @background  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QGraphicsScene.html#PySide6.QtWidgets.QGraphicsScene.setBackgroundBrush>
+def drawBackground(self, painter, rect)  # override to draw a grid behind items  @grid @background  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QGraphicsScene.html#PySide6.QtWidgets.QGraphicsScene.drawBackground>
+scene.selectionChanged.connect(FN) / scene.changed.connect(FN)  # react to selection / item changes  @signal  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QGraphicsScene.html#PySide6.QtWidgets.QGraphicsScene.selectionChanged>
+scene.render(PAINTER)               # paint the scene to an image, printer or PDF  @export @render  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QGraphicsScene.html#PySide6.QtWidgets.QGraphicsScene.render>
+scene.createItemGroup([A, B]) / scene.destroyItemGroup(G)  # group items to move them together  @group  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QGraphicsScene.html#PySide6.QtWidgets.QGraphicsScene.createItemGroup>
+scene.setItemIndexMethod(QGraphicsScene.ItemIndexMethod.NoIndex)  # faster for many moving items  @performance  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QGraphicsScene.html#PySide6.QtWidgets.QGraphicsScene.setItemIndexMethod>
+scene.mousePressEvent / mouseMoveEvent / keyPressEvent  # override in a scene subclass for input anywhere in the scene (position: e.scenePos())  @input  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QGraphicsScene.html#PySide6.QtWidgets.QGraphicsScene.mousePressEvent>
+
+## view: zoom, pan, fit
+view.scale(1.2, 1.2)                # zoom in by 20%  @zoom  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QGraphicsView.html#PySide6.QtWidgets.QGraphicsView.scale>
+def wheelEvent(self, e): f = 1.15 if e.angleDelta().y() > 0 else 1 / 1.15; self.scale(f, f)  # zoom with the mouse wheel  @zoom @wheel  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QGraphicsView.html#PySide6.QtWidgets.QGraphicsView.wheelEvent>
+view.setTransformationAnchor(QGraphicsView.ViewportAnchor.AnchorUnderMouse)  # zoom around the mouse, not the center  @zoom @anchor  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QGraphicsView.html#PySide6.QtWidgets.QGraphicsView.setTransformationAnchor>
+view.setDragMode(QGraphicsView.DragMode.ScrollHandDrag)  # pan by dragging the background  @pan  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QGraphicsView.html#PySide6.QtWidgets.QGraphicsView.setDragMode>
+view.setDragMode(QGraphicsView.DragMode.RubberBandDrag)  # select items with a rubber band  @select @lasso  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QGraphicsView.html#PySide6.QtWidgets.QGraphicsView.setDragMode>
+view.fitInView(scene.itemsBoundingRect(), Qt.AspectRatioMode.KeepAspectRatio)  # zoom to show everything  @fit @zoom-all  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QGraphicsView.html#PySide6.QtWidgets.QGraphicsView.fitInView>
+view.centerOn(ITEM_OR_POINT)        # scroll so a point or item is centered  @center  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QGraphicsView.html#PySide6.QtWidgets.QGraphicsView.centerOn>
+view.ensureVisible(ITEM)            # scroll just enough to show an item  @scroll  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QGraphicsView.html#PySide6.QtWidgets.QGraphicsView.ensureVisible>
+view.rotate(DEG) / view.resetTransform() / view.setTransform(T)  # rotate / reset the view  @rotate  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QGraphicsView.html#PySide6.QtWidgets.QGraphicsView.rotate>
+view.transform().m11()              # get the current zoom factor  @zoom  <https://doc.qt.io/qtforpython-6/PySide6/QtGui/QTransform.html#PySide6.QtGui.QTransform.m11>
+view.mapToScene(VIEW_POS) / view.mapFromScene(SCENE_POS)  # convert between view and scene coordinates  @coordinates  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QGraphicsView.html#PySide6.QtWidgets.QGraphicsView.mapToScene>
+view.setRenderHint(QPainter.RenderHint.Antialiasing)  # smooth shapes  @smooth  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QGraphicsView.html#PySide6.QtWidgets.QGraphicsView.setRenderHint>
+view.setViewportUpdateMode(QGraphicsView.ViewportUpdateMode.FullViewportUpdate)  # repaint all on change (fixes trails, can be slower)  @repaint  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QGraphicsView.html#PySide6.QtWidgets.QGraphicsView.setViewportUpdateMode>
+view.setCacheMode(QGraphicsView.CacheModeFlag.CacheBackground)  # cache a heavy background  @performance  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QGraphicsView.html#PySide6.QtWidgets.QGraphicsView.setCacheMode>
+view.setViewport(QOpenGLWidget())   # draw the view with OpenGL  @gpu @opengl  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QAbstractScrollArea.html#PySide6.QtWidgets.QAbstractScrollArea.setViewport>
+view.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)  # hide scroll bars  @scrollbar  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QAbstractScrollArea.html#PySide6.QtWidgets.QAbstractScrollArea.setHorizontalScrollBarPolicy>
+view.setInteractive(False)          # make the view display-only  @readonly  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QGraphicsView.html#PySide6.QtWidgets.QGraphicsView.setInteractive>
+view.rubberBandChanged.connect(FN)  # react while the rubber band is dragged  @select  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QGraphicsView.html#PySide6.QtWidgets.QGraphicsView.rubberBandChanged>
+
+## items
+item.setPos(X, Y) / item.pos()      # move an item / get its position in the parent (scene)  @move  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QGraphicsItem.html#PySide6.QtWidgets.QGraphicsItem.setPos>
+item.moveBy(DX, DY)                 # move by an offset  @move  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QGraphicsItem.html#PySide6.QtWidgets.QGraphicsItem.moveBy>
+item.setZValue(N)                   # stack items: higher z is drawn on top  @z-order @stack  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QGraphicsItem.html#PySide6.QtWidgets.QGraphicsItem.setZValue>
+item.setRotation(DEG) / item.setScale(F) / item.setTransformOriginPoint(P)  # rotate / scale around a point  @transform  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QGraphicsItem.html#PySide6.QtWidgets.QGraphicsItem.setRotation>
+item.setFlag(QGraphicsItem.GraphicsItemFlag.ItemIsMovable)  # let the user drag the item  @drag @movable  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QGraphicsItem.html#PySide6.QtWidgets.QGraphicsItem.setFlag>
+item.setFlag(QGraphicsItem.GraphicsItemFlag.ItemIsSelectable)  # let the user select it  @select  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QGraphicsItem.html#PySide6.QtWidgets.QGraphicsItem.setFlag>
+item.setFlag(QGraphicsItem.GraphicsItemFlag.ItemSendsGeometryChanges)  # get itemChange calls on move (needed for edges that follow nodes)  @notify  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QGraphicsItem.html#PySide6.QtWidgets.QGraphicsItem.setFlag>
+QGraphicsItem.GraphicsItemFlag.ItemIgnoresTransformations  # keep size when the view zooms (labels, handles)  @fixed-size  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QGraphicsItem.html#PySide6.QtWidgets.QGraphicsItem.GraphicsItemFlag>
+QGraphicsItem.GraphicsItemFlag.ItemIsFocusable / ItemClipsChildrenToShape  # other common item flags  @flags  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QGraphicsItem.html#PySide6.QtWidgets.QGraphicsItem.GraphicsItemFlag>
+item.setParentItem(PARENT)          # make an item move and transform with a parent item  @parent @group  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QGraphicsItem.html#PySide6.QtWidgets.QGraphicsItem.setParentItem>
+item.childItems() / item.parentItem()  # walk the item tree  @tree  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QGraphicsItem.html#PySide6.QtWidgets.QGraphicsItem.childItems>
+item.setVisible(False) / item.setOpacity(0.5) / item.setEnabled(False)  # hide / fade / disable  @state  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QGraphicsItem.html#PySide6.QtWidgets.QGraphicsItem.setOpacity>
+item.setToolTip("TEXT") / item.setCursor(Qt.CursorShape.OpenHandCursor)  # tooltip / cursor over the item  @hover  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QGraphicsItem.html#PySide6.QtWidgets.QGraphicsItem.setToolTip>
+item.setData(0, VALUE) / item.data(0)  # store your own value on an item by key  @data  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QGraphicsItem.html#PySide6.QtWidgets.QGraphicsItem.setData>
+item.setAcceptHoverEvents(True)     # get hoverEnterEvent / hoverLeaveEvent  @hover  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QGraphicsItem.html#PySide6.QtWidgets.QGraphicsItem.setAcceptHoverEvents>
+item.isSelected() / item.setSelected(True)  # read / set selection  @select  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QGraphicsItem.html#PySide6.QtWidgets.QGraphicsItem.setSelected>
+item.sceneBoundingRect() / item.mapToScene(P) / item.mapFromScene(P)  # coordinates in the scene  @coordinates  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QGraphicsItem.html#PySide6.QtWidgets.QGraphicsItem.mapToScene>
+item.collidesWithItem(OTHER)        # check overlap with another item  @collision  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QGraphicsItem.html#PySide6.QtWidgets.QGraphicsItem.collidesWithItem>
+item.update()                       # repaint the item  @repaint  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QGraphicsItem.html#PySide6.QtWidgets.QGraphicsItem.update>
+item.setGraphicsEffect(QGraphicsDropShadowEffect())  # add a shadow / blur / colorize / opacity effect  @effect  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QGraphicsItem.html#PySide6.QtWidgets.QGraphicsItem.setGraphicsEffect>
+rect_item.setRect(R) / rect_item.setPen(P) / rect_item.setBrush(B)  # change a shape item  @shape  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QGraphicsRectItem.html#PySide6.QtWidgets.QGraphicsRectItem.setRect>
+text_item.setTextInteractionFlags(Qt.TextInteractionFlag.TextEditorInteraction)  # make a scene text editable  @edit  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QGraphicsTextItem.html#PySide6.QtWidgets.QGraphicsTextItem.setTextInteractionFlags>
+pix_item.setTransformationMode(Qt.TransformationMode.SmoothTransformation)  # smooth scaling of an image item  @smooth  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QGraphicsPixmapItem.html#PySide6.QtWidgets.QGraphicsPixmapItem.setTransformationMode>
+
+## custom items
+class Node(QGraphicsItem):          # subclass and write boundingRect() and paint()  @custom @node  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QGraphicsItem.html>
+    class Node(QGraphicsItem):
+        def boundingRect(self):
+            return QRectF(-20, -20, 40, 40)
+        def paint(self, painter, option, widget=None):
+            painter.setBrush(QColor("teal"))
+            if self.isSelected(): painter.setPen(QPen(Qt.GlobalColor.yellow, 2))
+            painter.drawEllipse(self.boundingRect())
+def boundingRect(self)              # return the area the item paints in (must contain all drawing)  @bounds  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QGraphicsItem.html#PySide6.QtWidgets.QGraphicsItem.boundingRect>
+def paint(self, painter, option, widget=None)  # draw the item in its own coordinates  @paint  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QGraphicsItem.html#PySide6.QtWidgets.QGraphicsItem.paint>
+def shape(self)                     # return a QPainterPath for exact hit-testing and collisions  @hit-test  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QGraphicsItem.html#PySide6.QtWidgets.QGraphicsItem.shape>
+self.prepareGeometryChange()        # call before boundingRect changes, or you get drawing trails  @trails @resize  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QGraphicsItem.html#PySide6.QtWidgets.QGraphicsItem.prepareGeometryChange>
+def itemChange(self, change, value):  # react to moves, selection...; return the (maybe changed) value  @notify @snap  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QGraphicsItem.html#PySide6.QtWidgets.QGraphicsItem.itemChange>
+    def itemChange(self, change, value):
+        if change == QGraphicsItem.GraphicsItemChange.ItemPositionChange:
+            return QPointF(round(value.x() / 10) * 10, round(value.y() / 10) * 10)   # snap to grid
+        return super().itemChange(change, value)
+def mousePressEvent(self, e): e.scenePos() / e.pos() / e.button()  # mouse input on an item (QGraphicsSceneMouseEvent)  @mouse  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QGraphicsSceneMouseEvent.html>
+def hoverEnterEvent(self, e) / def hoverLeaveEvent(self, e)  # hover on an item (setAcceptHoverEvents first)  @hover  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QGraphicsItem.html#PySide6.QtWidgets.QGraphicsItem.hoverEnterEvent>
+def contextMenuEvent(self, e): menu.exec(e.screenPos())  # right click on an item  @rightclick  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QGraphicsSceneContextMenuEvent.html#PySide6.QtWidgets.QGraphicsSceneContextMenuEvent.screenPos>
+def type(self): return QGraphicsItem.UserType + 1  # give your item class its own type id (for qgraphicsitem_cast style checks)  @type  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QGraphicsItem.html#PySide6.QtWidgets.QGraphicsItem.type>
+class Obj(QGraphicsObject):         # use QGraphicsObject for items that need signals, slots and Qt properties (animations)  @signals @animate  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QGraphicsObject.html>
+QGraphicsWidget / QGraphicsLinearLayout / QGraphicsGridLayout  # layouts inside the scene  @layout  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QGraphicsLinearLayout.html>
+
+## graphics effects (scene items and normal widgets)
+fx = QGraphicsDropShadowEffect(); fx.setBlurRadius(20); fx.setOffset(0, 4); fx.setColor(QColor(0, 0, 0, 160))  # drop shadow  @shadow  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QGraphicsDropShadowEffect.html>
+QGraphicsBlurEffect(); fx.setBlurRadius(8)  # blur  @blur  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QGraphicsBlurEffect.html>
+QGraphicsColorizeEffect(); fx.setColor(QColor("red")); fx.setStrength(0.5)  # tint  @colorize @tint  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QGraphicsColorizeEffect.html>
+QGraphicsOpacityEffect(); fx.setOpacity(0.5)  # fade a widget (animate opacity for fade-in/out)  @fade @opacity  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QGraphicsOpacityEffect.html>
+w.setGraphicsEffect(FX)             # apply an effect; one effect per widget/item  @apply  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QWidget.html#PySide6.QtWidgets.QWidget.setGraphicsEffect>

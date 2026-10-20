@@ -1,0 +1,166 @@
+title: qt main window: menus, toolbars, docks, status bar, actions, shortcuts, tray, undo (pyside6)
+url:   https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QMainWindow.html
+tags:  qt pyside6 qmainwindow menu menubar toolbar dock qdockwidget statusbar qaction shortcut hotkey keyboard qsystemtrayicon tray splash undo redo
+
+## QMainWindow
+class MainWindow(QMainWindow):      # subclass QMainWindow for an app window with menu bar, toolbars, docks, status bar  @window @app  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QMainWindow.html>
+    class MainWindow(QMainWindow):
+        def __init__(self):
+            super().__init__()
+            self.setWindowTitle("App")
+            self.setCentralWidget(QTextEdit())
+            file_menu = self.menuBar().addMenu("&File")
+            quit_act = file_menu.addAction("&Quit")
+            quit_act.setShortcut(QKeySequence.StandardKey.Quit)
+            quit_act.triggered.connect(self.close)
+            self.statusBar().showMessage("Ready")
+win.setCentralWidget(W)             # set the main content; a QMainWindow cannot take setLayout()  @central @content  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QMainWindow.html#PySide6.QtWidgets.QMainWindow.setCentralWidget>
+QWidget::setLayout: Attempting to set QLayout on MainWindow which already has a layout  # put a QWidget with your layout in setCentralWidget instead  @error @layout
+win.centralWidget() / win.takeCentralWidget()  # get / remove the central widget  @central  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QMainWindow.html#PySide6.QtWidgets.QMainWindow.takeCentralWidget>
+win.menuBar()                       # get (and create) the menu bar  @menubar  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QMainWindow.html#PySide6.QtWidgets.QMainWindow.menuBar>
+win.statusBar()                     # get (and create) the status bar  @statusbar  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QMainWindow.html#PySide6.QtWidgets.QMainWindow.statusBar>
+win.setMenuBar(QMenuBar()) / win.setStatusBar(QStatusBar())  # use your own bar objects  @custom  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QMainWindow.html#PySide6.QtWidgets.QMainWindow.setMenuBar>
+win.saveState() / win.restoreState(BYTES)  # remember toolbar and dock layout (give them objectNames)  @settings @remember  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QMainWindow.html#PySide6.QtWidgets.QMainWindow.saveState>
+win.setIconSize(QSize(20, 20))      # set the icon size of all toolbars  @icon  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QMainWindow.html#PySide6.QtWidgets.QMainWindow.setIconSize>
+win.setToolButtonStyle(Qt.ToolButtonStyle.ToolButtonTextUnderIcon)  # set the toolbar text/icon style  @toolbar  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QMainWindow.html#PySide6.QtWidgets.QMainWindow.setToolButtonStyle>
+win.createPopupMenu()               # get the right-click menu that toggles toolbars and docks  @menu  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QMainWindow.html#PySide6.QtWidgets.QMainWindow.createPopupMenu>
+win.setUnifiedTitleAndToolBarOnMac(True)  # merge the title bar and toolbar on macOS  @macos  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QMainWindow.html#PySide6.QtWidgets.QMainWindow.setUnifiedTitleAndToolBarOnMac>
+win.setDocumentMode(True)           # draw tabbed docks in document mode  @look  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QMainWindow.html#PySide6.QtWidgets.QMainWindow.setDocumentMode>
+
+## menus
+menu = win.menuBar().addMenu("&File")  # add a top menu; & marks the Alt key letter  @menu @menubar  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QMenuBar.html#PySide6.QtWidgets.QMenuBar.addMenu>
+act = menu.addAction("&Open...")    # add a menu entry; returns a QAction  @item @entry  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QMenu.html#PySide6.QtWidgets.QMenu.addAction>
+menu.addAction(QIcon("open.png"), "Open", QKeySequence.StandardKey.Open, self.open)  # add an entry with icon, shortcut and slot in one call  @item  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QMenu.html#PySide6.QtWidgets.QMenu.addAction>
+menu.addAction(ACTION)              # add an existing QAction (shared with a toolbar)  @action  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QWidget.html#PySide6.QtWidgets.QWidget.addAction>
+menu.addSeparator()                 # add a line  @separator  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QMenu.html#PySide6.QtWidgets.QMenu.addSeparator>
+menu.addSection("Title")            # add a titled separator  @section  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QMenu.html#PySide6.QtWidgets.QMenu.addSection>
+sub = menu.addMenu("Recent")        # add a sub menu  @submenu  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QMenu.html#PySide6.QtWidgets.QMenu.addMenu>
+menu.clear()                        # remove all entries (rebuild a "Recent files" menu)  @clear  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QMenu.html#PySide6.QtWidgets.QMenu.clear>
+menu.aboutToShow.connect(FN)        # fill a menu right before it opens  @dynamic @lazy  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QMenu.html#PySide6.QtWidgets.QMenu.aboutToShow>
+menu.triggered.connect(FN)          # run FN(action) when any entry is chosen  @signal  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QMenu.html#PySide6.QtWidgets.QMenu.triggered>
+menu.exec(QCursor.pos())            # show a menu at the mouse and wait; returns the chosen QAction or None  @popup @contextmenu  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QMenu.html#PySide6.QtWidgets.QMenu.exec>
+menu.popup(GLOBAL_POS)              # show a menu without waiting  @popup  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QMenu.html#PySide6.QtWidgets.QMenu.popup>
+menu.setToolTipsVisible(True)       # show action tooltips in the menu  @tooltip  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QMenu.html#PySide6.QtWidgets.QMenu.setToolTipsVisible>
+menu.setTearOffEnabled(True)        # let the user tear the menu off into a window  @tearoff  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QMenu.html#PySide6.QtWidgets.QMenu.setTearOffEnabled>
+menu.menuAction()                   # get the action that opens this menu (to hide/disable the whole menu)  @action  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QMenu.html#PySide6.QtWidgets.QMenu.menuAction>
+win.menuBar().setNativeMenuBar(False)  # draw the menu bar inside the window on macOS / global menus  @macos @global  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QMenuBar.html#PySide6.QtWidgets.QMenuBar.setNativeMenuBar>
+win.menuBar().setCornerWidget(W)    # put a widget at the right end of the menu bar  @corner  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QMenuBar.html#PySide6.QtWidgets.QMenuBar.setCornerWidget>
+def contextMenuEvent(self, e): menu.exec(e.globalPos())  # show a right-click menu in your widget  @rightclick  <https://doc.qt.io/qtforpython-6/PySide6/QtGui/QContextMenuEvent.html#PySide6.QtGui.QContextMenuEvent.globalPos>
+
+## QAction
+act = QAction("&Save", self)        # make an action: one command for menus, toolbars and shortcuts  @command  <https://doc.qt.io/qtforpython-6/PySide6/QtGui/QAction.html>
+QAction(QIcon("save.png"), "&Save", self)  # make an action with an icon  @icon  <https://doc.qt.io/qtforpython-6/PySide6/QtGui/QAction.html>
+act.triggered.connect(FN)           # run FN when chosen (FN gets checked: bool if it takes an argument)  @signal @click  <https://doc.qt.io/qtforpython-6/PySide6/QtGui/QAction.html#PySide6.QtGui.QAction.triggered>
+act.setShortcut(QKeySequence("Ctrl+S"))  # set the keyboard shortcut  @hotkey @keybinding  <https://doc.qt.io/qtforpython-6/PySide6/QtGui/QAction.html#PySide6.QtGui.QAction.setShortcut>
+act.setShortcut(QKeySequence.StandardKey.Save)  # use the platform's standard shortcut  @standard  <https://doc.qt.io/qtforpython-6/PySide6/QtGui/QAction.html#PySide6.QtGui.QAction.setShortcut>
+act.setShortcuts([QKeySequence("F5"), QKeySequence("Ctrl+R")])  # give several shortcuts  @hotkey  <https://doc.qt.io/qtforpython-6/PySide6/QtGui/QAction.html#PySide6.QtGui.QAction.setShortcuts>
+act.setShortcutContext(Qt.ShortcutContext.WidgetWithChildrenShortcut)  # limit where the shortcut works (WindowShortcut default, ApplicationShortcut)  @scope  <https://doc.qt.io/qtforpython-6/PySide6/QtGui/QAction.html#PySide6.QtGui.QAction.setShortcutContext>
+act.setCheckable(True); act.toggled.connect(FN)  # make an on/off action  @toggle  <https://doc.qt.io/qtforpython-6/PySide6/QtGui/QAction.html#PySide6.QtGui.QAction.setCheckable>
+act.setChecked(BOOL) / act.isChecked()  # set / read the state of a checkable action  @toggle  <https://doc.qt.io/qtforpython-6/PySide6/QtGui/QAction.html#PySide6.QtGui.QAction.setChecked>
+act.setEnabled(False)               # grey out the action everywhere it appears  @disable  <https://doc.qt.io/qtforpython-6/PySide6/QtGui/QAction.html#PySide6.QtGui.QAction.setEnabled>
+act.setVisible(False)               # hide the action everywhere  @hide  <https://doc.qt.io/qtforpython-6/PySide6/QtGui/QAction.html#PySide6.QtGui.QAction.setVisible>
+act.setStatusTip("TEXT") / act.setToolTip("TEXT")  # set status bar / tooltip help  @help  <https://doc.qt.io/qtforpython-6/PySide6/QtGui/QAction.html#PySide6.QtGui.QAction.setStatusTip>
+act.setData(VALUE) / act.data()     # attach a value (e.g. a file path for "recent files")  @data  <https://doc.qt.io/qtforpython-6/PySide6/QtGui/QAction.html#PySide6.QtGui.QAction.setData>
+act.setMenu(SUBMENU)                # make the action open a sub menu  @submenu  <https://doc.qt.io/qtforpython-6/PySide6/QtGui/QAction.html#PySide6.QtGui.QAction.setMenu>
+act.setMenuRole(QAction.MenuRole.PreferencesRole)  # move the action into the macOS app menu (AboutRole, QuitRole...)  @macos  <https://doc.qt.io/qtforpython-6/PySide6/QtGui/QAction.html#PySide6.QtGui.QAction.setMenuRole>
+act.setIconVisibleInMenu(False)     # hide the icon in menus but keep it in toolbars  @icon  <https://doc.qt.io/qtforpython-6/PySide6/QtGui/QAction.html#PySide6.QtGui.QAction.setIconVisibleInMenu>
+act.setAutoRepeat(False)            # do not repeat while the shortcut key is held  @repeat  <https://doc.qt.io/qtforpython-6/PySide6/QtGui/QAction.html#PySide6.QtGui.QAction.setAutoRepeat>
+act.setSeparator(True)              # turn the action into a separator  @separator  <https://doc.qt.io/qtforpython-6/PySide6/QtGui/QAction.html#PySide6.QtGui.QAction.setSeparator>
+act.trigger()                       # run the action from code  @trigger  <https://doc.qt.io/qtforpython-6/PySide6/QtGui/QAction.html#PySide6.QtGui.QAction.trigger>
+act.changed.connect(FN)             # react when text, icon, enabled... changes  @signal  <https://doc.qt.io/qtforpython-6/PySide6/QtGui/QAction.html#PySide6.QtGui.QAction.changed>
+group = QActionGroup(self); group.addAction(A); group.addAction(B)  # make checkable actions exclusive (like radio buttons)  @radio @exclusive  <https://doc.qt.io/qtforpython-6/PySide6/QtGui/QActionGroup.html>
+group.setExclusionPolicy(QActionGroup.ExclusionPolicy.ExclusiveOptional)  # allow none checked  @exclusive  <https://doc.qt.io/qtforpython-6/PySide6/QtGui/QActionGroup.html#PySide6.QtGui.QActionGroup.setExclusionPolicy>
+group.checkedAction() / group.triggered.connect(FN)  # get / react to the checked action  @radio  <https://doc.qt.io/qtforpython-6/PySide6/QtGui/QActionGroup.html#PySide6.QtGui.QActionGroup.checkedAction>
+QWidgetAction(self); wa.setDefaultWidget(SLIDER)  # put any widget into a menu or toolbar  @widget @custom  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QWidgetAction.html#PySide6.QtWidgets.QWidgetAction.setDefaultWidget>
+
+## shortcuts and key sequences
+QShortcut(QKeySequence("Ctrl+F"), self, self.find)  # make a shortcut without an action  @hotkey @keybinding  <https://doc.qt.io/qtforpython-6/PySide6/QtGui/QShortcut.html>
+QShortcut(QKeySequence(Qt.Key.Key_Escape), self).activated.connect(self.close)  # close on Escape  @escape  <https://doc.qt.io/qtforpython-6/PySide6/QtGui/QShortcut.html#PySide6.QtGui.QShortcut.activated>
+sc.setContext(Qt.ShortcutContext.ApplicationShortcut)  # make a shortcut work in every window of the app  @global  <https://doc.qt.io/qtforpython-6/PySide6/QtGui/QShortcut.html#PySide6.QtGui.QShortcut.setContext>
+sc.setEnabled(False) / sc.setKey(SEQ)  # disable / change a shortcut  @edit  <https://doc.qt.io/qtforpython-6/PySide6/QtGui/QShortcut.html#PySide6.QtGui.QShortcut.setKey>
+sc.activatedAmbiguously.connect(FN)  # react when two shortcuts use the same keys  @conflict  <https://doc.qt.io/qtforpython-6/PySide6/QtGui/QShortcut.html#PySide6.QtGui.QShortcut.activatedAmbiguously>
+QKeySequence("Ctrl+Shift+P")        # write a shortcut as text (Ctrl = Cmd on macOS; Meta = Ctrl on macOS)  @text  <https://doc.qt.io/qtforpython-6/PySide6/QtGui/QKeySequence.html>
+QKeySequence("Ctrl+K, Ctrl+C")      # a two-step chord shortcut  @chord  <https://doc.qt.io/qtforpython-6/PySide6/QtGui/QKeySequence.html>
+QKeySequence(Qt.Modifier.CTRL | Qt.Key.Key_S)  # build a shortcut from enums  @enum  <https://doc.qt.io/qtforpython-6/PySide6/QtGui/QKeySequence.html>
+QKeySequence(QKeySequence.StandardKey.Copy)  # use a standard shortcut (Copy, Paste, Undo, Find, Quit, ZoomIn...)  @standard  <https://doc.qt.io/qtforpython-6/PySide6/QtGui/QKeySequence.html#PySide6.QtGui.QKeySequence.StandardKey>
+seq.toString(QKeySequence.SequenceFormat.NativeText)  # get text for the UI ("⌘S" on macOS)  @display  <https://doc.qt.io/qtforpython-6/PySide6/QtGui/QKeySequence.html#PySide6.QtGui.QKeySequence.toString>
+QKeySequence.keyBindings(QKeySequence.StandardKey.Delete)  # list the keys for a standard shortcut on this OS  @standard  <https://doc.qt.io/qtforpython-6/PySide6/QtGui/QKeySequence.html#PySide6.QtGui.QKeySequence.keyBindings>
+"&File"                             # & before a letter makes Alt+F open it; draw && for a real &  @mnemonic @alt
+
+## toolbars
+tb = win.addToolBar("Main")         # add a toolbar (name shown in the right-click menu)  @toolbar  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QMainWindow.html#PySide6.QtWidgets.QMainWindow.addToolBar>
+tb.setObjectName("mainToolBar")     # name it so saveState() can store its position  @settings  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/QObject.html#PySide6.QtCore.QObject.setObjectName>
+tb.addAction(ACTION)                # add an action as a button  @button  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QWidget.html#PySide6.QtWidgets.QWidget.addAction>
+tb.addWidget(QLineEdit())           # put any widget into the toolbar (search box)  @widget  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QToolBar.html#PySide6.QtWidgets.QToolBar.addWidget>
+tb.addSeparator()                   # add a divider  @separator  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QToolBar.html#PySide6.QtWidgets.QToolBar.addSeparator>
+spacer = QWidget(); spacer.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Preferred); tb.addWidget(spacer)  # push the next items to the right  @spacer @right
+tb.setMovable(False) / tb.setFloatable(False)  # lock the toolbar in place  @lock  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QToolBar.html#PySide6.QtWidgets.QToolBar.setMovable>
+win.addToolBar(Qt.ToolBarArea.LeftToolBarArea, tb)  # place a toolbar on the left (Top, Bottom, Right)  @position  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QMainWindow.html#PySide6.QtWidgets.QMainWindow.addToolBar>
+win.addToolBarBreak()               # start a new toolbar row  @row  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QMainWindow.html#PySide6.QtWidgets.QMainWindow.addToolBarBreak>
+tb.setAllowedAreas(Qt.ToolBarArea.TopToolBarArea)  # limit where the user can dock it  @areas  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QToolBar.html#PySide6.QtWidgets.QToolBar.setAllowedAreas>
+tb.setIconSize(QSize(16, 16)) / tb.setToolButtonStyle(Qt.ToolButtonStyle.ToolButtonIconOnly)  # icon size / text style  @icon  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QToolBar.html#PySide6.QtWidgets.QToolBar.setIconSize>
+tb.toggleViewAction()               # get an action that shows/hides the toolbar (for a View menu)  @view-menu  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QToolBar.html#PySide6.QtWidgets.QToolBar.toggleViewAction>
+tb.widgetForAction(ACT)             # get the QToolButton made for an action  @button  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QToolBar.html#PySide6.QtWidgets.QToolBar.widgetForAction>
+
+## dock widgets
+dock = QDockWidget("Files", self)   # make a panel that docks to the window edges or floats  @dock @panel @sidebar  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QDockWidget.html>
+dock.setWidget(W)                   # set the panel content  @content  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QDockWidget.html#PySide6.QtWidgets.QDockWidget.setWidget>
+win.addDockWidget(Qt.DockWidgetArea.LeftDockWidgetArea, dock)  # dock it on the left (Right, Top, Bottom)  @add  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QMainWindow.html#PySide6.QtWidgets.QMainWindow.addDockWidget>
+dock.setObjectName("filesDock")     # name it so saveState() can store its place  @settings  <https://doc.qt.io/qtforpython-6/PySide6/QtCore/QObject.html#PySide6.QtCore.QObject.setObjectName>
+dock.setAllowedAreas(Qt.DockWidgetArea.LeftDockWidgetArea | Qt.DockWidgetArea.RightDockWidgetArea)  # limit where it can dock  @areas  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QDockWidget.html#PySide6.QtWidgets.QDockWidget.setAllowedAreas>
+dock.setFeatures(QDockWidget.DockWidgetFeature.NoDockWidgetFeatures)  # stop close/move/float (or combine DockWidgetClosable, Movable, Floatable)  @lock  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QDockWidget.html#PySide6.QtWidgets.QDockWidget.setFeatures>
+dock.setFloating(True)              # undock it into its own window  @float  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QDockWidget.html#PySide6.QtWidgets.QDockWidget.setFloating>
+dock.toggleViewAction()             # get an action that shows/hides the dock (for a View menu)  @view-menu  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QDockWidget.html#PySide6.QtWidgets.QDockWidget.toggleViewAction>
+dock.setTitleBarWidget(QWidget())   # hide the dock title bar (empty widget) or use your own  @titlebar  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QDockWidget.html#PySide6.QtWidgets.QDockWidget.setTitleBarWidget>
+dock.visibilityChanged.connect(FN) / dock.topLevelChanged.connect(FN)  # react to show/hide / float changes  @signal  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QDockWidget.html#PySide6.QtWidgets.QDockWidget.visibilityChanged>
+win.tabifyDockWidget(DOCK1, DOCK2)  # stack two docks as tabs  @tabs  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QMainWindow.html#PySide6.QtWidgets.QMainWindow.tabifyDockWidget>
+win.splitDockWidget(DOCK1, DOCK2, Qt.Orientation.Vertical)  # place DOCK2 below DOCK1  @split  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QMainWindow.html#PySide6.QtWidgets.QMainWindow.splitDockWidget>
+win.resizeDocks([dock], [300], Qt.Orientation.Horizontal)  # set the dock width  @size  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QMainWindow.html#PySide6.QtWidgets.QMainWindow.resizeDocks>
+win.setDockOptions(QMainWindow.DockOption.AllowTabbedDocks | QMainWindow.DockOption.AnimatedDocks)  # choose dock behaviour (AllowNestedDocks, GroupedDragging, VerticalTabs)  @options  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QMainWindow.html#PySide6.QtWidgets.QMainWindow.setDockOptions>
+win.setCorner(Qt.Corner.BottomLeftCorner, Qt.DockWidgetArea.LeftDockWidgetArea)  # let the left dock take the bottom-left corner  @corner  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QMainWindow.html#PySide6.QtWidgets.QMainWindow.setCorner>
+win.setTabPosition(Qt.DockWidgetArea.AllDockWidgetAreas, QTabWidget.TabPosition.North)  # put tabs of tabbed docks on top  @tabs  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QMainWindow.html#PySide6.QtWidgets.QMainWindow.setTabPosition>
+win.removeDockWidget(dock)          # remove a dock (hides it)  @remove  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QMainWindow.html#PySide6.QtWidgets.QMainWindow.removeDockWidget>
+
+## status bar
+win.statusBar().showMessage("Saved", 3000)  # show a temporary message for 3 s (0 = until replaced)  @message @toast  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QStatusBar.html#PySide6.QtWidgets.QStatusBar.showMessage>
+win.statusBar().clearMessage()      # remove the temporary message  @clear  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QStatusBar.html#PySide6.QtWidgets.QStatusBar.clearMessage>
+win.statusBar().addWidget(QLabel("Line 1"))  # add a widget on the left (hidden by temporary messages)  @widget  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QStatusBar.html#PySide6.QtWidgets.QStatusBar.addWidget>
+win.statusBar().addPermanentWidget(QLabel("UTF-8"))  # add a widget on the right that stays visible  @permanent  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QStatusBar.html#PySide6.QtWidgets.QStatusBar.addPermanentWidget>
+win.statusBar().addPermanentWidget(QProgressBar())  # show progress in the status bar  @progress
+win.statusBar().setSizeGripEnabled(False)  # hide the resize grip  @grip  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QStatusBar.html#PySide6.QtWidgets.QStatusBar.setSizeGripEnabled>
+win.statusBar().messageChanged.connect(FN)  # react when the message changes  @signal  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QStatusBar.html#PySide6.QtWidgets.QStatusBar.messageChanged>
+
+## system tray icon
+tray = QSystemTrayIcon(QIcon("icon.png"), app)  # make a tray / notification area icon  @tray @systray  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QSystemTrayIcon.html>
+QSystemTrayIcon.isSystemTrayAvailable()  # check that the desktop has a tray  @check  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QSystemTrayIcon.html#PySide6.QtWidgets.QSystemTrayIcon.isSystemTrayAvailable>
+tray.setContextMenu(MENU); tray.show()  # set the right-click menu and show the icon  @menu  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QSystemTrayIcon.html#PySide6.QtWidgets.QSystemTrayIcon.setContextMenu>
+tray.activated.connect(FN)          # run FN(reason) on click (Trigger), DoubleClick, MiddleClick, Context  @click  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QSystemTrayIcon.html#PySide6.QtWidgets.QSystemTrayIcon.activated>
+tray.showMessage("Title", "Body", QSystemTrayIcon.MessageIcon.Information, 5000)  # show a desktop notification balloon  @notification @notify  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QSystemTrayIcon.html#PySide6.QtWidgets.QSystemTrayIcon.showMessage>
+tray.messageClicked.connect(FN)     # react when the user clicks the notification  @notification  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QSystemTrayIcon.html#PySide6.QtWidgets.QSystemTrayIcon.messageClicked>
+tray.setToolTip("TEXT") / tray.setIcon(ICON)  # change the tray tooltip / icon  @tooltip  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QSystemTrayIcon.html#PySide6.QtWidgets.QSystemTrayIcon.setToolTip>
+app.setQuitOnLastWindowClosed(False)  # keep running in the tray when the window closes  @tray  <https://doc.qt.io/qtforpython-6/PySide6/QtGui/QGuiApplication.html#PySide6.QtGui.QGuiApplication.setQuitOnLastWindowClosed>
+
+## splash screen
+splash = QSplashScreen(QPixmap("splash.png")); splash.show()  # show an image while the app loads  @splash @startup  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QSplashScreen.html>
+splash.showMessage("Loading...", Qt.AlignmentFlag.AlignBottom, Qt.GlobalColor.white)  # draw a status text on the splash  @message  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QSplashScreen.html#PySide6.QtWidgets.QSplashScreen.showMessage>
+splash.finish(MAIN_WINDOW)          # close the splash when the main window shows  @close  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QSplashScreen.html#PySide6.QtWidgets.QSplashScreen.finish>
+
+## undo / redo (QUndoStack, in QtGui)
+stack = QUndoStack(self)            # keep a history of commands for undo/redo  @undo @history  <https://doc.qt.io/qtforpython-6/PySide6/QtGui/QUndoStack.html>
+class AddCmd(QUndoCommand): def redo(self): ...; def undo(self): ...  # one undoable change; redo() also runs on push  @command  <https://doc.qt.io/qtforpython-6/PySide6/QtGui/QUndoCommand.html>
+    class SetText(QUndoCommand):
+        def __init__(self, edit, old, new):
+            super().__init__(f"set {new}")
+            self.edit, self.old, self.new = edit, old, new
+        def redo(self): self.edit.setText(self.new)
+        def undo(self): self.edit.setText(self.old)
+stack.push(CMD)                     # run CMD.redo() and add it to the history  @push  <https://doc.qt.io/qtforpython-6/PySide6/QtGui/QUndoStack.html#PySide6.QtGui.QUndoStack.push>
+stack.undo() / stack.redo()         # undo / redo one step  @undo  <https://doc.qt.io/qtforpython-6/PySide6/QtGui/QUndoStack.html#PySide6.QtGui.QUndoStack.undo>
+stack.createUndoAction(self) / stack.createRedoAction(self)  # get ready-made Undo/Redo menu actions that update their text  @menu @action  <https://doc.qt.io/qtforpython-6/PySide6/QtGui/QUndoStack.html#PySide6.QtGui.QUndoStack.createUndoAction>
+stack.beginMacro("TEXT"); ...; stack.endMacro()  # group many commands into one undo step  @group @macro  <https://doc.qt.io/qtforpython-6/PySide6/QtGui/QUndoStack.html#PySide6.QtGui.QUndoStack.beginMacro>
+stack.setClean() / stack.isClean() / stack.cleanChanged.connect(FN)  # mark the saved point / check unsaved changes  @dirty @saved  <https://doc.qt.io/qtforpython-6/PySide6/QtGui/QUndoStack.html#PySide6.QtGui.QUndoStack.cleanChanged>
+stack.setUndoLimit(N)               # keep at most N steps  @limit  <https://doc.qt.io/qtforpython-6/PySide6/QtGui/QUndoStack.html#PySide6.QtGui.QUndoStack.setUndoLimit>
+stack.canUndo() / stack.canRedo() / stack.clear()  # check / clear the history  @state  <https://doc.qt.io/qtforpython-6/PySide6/QtGui/QUndoStack.html#PySide6.QtGui.QUndoStack.canUndo>
+def id(self): return 1; def mergeWith(self, other): ...  # merge many small commands (typing) into one  @merge  <https://doc.qt.io/qtforpython-6/PySide6/QtGui/QUndoCommand.html#PySide6.QtGui.QUndoCommand.mergeWith>
+QUndoView(stack)                    # show the history as a clickable list  @view @history  <https://doc.qt.io/qtforpython-6/PySide6/QtWidgets/QUndoView.html>
+QUndoGroup                          # several stacks (one per document) with one active  @group  <https://doc.qt.io/qtforpython-6/PySide6/QtGui/QUndoGroup.html>
