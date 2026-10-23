@@ -2718,3 +2718,136 @@ ulimit -c unlimited         # C. Automatically, when a program crashes: enable c
     ; C. Automatically, when a program crashes — this is where your existing `core` file came from. Your `core_pattern` is `core`, so a crash writes `./core` in the working directory. But it only happens if the core size limit allows it, and in my shell `ulimit -c` is `0` (disabled). Enable it per-shell:
     $ ulimit -c unlimited
     $ ./faulty          # segfaults → writes ./core
+
+
++==============================================================================+
+|                     GDB  "x"  -  EXAMINE MEMORY  CHEAT SHEET                |
++==============================================================================+
+   SYNTAX
+   ------
+                         x / N F U   ADDRESS
+                         |   | | |      |
+                         |   | | |      +--> start address (expression)
+                         |   | | +---------> U = UNIT SIZE  (bytes per item)
+                         |   | +-----------> F = FORMAT     (how to print)
+                         |   +-------------> N = COUNT      (how many items)
+                         +-----------------> eXamine
+
+   All of N, F, U are optional and may be written in any order after "/"
+   (x/10xw == x/10wx).  Anything omitted = value from the LAST x command.
+   Initial defaults:  N = 1,  F = x (hex),  U = w (4 bytes).
+
+
+   N  -  COUNT
+   -----------
+     10      -> show 10 items
+     (none)  -> show 1 item
+     -10     -> show 10 items BEFORE the address (backwards, gdb >= 7.12)
+
+
+   U  -  UNIT SIZE
+   ---------------
+     +------+-----------+-------+------------------------------------------+
+     | char | name      | bytes | typical use                              |
+     +------+-----------+-------+------------------------------------------+
+     |  b   | byte      |   1   | raw buffers, shellcode, chars            |
+     |  h   | halfword  |   2   | shorts, UTF-16                           |
+     |  w   | word      |   4   | ints, 32-bit pointers, floats            |
+     |  g   | giant     |   8   | longs, 64-bit pointers, doubles, stack   |
+     +------+-----------+-------+------------------------------------------+
+     !! gdb "word" = 4 bytes  (NOT the x86 WORD = 2 bytes)
+
+
+   F  -  FORMAT
+   ------------
+     +------+--------------------------+-----------------------------------+
+     | char | meaning                  | note                              |
+     +------+--------------------------+-----------------------------------+
+     |  x   | hexadecimal              | default                           |
+     |  z   | hex, zero-padded         | full width, e.g. 0x0000002a       |
+     |  d   | signed decimal           |                                   |
+     |  u   | unsigned decimal         |                                   |
+     |  o   | octal                    |                                   |
+     |  t   | binary  (t = "two")      |                                   |
+     |  c   | character                | best with size b                  |
+     |  f   | floating point           | w = float, g = double             |
+     |  a   | address                  | prints <symbol+offset> too        |
+     |  s   | C string (null-term.)    | size IGNORED (h/w = wide strings) |
+     |  i   | machine instruction      | size IGNORED, disassembles        |
+     +------+--------------------------+-----------------------------------+
+
+
+   ADDRESS  -  what you can put there
+   ----------------------------------
+     0x401000        literal address
+     $rsp  $sp       stack pointer
+     $rip  $pc       instruction pointer
+     $rbp+16         register + offset
+     &var            address of a variable
+     buf             array name (decays to address)
+     *ptr            value of pointer used as address
+     main            function address
+     (none)          continue right after last examined address
+
+
+   HOW ITEMS ARE LAID OUT  (example: x/4xg $rsp)
+   ---------------------------------------------
+
+       ADDRESS              N=4 items, U=g (8 bytes), F=x (hex)
+          |
+          v
+     0x7fffffffe100: 0x00007fffffffe1a0   0x0000000000401136
+     0x7fffffffe110: 0x0000000000000001   0x00007fffffffe2b8
+          ^                 ^                    ^
+          |                 |                    |
+          |              item 1               item 2   ... (2 per row for g)
+          +-- address of first item on that row
+
+       memory:  $rsp
+                 |
+                 v
+                 +--------+--------+--------+--------+
+                 | item 1 | item 2 | item 3 | item 4 |   = 4 x 8 = 32 bytes
+                 +--------+--------+--------+--------+
+                 +0       +8       +16      +24
+
+
+   COMMON COMMANDS
+   ---------------
+     x/10i  $pc        next 10 instructions from current position
+     x/i    $pc        current instruction only
+     x/-5i  $pc        5 instructions before $pc
+     x/10xw $sp        10 x 4-byte words in hex  (40 bytes)
+     x/10xg $rsp       10 x 8-byte giants in hex (80 bytes) - 64-bit stack
+     x/10dw arr        10 ints in signed decimal
+     x/16xb buf        16 raw bytes in hex       (hexdump style)
+     x/16cb buf        16 bytes as characters
+     x/32tb &flags     32 bytes in binary
+     x/2fg  &d         2 doubles
+     x/10s  str        10 consecutive null-terminated strings
+     x/s    *argv      first command-line argument (argv[0])
+     x/8ag  $rsp       8 stack slots as addresses with symbols
+                       (great for spotting return addresses)
+
+
+   x/s  -  HOW CONSECUTIVE STRINGS ARE READ  (x/3s 0x402000)
+   ----------------------------------------------------------
+     0x402000: "hello"      0x402006: "world"      0x40200c: "!"
+       |                      |                      |
+       v                      v                      v
+     +-+-+-+-+-+--+-+-+-+-+-+--+-+--+
+     |h|e|l|l|o|\0|w|o|r|l|d|\0|!|\0|
+     +-+-+-+-+-+--+-+-+-+-+-+--+-+--+
+     each string ends at \0, the next starts right after it
+
+
+   USEFUL EXTRAS
+   -------------
+     <Enter>           repeat last x, continuing from where it stopped
+     $_                last address examined by x
+     $__               contents of that last address
+     display/i $pc     auto-show current instruction after every step
+     display/4xg $rsp  auto-show top of stack after every step
+     undisplay N       remove auto-display number N
+     p/x var           print a VALUE in hex  (x examines MEMORY at an addr)
++==============================================================================+
