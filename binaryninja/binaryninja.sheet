@@ -10,6 +10,8 @@ tags:  binaryninja binja bn python api headless script console reverse-engineeri
 ; bv = BinaryView, f = Function. UPPERCASE words are placeholders.
 
 ## load and open
+; Opening a file is the first step of every script. You get a BinaryView (bv),
+; the main object for everything in the file. It works with or without the UI.
 from binaryninja import *          # import the whole API in a script or headless run  <https://api.binary.ninja/index.html#binaryninja.load>
 bv = load(PATH)                    # open a binary or .bndb and wait for analysis to finish  @headless  <https://api.binary.ninja/index.html#binaryninja.load>
 bv = load(PATH, update_analysis=False)  # open fast without analysis, call bv.update_analysis_and_wait() later  @lazy  <https://api.binary.ninja/index.html#binaryninja.load>
@@ -38,6 +40,8 @@ shutdown()                         # stop the core cleanly at the end of a headl
 disable_default_log()              # stop the headless default log output for this session  @quiet  <https://api.binary.ninja/index.html#binaryninja.disable_default_log>
 
 ## save and databases
+; A .bndb file is a database that keeps all your work: names, types, comments.
+; Save to a .bndb to keep your analysis, or save a new binary with your patches.
 bv.create_database(PATH)  # save analysis to a new .bndb file  <https://api.binary.ninja/binaryninja.binaryview-module.html#binaryninja.binaryview.BinaryView.create_database>
 bv.save_auto_snapshot()   # save analysis into the .bndb it was opened from  <https://api.binary.ninja/binaryninja.binaryview-module.html#binaryninja.binaryview.BinaryView.save_auto_snapshot>
 bv.save(PATH)             # write the patched binary (not a .bndb) to PATH  @patch @export  <https://api.binary.ninja/binaryninja.binaryview-module.html#binaryninja.binaryview.BinaryView.save>
@@ -48,6 +52,8 @@ SaveSettings().set_option(SaveOption.TrimSnapshots)  # drop old snapshot data to
 bv.create_database(PATH, settings=SETTINGS)  # save a .bndb with SaveSettings options  <https://api.binary.ninja/binaryninja.binaryview-module.html#binaryninja.binaryview.BinaryView.create_database>
 
 ## analysis control
+; Analysis is the work Binary Ninja does to find functions, types and code flow.
+; Use these to start it, wait for it, stop it, or make it do less work.
 bv.update_analysis_and_wait()         # run analysis and block until it is done  @sync  <https://api.binary.ninja/binaryninja.binaryview-module.html#binaryninja.binaryview.BinaryView.update_analysis_and_wait>
 bv.update_analysis()                  # start analysis in the background and return at once  @async  <https://api.binary.ninja/binaryninja.binaryview-module.html#binaryninja.binaryview.BinaryView.update_analysis>
 bv.reanalyze()                        # mark every function for reanalysis and start it  @refresh @rerun  <https://api.binary.ninja/binaryninja.binaryview-module.html#binaryninja.binaryview.BinaryView.reanalyze>
@@ -63,6 +69,8 @@ bv.new_auto_function_analysis_suppressed = True  # stop analysis of newly found 
 bv.add_analysis_option("linearsweep")  # ask analysis to run an extra pass like linear sweep  <https://api.binary.ninja/binaryninja.binaryview-module.html#binaryninja.binaryview.BinaryView.add_analysis_option>
 
 ## python console magic variables
+; Ready-made names in the Python console of the UI. They always point to what you
+; see now: the open file, the cursor address, the current function.
 bv                                  # the BinaryView in the active tab  @console @current_view
 here                                # the current address in the UI (same as current_address)  @console @cursor
 current_address                     # the current address; assign to navigate there  @console
@@ -89,6 +97,8 @@ current_ui_context / current_ui_view / current_ui_view_frame  # UI objects for t
 PythonScriptingProvider.register_magic_variable(NAME, GET, SET)  # add your own variable to the Python console  @custom  <https://api.binary.ninja/binaryninja.scriptingprovider-module.html#binaryninja.scriptingprovider.PythonScriptingProvider.register_magic_variable>
 
 ## logging
+; Write messages to the Log window (or the terminal in a headless script).
+; Use them to see what your script does and to find bugs.
 log_info(MSG)                         # write an info message to the log  @print  <https://api.binary.ninja/binaryninja.log-module.html#binaryninja.log.log_info>
 log_debug(MSG)                        # write a debug message (shown only at debug level)  @verbose  <https://api.binary.ninja/binaryninja.log-module.html#binaryninja.log.log_debug>
 log_warn(MSG)                         # write a warning to the log  <https://api.binary.ninja/binaryninja.log-module.html#binaryninja.log.log_warn>
@@ -105,6 +115,8 @@ close_logs()                          # close all log files  @file  <https://api
 redirect_output_to_log()              # send Python print/stdout into the Binary Ninja log  <https://api.binary.ninja/binaryninja.log-module.html#binaryninja.log.redirect_output_to_log>
 
 ## settings
+; Settings are the options of Binary Ninja, the same ones you see in the UI.
+; Read them, change them, or add new options for your own plugin.
 Settings()                           # get the default settings store  @config @preferences  <https://api.binary.ninja/binaryninja.settings-module.html#binaryninja.settings.Settings>
 Settings().get_bool("analysis.linearSweep.autorun")  # read a bool setting by its key  @config  <https://api.binary.ninja/binaryninja.settings-module.html#binaryninja.settings.Settings.get_bool>
 Settings().get_string(KEY, bv)       # read a setting as seen by this view (resource scope)  @config  <https://api.binary.ninja/binaryninja.settings-module.html#binaryninja.settings.Settings.get_string>
@@ -129,6 +141,8 @@ bv.get_load_settings("ELF")          # get the load settings used for this view 
 Settings().serialize_settings(scope=SettingsScope.SettingsUserScope)  # dump user settings as JSON  @export  <https://api.binary.ninja/binaryninja.settings-module.html#binaryninja.settings.Settings.serialize_settings>
 
 ## undo
+; Group your changes so that one Ctrl+Z takes them all back.
+; Use it in scripts that change many things at once.
 with bv.undoable_transaction():  # group changes into one undo step, reverted if an exception escapes  <https://api.binary.ninja/binaryninja.binaryview-module.html#binaryninja.binaryview.BinaryView.undoable_transaction>
 ID = bv.begin_undo_actions()     # start recording changes for undo  <https://api.binary.ninja/binaryninja.binaryview-module.html#binaryninja.binaryview.BinaryView.begin_undo_actions>
 bv.commit_undo_actions(ID)       # save recorded changes as one undo step  <https://api.binary.ninja/binaryninja.binaryview-module.html#binaryninja.binaryview.BinaryView.commit_undo_actions>
@@ -139,6 +153,8 @@ bv.redo()                        # redo the last undone step  <https://api.binar
 bv.file.undo_entries             # list the undo history entries  <https://api.binary.ninja/binaryninja.filemetadata-module.html#binaryninja.filemetadata.FileMetadata.undo_entries>
 
 ## threads and workers
+; Binary Ninja runs code on many threads. The UI may only change on the main thread.
+; Use these to run work in the background, or to safely touch the UI.
 execute_on_main_thread(FN)           # run FN on the UI main thread later  <https://api.binary.ninja/binaryninja.mainthread-module.html#binaryninja.mainthread.execute_on_main_thread>
 execute_on_main_thread_and_wait(FN)  # run FN on the main thread and wait for it  @ui @sync  <https://api.binary.ninja/binaryninja.mainthread-module.html#binaryninja.mainthread.execute_on_main_thread_and_wait>
 is_main_thread()                     # check whether code runs on the UI main thread  <https://api.binary.ninja/binaryninja.mainthread-module.html#binaryninja.mainthread.is_main_thread>
@@ -148,6 +164,8 @@ get_worker_thread_count()            # get the number of analysis worker threads
 set_worker_thread_count(N)           # change the number of analysis worker threads  @cpu  <https://api.binary.ninja/binaryninja.mainthread-module.html#binaryninja.mainthread.set_worker_thread_count>
 
 ## version, license and paths
+; Facts about your Binary Ninja install: version, license, and where it keeps its files.
+; Use them to check that a script works on this version.
 core_version()                        # get the Binary Ninja version string  <https://api.binary.ninja/index.html#binaryninja.core_version>
 core_version_info()                   # get the version as major, minor, build, channel  <https://api.binary.ninja/index.html#binaryninja.core_version_info>
 core_build_id()                       # get the build number  @version  <https://api.binary.ninja/index.html#binaryninja.core_build_id>
@@ -165,6 +183,8 @@ connect_pycharm_debugger(port=5678)   # attach to a PyCharm debug server  <https
 get_memory_usage_info()               # count core objects in memory to find leaks  @leak  <https://api.binary.ninja/index.html#binaryninja.get_memory_usage_info>
 
 ## user interaction and reports
+; Talk to the user from a script: ask for a value, a file or a choice, or show a result.
+; Works in the UI. In headless mode the questions go to the terminal.
 get_text_line_input("PROMPT", "TITLE")  # ask the user for a line of text, None on cancel  <https://api.binary.ninja/binaryninja.interaction-module.html#binaryninja.interaction.get_text_line_input>
 get_int_input("PROMPT", "TITLE")      # ask the user for an integer  @number  <https://api.binary.ninja/binaryninja.interaction-module.html#binaryninja.interaction.get_int_input>
 get_address_input("PROMPT", "TITLE")  # ask the user for an address or expression  <https://api.binary.ninja/binaryninja.interaction-module.html#binaryninja.interaction.get_address_input>
@@ -191,6 +211,7 @@ bv.navigate(bv.view, ADDR)            # move the UI to an address in the current
 bv.file.navigate(bv.view, ADDR)       # move the UI to an address  @goto @jump  <https://api.binary.ninja/binaryninja.filemetadata-module.html#binaryninja.filemetadata.FileMetadata.navigate>
 
 ## guides and references
+; The official places to read more when a one-line note is not enough.
 https://api.binary.ninja/  # open the Python API reference  @docs  <https://api.binary.ninja/>
 https://docs.binary.ninja/dev/cookbook.html  # open the official snippets cookbook  @recipes @examples  <https://docs.binary.ninja/dev/cookbook.html>
 https://docs.binary.ninja/dev/concepts.html  # read the core concepts (views, functions, analysis)  @learn  <https://docs.binary.ninja/dev/concepts.html>
@@ -208,6 +229,8 @@ https://docs.binary.ninja/guide/settings.html  # list every setting key with its
 ; bv = BinaryView. ADDR = virtual address. UPPERCASE words are placeholders.
 
 ## file facts
+; Basic facts about the open file: where it starts and ends, its entry point,
+; its format and its CPU.
 bv.start / bv.end               # # get the lowest and highest+1 mapped address  @range @bounds  <https://api.binary.ninja/binaryninja.binaryview-module.html#binaryninja.binaryview.BinaryView.start>
 bv.length                       # # get the size of the mapped address range (end - start)  @len  <https://api.binary.ninja/binaryninja.binaryview-module.html#binaryninja.binaryview.BinaryView.length>
 bv.entry_point                  # # get the entry point address  @main @start  <https://api.binary.ninja/binaryninja.binaryview-module.html#binaryninja.binaryview.BinaryView.entry_point>
@@ -225,6 +248,8 @@ bv.session_data                 # get a dict for plugin data that lives until th
 bv.rebase(ADDR)                 # rebase to a new image base and return the new view  @relocate  <https://api.binary.ninja/binaryninja.binaryview-module.html#binaryninja.binaryview.BinaryView.rebase>
 
 ## read bytes and values
+; Read raw bytes or numbers from the file at an address, the same way the program
+; would see them in memory.
 bv.read(ADDR, N)                      # # read N bytes at ADDR  @memory  <https://api.binary.ninja/binaryninja.binaryview-module.html#binaryninja.binaryview.BinaryView.read>
 bv[ADDR:ADDR+N]                       # read a byte slice at ADDR  @bytes  <https://api.binary.ninja/binaryninja.binaryview-module.html#binaryninja.binaryview.BinaryView>
 bv.read_int(ADDR, 4, sign=False)      # # read an integer of a given size with the view's endianness  @dword @u32  <https://api.binary.ninja/binaryninja.binaryview-module.html#binaryninja.binaryview.BinaryView.read_int>
@@ -248,6 +273,8 @@ bv.eval("main + 0x10")                # evaluate an address expression (symbols,
 bv.parse_expression(EXPR, here=ADDR)  # evaluate an address expression relative to ADDR  <https://api.binary.ninja/binaryninja.binaryview-module.html#binaryninja.binaryview.BinaryView.parse_expression>
 
 ## write and patch
+; Change the bytes of the file. Use it to patch code or data,
+; then save a new binary.
 bv.write(ADDR, DATA)                 # overwrite bytes at ADDR, returns the count written  @patch @modify  <https://api.binary.ninja/binaryninja.binaryview-module.html#binaryninja.binaryview.BinaryView.write>
 bv[ADDR] = b"\x90"                   # overwrite bytes at ADDR with slice syntax  @patch  <https://api.binary.ninja/binaryninja.binaryview-module.html#binaryninja.binaryview.BinaryView>
 bv.insert(ADDR, DATA)                # insert bytes and shift the rest (raw views only)  @patch @grow  <https://api.binary.ninja/binaryninja.binaryview-module.html#binaryninja.binaryview.BinaryView.insert>
@@ -265,6 +292,8 @@ bv.get_modification(ADDR, N)         # list ModificationStatus for each byte (Or
 bv.save(PATH)                        # write the patched file to disk  @export @patch  <https://api.binary.ninja/binaryninja.binaryview-module.html#binaryninja.binaryview.BinaryView.save>
 
 ## address checks
+; Ask questions about an address: is it in the file? Can it be read, written
+; or run? Is it code or data?
 ADDR in bv                           # check whether ADDR is mapped  @valid  <https://api.binary.ninja/binaryninja.binaryview-module.html#binaryninja.binaryview.BinaryView>
 bv.is_valid_offset(ADDR)             # check whether ADDR is mapped  <https://api.binary.ninja/binaryninja.binaryview-module.html#binaryninja.binaryview.BinaryView.is_valid_offset>
 bv.is_offset_readable(ADDR)          # check whether ADDR is readable  @permission @r  <https://api.binary.ninja/binaryninja.binaryview-module.html#binaryninja.binaryview.BinaryView.is_offset_readable>
@@ -279,6 +308,8 @@ bv.mapped_address_ranges             # list mapped address ranges  @memory  <htt
 bv.backed_address_ranges             # list address ranges backed by file data  <https://api.binary.ninja/binaryninja.binaryview-module.html#binaryninja.binaryview.BinaryView.backed_address_ranges>
 
 ## segments, sections, memory map
+; How the file is placed in memory. Segments are the big memory areas with
+; permissions. Sections are named parts like .text or .data.
 bv.segments                           # list the Segments (memory mappings from the file)  @program-headers @phdr  <https://api.binary.ninja/binaryninja.binaryview-module.html#binaryninja.binaryview.BinaryView.segments>
 bv.get_segment_at(ADDR)               # get the Segment that holds ADDR  @mapping  <https://api.binary.ninja/binaryninja.binaryview-module.html#binaryninja.binaryview.BinaryView.get_segment_at>
 seg.start, seg.end, seg.readable, seg.writable, seg.executable  # read the range and permissions of a Segment  @rwx  <https://api.binary.ninja/binaryninja.binaryview-module.html#binaryninja.binaryview.Segment>
@@ -305,6 +336,7 @@ bv.relocations_at(ADDR)               # list relocations that patch ADDR  @reloc
 bv.relocation_ranges                  # list (start, end) of every relocated range  @reloc  <https://api.binary.ninja/binaryninja.binaryview-module.html#binaryninja.binaryview.BinaryView.relocation_ranges>
 
 ## functions
+; Find, list, add and remove the functions Binary Ninja found in the file.
 bv.functions                       # iterate every Function in the view  @all @list  <https://api.binary.ninja/binaryninja.binaryview-module.html#binaryninja.binaryview.BinaryView.functions>
 for f in bv:                       # iterate every Function in the view  @loop  <https://api.binary.ninja/binaryninja.binaryview-module.html#binaryninja.binaryview.BinaryView>
 len(bv.functions)                  # count the functions  <https://api.binary.ninja/binaryninja.binaryview-module.html#binaryninja.binaryview.BinaryView.functions>
@@ -326,6 +358,8 @@ bv.hlil_functions()                # iterate HLIL of all functions, generated in
 bv.mlil_functions()                # iterate MLIL of all functions, generated in the background for speed  @il @fast  <https://api.binary.ninja/binaryninja.binaryview-module.html#binaryninja.binaryview.BinaryView.mlil_functions>
 
 ## symbols and names
+; A symbol is a name for an address, like a function or a global variable name.
+; Use these to find things by name or to rename them.
 bv.symbols                            # get a mapping name -> list of Symbols  @names @all  <https://api.binary.ninja/binaryninja.binaryview-module.html#binaryninja.binaryview.BinaryView.symbols>
 bv.get_symbol_at(ADDR)                # get the Symbol at ADDR  @name @label  <https://api.binary.ninja/binaryninja.binaryview-module.html#binaryninja.binaryview.BinaryView.get_symbol_at>
 bv.get_symbols_by_name("printf")      # list Symbols with this name  @lookup @find  <https://api.binary.ninja/binaryninja.binaryview-module.html#binaryninja.binaryview.BinaryView.get_symbols_by_name>
@@ -343,6 +377,8 @@ sym.type / sym.address / sym.binding  # read a Symbol's SymbolType, address and 
 bv.namespaces                         # list symbol namespaces (one per imported library on some formats)  @namespace  <https://api.binary.ninja/binaryninja.binaryview-module.html#binaryninja.binaryview.BinaryView.namespaces>
 
 ## data variables and strings
+; Data variables are typed values in memory, like globals and tables.
+; Strings are the text Binary Ninja found in the file.
 bv.data_vars                        # get a dict addr -> DataVariable  @globals  <https://api.binary.ninja/binaryninja.binaryview-module.html#binaryninja.binaryview.BinaryView.data_vars>
 bv.get_data_var_at(ADDR)            # get the DataVariable at ADDR  @global @lookup  <https://api.binary.ninja/binaryninja.binaryview-module.html#binaryninja.binaryview.BinaryView.get_data_var_at>
 bv.define_user_data_var(ADDR, TYPE, "name")  # type (and optionally name) a global as a user action  @apply-type  <https://api.binary.ninja/binaryninja.binaryview-module.html#binaryninja.binaryview.BinaryView.define_user_data_var>
@@ -360,6 +396,7 @@ s.value, s.start, s.length, s.type  # # read a StringReference's text, address, 
 bv.derived_strings                  # list strings built by code, e.g. stack strings or decoded strings  @deobfuscate  <https://api.binary.ninja/binaryninja.binaryview-module.html#binaryninja.binaryview.BinaryView.derived_strings>
 
 ## search
+; Find bytes, text or constant values anywhere in the file.
 bv.find_next_data(ADDR, b"\x7fELF")   # find the next exact byte match at or after ADDR  @bytes @grep  <https://api.binary.ninja/binaryninja.binaryview-module.html#binaryninja.binaryview.BinaryView.find_next_data>
 bv.find_all_data(START, END, DATA)    # iterate (addr, DataBuffer) of every byte match in a range  @bytes @findall  <https://api.binary.ninja/binaryninja.binaryview-module.html#binaryninja.binaryview.BinaryView.find_all_data>
 bv.find_next_text(ADDR, "TEXT")       # find text in the disassembly/IL output after ADDR  @string @grep  <https://api.binary.ninja/binaryninja.binaryview-module.html#binaryninja.binaryview.BinaryView.find_next_text>
@@ -372,6 +409,8 @@ bv.search(PATTERN, start=A, end=B, limit=N)  # search only part of the view and 
 BinaryView.detect_search_mode(PATTERN)  # show which mode search() would use for a pattern  @debug  <https://api.binary.ninja/binaryninja.binaryview-module.html#binaryninja.binaryview.BinaryView.detect_search_mode>
 
 ## cross references
+; Cross references (xrefs) tell you who uses an address.
+; Use them to see where a function is called or where data is read.
 bv.get_code_refs(ADDR)               # iterate code locations that reference ADDR (ReferenceSource)  @xrefs @to @callers  <https://api.binary.ninja/binaryninja.binaryview-module.html#binaryninja.binaryview.BinaryView.get_code_refs>
 ref.function, ref.address, ref.arch  # read where a ReferenceSource comes from  @xrefs  <https://api.binary.ninja/binaryninja.binaryview-module.html#binaryninja.binaryview.ReferenceSource>
 ref.llil / ref.mlil / ref.hlil       # get the IL instruction at a reference site  @xrefs  <https://api.binary.ninja/binaryninja.binaryview-module.html#binaryninja.binaryview.ReferenceSource.hlil>
@@ -388,11 +427,14 @@ bv.add_user_data_ref(FROM, TO)       # add a manual data xref  @xrefs  <https://
 bv.remove_user_data_ref(FROM, TO)    # delete a manual data xref  @xrefs  <https://api.binary.ninja/binaryninja.binaryview-module.html#binaryninja.binaryview.BinaryView.remove_user_data_ref>
 
 ## comments
+; Notes you attach to an address. They show next to the code in the UI.
 bv.set_comment_at(ADDR, "TEXT")  # set a comment at an address (data or code, not tied to a function)  @annotate @note  <https://api.binary.ninja/binaryninja.binaryview-module.html#binaryninja.binaryview.BinaryView.set_comment_at>
 bv.get_comment_at(ADDR)          # read the address comment at ADDR  @annotate  <https://api.binary.ninja/binaryninja.binaryview-module.html#binaryninja.binaryview.BinaryView.get_comment_at>
 bv.address_comments              # get a dict addr -> comment of address comments  @all  <https://api.binary.ninja/binaryninja.binaryview-module.html#binaryninja.binaryview.BinaryView.address_comments>
 
 ## tags and bookmarks
+; Tags are labels with an icon that you put on addresses or functions.
+; Use them to mark interesting places and find them again later.
 bv.tag_types                        # get a dict name -> TagType  @tags  <https://api.binary.ninja/binaryninja.binaryview-module.html#binaryninja.binaryview.BinaryView.tag_types>
 bv.create_tag_type("Crypto", "🔑")   # make a new tag type with a name and emoji icon  @tags  <https://api.binary.ninja/binaryninja.binaryview-module.html#binaryninja.binaryview.BinaryView.create_tag_type>
 bv.get_tag_type("Bookmarks")        # get a tag type by name  @tags  <https://api.binary.ninja/binaryninja.binaryview-module.html#binaryninja.binaryview.BinaryView.get_tag_type>
@@ -406,6 +448,8 @@ bv.remove_user_data_tags_of_type(ADDR, "Bookmarks")  # delete all data tags of a
 bv.remove_tag_type("Crypto")        # delete a tag type and all its tags  <https://api.binary.ninja/binaryninja.binaryview-module.html#binaryninja.binaryview.BinaryView.remove_tag_type>
 
 ## metadata storage
+; Save your own data (numbers, text, lists) inside the .bndb file.
+; Use it to keep the results of a plugin between sessions.
 bv.store_metadata("key", VALUE)  # save a value (int, str, bytes, list, dict) into the .bndb  @persist @plugin-data  <https://api.binary.ninja/binaryninja.binaryview-module.html#binaryninja.binaryview.BinaryView.store_metadata>
 bv.query_metadata("key")         # read stored metadata, raises KeyError if missing  @persist @load  <https://api.binary.ninja/binaryninja.binaryview-module.html#binaryninja.binaryview.BinaryView.query_metadata>
 bv.get_metadata("key", DEFAULT)  # read stored metadata or a default  @persist  <https://api.binary.ninja/binaryninja.binaryview-module.html#binaryninja.binaryview.BinaryView.get_metadata>
@@ -414,6 +458,8 @@ bv.metadata                      # get all stored metadata as a dict-like Metada
 bv.session_data["key"] = VALUE   # keep plugin data for this session only (not saved)  @cache @ephemeral  <https://api.binary.ninja/binaryninja.binaryview-module.html#binaryninja.binaryview.BinaryView.session_data>
 
 ## components (folders for functions)
+; Components are folders. Use them to put related functions and data in groups
+; so a big binary is easier to read.
 bv.root_component                 # get the top component (folder tree in the sidebar)  @folders @group @organize  <https://api.binary.ninja/binaryninja.binaryview-module.html#binaryninja.binaryview.BinaryView.root_component>
 bv.create_component("NAME")       # make a new component under the root  @folder  <https://api.binary.ninja/binaryninja.binaryview-module.html#binaryninja.binaryview.BinaryView.create_component>
 comp.add_function(F)              # put a function into a component  @folder @group  <https://api.binary.ninja/binaryninja.component-module.html#binaryninja.component.Component.add_function>
@@ -423,12 +469,16 @@ bv.get_component_by_path("a/b")   # get a component by its path  @folder @lookup
 bv.remove_component(COMP)         # delete a component (its functions stay)  @folder  <https://api.binary.ninja/binaryninja.binaryview-module.html#binaryninja.binaryview.BinaryView.remove_component>
 
 ## external libraries and links
+; Record which libraries the file imports from, and link an import to
+; the real function in another file.
 bv.add_external_library("libc.so.6", PROJECT_FILE)  # record a linked library, optionally backed by a project file  @imports  <https://api.binary.ninja/binaryninja.binaryview-module.html#binaryninja.binaryview.BinaryView.add_external_library>
 bv.add_external_location(SYM, LIB, "target", TARGET_ADDR)  # point an import at a symbol/address in another library  @imports  <https://api.binary.ninja/binaryninja.binaryview-module.html#binaryninja.binaryview.BinaryView.add_external_location>
 bv.get_external_libraries()  # list ExternalLibrary objects  @imports  <https://api.binary.ninja/binaryninja.binaryview-module.html#binaryninja.binaryview.BinaryView.get_external_libraries>
 bv.get_external_locations()  # list ExternalLocation links  @imports  <https://api.binary.ninja/binaryninja.binaryview-module.html#binaryninja.binaryview.BinaryView.get_external_locations>
 
 ## linear disassembly
+; The linear view shows the whole file from top to bottom as text.
+; Use it to print or export everything at once.
 bv.linear_disassembly                # iterate every line of the linear view as text lines  @dump @listing  <https://api.binary.ninja/binaryninja.binaryview-module.html#binaryninja.binaryview.BinaryView.linear_disassembly>
 bv.get_linear_disassembly(SETTINGS)  # iterate linear view lines with custom DisassemblySettings  @listing  <https://api.binary.ninja/binaryninja.binaryview-module.html#binaryninja.binaryview.BinaryView.get_linear_disassembly>
 LinearViewObject.language_representation(bv)  # build a linear view of pseudo C for the whole file  @decompile @export  <https://api.binary.ninja/binaryninja.lineardisassembly-module.html#binaryninja.lineardisassembly.LinearViewObject.language_representation>
@@ -440,6 +490,8 @@ LinearViewCursor(LinearViewObject.disassembly(bv))  # make a cursor that walks t
         if not cur.next(): break
 
 ## events and notifications
+; Get a call from Binary Ninja when something in the file changes,
+; for example a new function, a new name or patched bytes.
 bv.register_notification(OBJ)    # get callbacks when functions, symbols, data vars, types... change  @events @listen  <https://api.binary.ninja/binaryninja.binaryview-module.html#binaryninja.binaryview.BinaryView.register_notification>
     class Watch(BinaryDataNotification):
         def __init__(self):
@@ -465,6 +517,7 @@ BinaryViewType.add_binaryview_finalized_event(CB)  # run CB(bv) when any view fi
 ; f = Function, bb = BasicBlock, v = Variable. UPPERCASE words are placeholders.
 
 ## identity
+; Basic facts about one function: its name, address, CPU and size.
 f.name                                # get the function name; assign to rename it  @symbol  <https://api.binary.ninja/binaryninja.function-module.html#binaryninja.function.Function.name>
 f.start                               # get the start address  @entry  <https://api.binary.ninja/binaryninja.function-module.html#binaryninja.function.Function.start>
 f.symbol                              # get the Symbol of the function  @name  <https://api.binary.ninja/binaryninja.function-module.html#binaryninja.function.Function.symbol>
@@ -484,6 +537,8 @@ f.analysis_skip_override = FunctionAnalysisSkipOverride.NeverSkipFunctionAnalysi
 f.needs_update                        # check whether the function is waiting for reanalysis  @stale  <https://api.binary.ninja/binaryninja.function-module.html#binaryninja.function.Function.needs_update>
 
 ## prototype and type
+; The prototype is the function's C signature: return type, name and parameters.
+; Read it or change it to make the decompiled code better.
 f.type                           # get the FunctionType; assign a C prototype string or Type to change it  @signature  <https://api.binary.ninja/binaryninja.function-module.html#binaryninja.function.Function.type>
 f.type = "int32_t main(int32_t argc, char** argv)"  # set the prototype (and name) from C  @signature @retype  <https://api.binary.ninja/binaryninja.function-module.html#binaryninja.function.Function.type>
 f.set_user_type(TYPE)            # set the prototype without renaming  <https://api.binary.ninja/binaryninja.function-module.html#binaryninja.function.Function.set_user_type>
@@ -500,6 +555,8 @@ f.inline_during_analysis = True  # inline this function's IL into its callers  @
 bv.get_function_at(ADDR).apply_imported_types(SYM)  # apply type info from type libraries for a symbol  @imports  <https://api.binary.ninja/binaryninja.function-module.html#binaryninja.function.Function.apply_imported_types>
 
 ## il and decompiled output
+; Get the function as IL (Binary Ninja's own simple code) at low, medium or high level.
+; High level IL is the decompiled code you see as pseudo C.
 f.llil                       # get the LowLevelILFunction  @il @lowlevel  <https://api.binary.ninja/binaryninja.function-module.html#binaryninja.function.Function.llil>
 f.mlil                       # get the MediumLevelILFunction  @il @mediumlevel  <https://api.binary.ninja/binaryninja.function-module.html#binaryninja.function.Function.mlil>
 f.hlil                       # get the HighLevelILFunction (decompiler output)  @il @decompile @highlevel  <https://api.binary.ninja/binaryninja.function-module.html#binaryninja.function.Function.hlil>
@@ -522,6 +579,8 @@ f.get_instruction_containing_address(ADDR)  # get the start of the instruction t
 f.is_call_instruction(ADDR)  # check whether the instruction at ADDR is a call  <https://api.binary.ninja/binaryninja.function-module.html#binaryninja.function.Function.is_call_instruction>
 
 ## basic blocks and control flow
+; A basic block is a piece of code that runs from start to end with no jumps inside.
+; Blocks and the edges between them make the function's graph.
 f.basic_blocks                      # list the assembly BasicBlocks  @cfg  <https://api.binary.ninja/binaryninja.function-module.html#binaryninja.function.Function.basic_blocks>
 f.get_basic_block_at(ADDR)          # get the BasicBlock that holds ADDR  @lookup  <https://api.binary.ninja/binaryninja.function-module.html#binaryninja.function.Function.get_basic_block_at>
 f.llil.basic_blocks / f.mlil.basic_blocks / f.hlil.basic_blocks  # list the IL basic blocks  <https://api.binary.ninja/binaryninja.lowlevelil-module.html#binaryninja.lowlevelil.LowLevelILFunction.basic_blocks>
@@ -545,6 +604,8 @@ f.add_guided_source_blocks([(ARCH, ADDR)])  # mark blocks for guided analysis (o
 f.create_graph()                    # build a FlowGraph of the function (pass FunctionGraphType for IL)  @cfg  <https://api.binary.ninja/binaryninja.function-module.html#binaryninja.function.Function.create_graph>
 
 ## variables
+; The local variables and parameters of a function.
+; Read them, rename them, or change their types.
 f.vars                                # list all Variables of the function  @locals @stack  <https://api.binary.ninja/binaryninja.function-module.html#binaryninja.function.Function.vars>
 f.hlil.vars                           # list variables used in HLIL (what the decompiler shows)  @locals  <https://api.binary.ninja/binaryninja.highlevelil-module.html#binaryninja.highlevelil.HighLevelILFunction.vars>
 f.hlil.aliased_vars                   # list variables whose address is taken  @alias @pointer  <https://api.binary.ninja/binaryninja.highlevelil-module.html#binaryninja.highlevelil.HighLevelILFunction.aliased_vars>
@@ -568,6 +629,8 @@ f.get_hlil_var_refs(VAR)              # list HLIL places that use a variable  @x
 v.dead_store_elimination = DeadStoreElimination.PreventDeadStoreElimination  # keep writes to a variable that look unused  @dse  <https://api.binary.ninja/binaryninja.variable-module.html#binaryninja.variable.Variable.dead_store_elimination>
 
 ## values and dataflow
+; Ask what value a register, stack slot or argument has at one point in the code.
+; Binary Ninja works this out for you.
 f.get_reg_value_at(ADDR, "rdi")       # get what analysis knows about a register before ADDR  @dataflow @constant  <https://api.binary.ninja/binaryninja.function-module.html#binaryninja.function.Function.get_reg_value_at>
 f.get_reg_value_after(ADDR, "eax")    # get a register value after the instruction at ADDR  @dataflow  <https://api.binary.ninja/binaryninja.function-module.html#binaryninja.function.Function.get_reg_value_after>
 f.get_stack_contents_at(ADDR, OFFSET, SIZE)  # get a stack slot value before ADDR  @dataflow  <https://api.binary.ninja/binaryninja.function-module.html#binaryninja.function.Function.get_stack_contents_at>
@@ -582,6 +645,7 @@ f.set_call_type_adjustment(ADDR, TYPE)  # override the prototype used at one cal
 f.set_call_stack_adjustment(ADDR, N)  # override the stack change at one call site  <https://api.binary.ninja/binaryninja.function-module.html#binaryninja.function.Function.set_call_stack_adjustment>
 
 ## calls and references
+; Who calls this function, and which functions it calls.
 f.callers                         # list Functions that call this function  @xrefs @incoming  <https://api.binary.ninja/binaryninja.function-module.html#binaryninja.function.Function.callers>
 f.caller_sites                    # list ReferenceSource of each place that calls this function  @xrefs  <https://api.binary.ninja/binaryninja.function-module.html#binaryninja.function.Function.caller_sites>
     for site in f.caller_sites:
@@ -596,6 +660,7 @@ f.add_user_type_ref(FROM, "struct_name")  # add a manual xref from code to a typ
 f.add_user_type_field_ref(FROM, "struct_name", OFFSET)  # add a manual xref from code to a struct field  @xrefs @member  <https://api.binary.ninja/binaryninja.function-module.html#binaryninja.function.Function.add_user_type_field_ref>
 
 ## comments, tags, highlight
+; Mark up one function: add comments, tags and colors to its code.
 f.comment                             # get or set the function comment  @annotate @note  <https://api.binary.ninja/binaryninja.function-module.html#binaryninja.function.Function.comment>
 f.set_comment_at(ADDR, "TEXT")        # set a comment on an instruction in this function  @annotate  <https://api.binary.ninja/binaryninja.function-module.html#binaryninja.function.Function.set_comment_at>
 f.get_comment_at(ADDR)                # read the comment on an instruction  @annotate  <https://api.binary.ninja/binaryninja.function-module.html#binaryninja.function.Function.get_comment_at>
@@ -617,6 +682,7 @@ f.query_metadata("key")               # read plugin data stored on this function
 f.session_data                        # get a dict for plugin data on this function for this session  @cache  <https://api.binary.ninja/binaryninja.function-module.html#binaryninja.function.Function.session_data>
 
 ## function analysis control
+; Tell Binary Ninja to analyze one function again, or change how it is analyzed.
 f.reanalyze()                         # mark the function for reanalysis and start it  @refresh @update  <https://api.binary.ninja/binaryninja.function-module.html#binaryninja.function.Function.reanalyze>
 f.analyze()                           # analyze the function now if it is out of date  @update  <https://api.binary.ninja/binaryninja.function-module.html#binaryninja.function.Function.analyze>
 f.mark_updates_required()             # queue the function for the next analysis update  @refresh  <https://api.binary.ninja/binaryninja.function-module.html#binaryninja.function.Function.mark_updates_required>
@@ -630,6 +696,8 @@ f.set_switch_recovery(ADDR, SwitchRecovery.PreventSwitchRecovery)  # stop HLIL t
 f.collapse_region(HASH) / f.expand_all()  # collapse or expand HLIL regions in the UI  @fold  <https://api.binary.ninja/binaryninja.function-module.html#binaryninja.function.Function.collapse_region>
 
 ## disassembly text settings
+; Turn code into text lines, and choose what is shown (addresses, bytes...).
+; Use it to print or export a function's code.
 DisassemblySettings()       # make settings that control how code is rendered  @render @options  <https://api.binary.ninja/binaryninja.function-module.html#binaryninja.function.DisassemblySettings>
 s.set_option(DisassemblyOption.ShowAddress)  # turn on a render option, e.g. addresses or opcode bytes  @opcodes  <https://api.binary.ninja/binaryninja.function-module.html#binaryninja.function.DisassemblySettings.set_option>
 DisassemblyTextRenderer(f)  # render assembly or IL of a function into lines with comments  @text  <https://api.binary.ninja/binaryninja.function-module.html#binaryninja.function.DisassemblyTextRenderer>
@@ -644,6 +712,8 @@ str(LINE)                   # turn a DisassemblyTextLine into plain text  @rende
 ; Guide: https://docs.binary.ninja/dev/bnil-overview.html
 
 ## get il functions
+; IL (BNIL) is Binary Ninja's own simple language. Every CPU is translated into it,
+; so one script works on x86, ARM, MIPS and more. Get it here at each level.
 f.llil / f.mlil / f.hlil     # get the Low, Medium or High Level IL of a function  @bnil  <https://api.binary.ninja/binaryninja.function-module.html#binaryninja.function.Function.hlil>
 f.lifted_il                  # get the lifted IL (LLIL before flag and stack cleanup)  @lift @raw  <https://api.binary.ninja/binaryninja.function-module.html#binaryninja.function.Function.lifted_il>
 f.mmlil                      # get the mapped MLIL (keeps stores that MLIL drops)  <https://api.binary.ninja/binaryninja.function-module.html#binaryninja.function.Function.mmlil>
@@ -656,6 +726,7 @@ str(f.hlil)                  # print the whole decompiled function  @decompile @
 f.hlil.root                  # get the top HLIL instruction (the function body block)  @ast @tree  <https://api.binary.ninja/binaryninja.highlevelil-module.html#binaryninja.highlevelil.HighLevelILFunction.root>
 
 ## walk instructions
+; Loop over the IL instructions of a function, block by block or one by one.
 il.instructions           # iterate every top-level IL instruction of a function  @loop  <https://api.binary.ninja/binaryninja.mediumlevelil-module.html#binaryninja.mediumlevelil.MediumLevelILFunction.instructions>
 for bb in il:             # iterate the IL basic blocks of a function  @loop  <https://api.binary.ninja/binaryninja.mediumlevelil-module.html#binaryninja.mediumlevelil.MediumLevelILFunction>
 for i in bb:              # iterate the instructions of an IL basic block  @loop  <https://api.binary.ninja/binaryninja.mediumlevelil-module.html#binaryninja.mediumlevelil.MediumLevelILBasicBlock>
@@ -676,6 +747,7 @@ il.get_expr(EXPR_INDEX)   # get an IL expression by expression index  <https://a
 il.get_expr_count()       # count all expressions in the IL function  <https://api.binary.ninja/binaryninja.mediumlevelil-module.html#binaryninja.mediumlevelil.MediumLevelILFunction.get_expr_count>
 
 ## instruction basics
+; Facts about one IL instruction: what kind it is, its address and its parts.
 i.operation          # get the operation enum, e.g. MediumLevelILOperation.MLIL_CALL  @op @opcode @kind  <https://api.binary.ninja/binaryninja.mediumlevelil-module.html#binaryninja.mediumlevelil.MediumLevelILInstruction.operation>
 i.operation.name     # get the operation name as text, e.g. "HLIL_ASSIGN"  @op  <https://api.binary.ninja/binaryninja.mediumlevelil-module.html#binaryninja.mediumlevelil.MediumLevelILInstruction.operation>
 i.address            # get the assembly address this IL came from (approximate)  @addr @location  <https://api.binary.ninja/binaryninja.mediumlevelil-module.html#binaryninja.mediumlevelil.MediumLevelILInstruction.address>
@@ -697,6 +769,8 @@ i.has_side_effects   # check whether an HLIL expression has side effects  @pure 
 MediumLevelILInstruction.show_mlil_hierarchy()  # open a graph of all MLIL classes (also show_llil_ / show_hlil_hierarchy)  @learn  <https://api.binary.ninja/binaryninja.mediumlevelil-module.html#binaryninja.mediumlevelil.MediumLevelILInstruction.show_mlil_hierarchy>
 
 ## match by kind
+; Find the instructions you care about, like calls, constants or assignments,
+; by checking their kind.
 isinstance(i, Call)               # match any call at any level (commonil class)  @filter  <https://api.binary.ninja/binaryninja.commonil-module.html#binaryninja.commonil.Call>
 isinstance(i, Localcall) / isinstance(i, Tailcall) / isinstance(i, Syscall)  # match normal calls, tail calls or syscalls  @call  <https://api.binary.ninja/binaryninja.commonil-module.html#binaryninja.commonil.Localcall>
 isinstance(i, Constant)           # match any constant expression  @const @immediate  <https://api.binary.ninja/binaryninja.commonil-module.html#binaryninja.commonil.Constant>
@@ -719,6 +793,8 @@ match i: case HighLevelILCall(dest=HighLevelILConstPtr(constant=ADDR)):  # patte
             print("write", v)
 
 ## common operands
+; The parts of the most used instructions, like the target and arguments of a call,
+; or the two sides of an assignment.
 call.dest / call.params               # get a call's target and argument list  @args @arguments  <https://api.binary.ninja/binaryninja.mediumlevelil-module.html#binaryninja.mediumlevelil.MediumLevelILCall>
 call.output                           # list the variables a MLIL call writes  @return  <https://api.binary.ninja/binaryninja.mediumlevelil-module.html#binaryninja.mediumlevelil.MediumLevelILCall.output>
 set_var.dest / set_var.src            # get the target variable and value of an MLIL assignment  @assign  <https://api.binary.ninja/binaryninja.mediumlevelil-module.html#binaryninja.mediumlevelil.MediumLevelILSetVar>
@@ -745,6 +821,7 @@ llil_set_reg.dest / llil_set_reg.src  # get the register and value of an LLIL re
 llil_reg.src.name                     # get the register name read by LLIL_REG  <https://api.binary.ninja/binaryninja.lowlevelil-module.html#binaryninja.lowlevelil.ILRegister.name>
 
 ## variables in il
+; Which variables an instruction reads or writes, and where a variable is used.
 i.vars_read / i.vars_written          # list variables an instruction reads / writes  @uses @defs @dataflow  <https://api.binary.ninja/binaryninja.mediumlevelil-module.html#binaryninja.mediumlevelil.MediumLevelILInstruction.vars_read>
 i.vars_address_taken                  # list variables whose address the instruction takes  @alias  <https://api.binary.ninja/binaryninja.mediumlevelil-module.html#binaryninja.mediumlevelil.MediumLevelILInstruction.vars_address_taken>
 il.vars                               # list variables used in this IL function  @locals  <https://api.binary.ninja/binaryninja.mediumlevelil-module.html#binaryninja.mediumlevelil.MediumLevelILFunction.vars>
@@ -757,6 +834,8 @@ i.get_var_for_reg("rdi")              # get the MLIL variable that holds a regis
 i.get_var_for_stack_location(OFFSET)  # get the MLIL variable at a stack offset at an instruction  @map  <https://api.binary.ninja/binaryninja.mediumlevelil-module.html#binaryninja.mediumlevelil.MediumLevelILInstruction.get_var_for_stack_location>
 
 ## ssa
+; SSA is a form of IL where each variable is written only once.
+; This makes it easy to follow where a value comes from.
 il.ssa_form                           # get the SSA version of the IL  <https://api.binary.ninja/binaryninja.mediumlevelil-module.html#binaryninja.mediumlevelil.MediumLevelILFunction.ssa_form>
 i.ssa_form / i.non_ssa_form           # move one instruction into or out of SSA form  @map  <https://api.binary.ninja/binaryninja.mediumlevelil-module.html#binaryninja.mediumlevelil.MediumLevelILInstruction.ssa_form>
 ssa_var.var / ssa_var.version         # get the Variable and version of an SSAVariable  <https://api.binary.ninja/binaryninja.mediumlevelil-module.html#binaryninja.mediumlevelil.SSAVariable>
@@ -776,6 +855,8 @@ llil.ssa_form.get_ssa_reg_uses(SSA_REG)  # list LLIL instructions that use an SS
 llil.ssa_form.get_ssa_flag_definition(SSA_FLAG)  # get the LLIL instruction that sets an SSA flag  @flags  <https://api.binary.ninja/binaryninja.lowlevelil-module.html#binaryninja.lowlevelil.LowLevelILFunction.get_ssa_flag_definition>
 
 ## map between levels
+; Go from an instruction at one IL level to the same code at another level,
+; or back to its assembly address.
 i.llil / i.mlil / i.hlil        # map an instruction to the closest one at another level (may be None)  @translate  <https://api.binary.ninja/binaryninja.mediumlevelil-module.html#binaryninja.mediumlevelil.MediumLevelILInstruction.hlil>
 i.llils / i.mlils / i.hlils     # list all instructions at another level that make up this one (more exact)  @map  <https://api.binary.ninja/binaryninja.highlevelil-module.html#binaryninja.highlevelil.HighLevelILInstruction.mlils>
 i.mmlil                         # map LLIL to the mapped MLIL  <https://api.binary.ninja/binaryninja.lowlevelil-module.html#binaryninja.lowlevelil.LowLevelILInstruction.mmlil>
@@ -788,6 +869,8 @@ mlil.get_high_level_il_instruction_index(N)  # map an MLIL instruction index to 
 ref.hlil                        # get the HLIL at a cross reference (ReferenceSource)  @xrefs  <https://api.binary.ninja/binaryninja.binaryview-module.html#binaryninja.binaryview.ReferenceSource.hlil>
 
 ## il values and dataflow
+; Ask what value an IL expression has. Binary Ninja may know one constant,
+; a range, or a list of possible values.
 i.value                             # get the RegisterValue analysis found for an expression  @constant @dataflow  <https://api.binary.ninja/binaryninja.mediumlevelil-module.html#binaryninja.mediumlevelil.MediumLevelILInstruction.value>
 i.value.type == RegisterValueType.ConstantValue  # check whether an expression is a known constant  <https://api.binary.ninja/binaryninja.variable-module.html#binaryninja.variable.RegisterValue>
 i.possible_values                   # get the PossibleValueSet (ranges, sets, tables) of an expression  @range @dataflow  <https://api.binary.ninja/binaryninja.mediumlevelil-module.html#binaryninja.mediumlevelil.MediumLevelILInstruction.possible_values>
@@ -801,6 +884,7 @@ PossibleValueSet.constant(5)        # make a constant value set (also unsigned_r
 bv.parse_possiblevalueset("[0x10, 0x20]", RegisterValueType.UnsignedRangeValue)  # build a value set from text  <https://api.binary.ninja/binaryninja.binaryview-module.html#binaryninja.binaryview.BinaryView.parse_possiblevalueset>
 
 ## llil specifics
+; Things only low level IL has: CPU registers, flags and the stack.
 llil.regs / llil.flags             # list registers / flags used in an LLIL function  <https://api.binary.ninja/binaryninja.lowlevelil-module.html#binaryninja.lowlevelil.LowLevelILFunction.regs>
 llil.ssa_regs                      # list SSA registers with versions  <https://api.binary.ninja/binaryninja.lowlevelil-module.html#binaryninja.lowlevelil.LowLevelILFunction.ssa_regs>
 ILRegister.name / ILRegister.temp  # get a register's name and whether it is an IL temp  <https://api.binary.ninja/binaryninja.lowlevelil-module.html#binaryninja.lowlevelil.ILRegister>
@@ -809,6 +893,7 @@ LowLevelILFlagCondition.LLFC_E     # name a flag condition (E, NE, SLT, ULT, ...
 llil.get_exits_for_instr(N)        # list exit points for an LLIL instruction index  @flow  <https://api.binary.ninja/binaryninja.lowlevelil-module.html#binaryninja.lowlevelil.LowLevelILFunction.get_exits_for_instr>
 
 ## graphs
+; Show an IL function as a graph, like the graph view in the UI.
 il.create_graph()  # build a FlowGraph of the IL function  @cfg  <https://api.binary.ninja/binaryninja.mediumlevelil-module.html#binaryninja.mediumlevelil.MediumLevelILFunction.create_graph>
 show_graph_report("MLIL", f.mlil.create_graph())  # show an IL graph in a new tab  @ui  <https://api.binary.ninja/binaryninja.interaction-module.html#binaryninja.interaction.show_graph_report>
 f.create_graph(FunctionGraphType.HighLevelILFunctionGraph)  # build a FlowGraph for a chosen IL view  <https://api.binary.ninja/binaryninja.function-module.html#binaryninja.function.Function.create_graph>
@@ -821,6 +906,7 @@ f.create_graph(FunctionGraphType.HighLevelILFunctionGraph)  # build a FlowGraph 
 ; t = a Type. UPPERCASE words are placeholders. Type objects are immutable; *Builder objects are mutable.
 
 ## make simple types
+; Make basic types in Python: ints, chars, pointers, arrays and function types.
 Type.int(4) / Type.int(4, False)    # make int32_t / uint32_t  @integer @signed @unsigned  <https://api.binary.ninja/binaryninja.types-module.html#binaryninja.types.Type.int>
 Type.char()                         # make char (a 1 byte signed integer)  <https://api.binary.ninja/binaryninja.types-module.html#binaryninja.types.Type.char>
 Type.wide_char(2)                   # make wchar16 (2) or wchar32 (4)  @unicode @wchar  <https://api.binary.ninja/binaryninja.types-module.html#binaryninja.types.Type.wide_char>
@@ -837,6 +923,8 @@ Type.fragment(T, WIDTH, OFFSET)     # make a bit slice of a larger type (for spl
 T.const = True                      # make a const variant of a builder type  @qualifier  <https://api.binary.ninja/binaryninja.types-module.html#binaryninja.types.TypeBuilder.const>
 
 ## parse C
+; Write a type as normal C text and let Binary Ninja turn it into a Type object.
+; Often the easiest way to make a type.
 bv.parse_type_string("struct foo* [4]")  # parse one C type, returns (Type, name)  @declaration  <https://api.binary.ninja/binaryninja.binaryview-module.html#binaryninja.binaryview.BinaryView.parse_type_string>
 t, name = bv.parse_type_string("int32_t (*cb)(void*)")  # parse a declaration and get its name too  @function-pointer  <https://api.binary.ninja/binaryninja.binaryview-module.html#binaryninja.binaryview.BinaryView.parse_type_string>
 bv.parse_types_from_string(C_SOURCE)  # parse many C definitions, returns .types .variables .functions  @header  <https://api.binary.ninja/binaryninja.binaryview-module.html#binaryninja.binaryview.BinaryView.parse_types_from_string>
@@ -848,6 +936,8 @@ TypeParser.default.preprocess_source(SRC, "x.h", PLATFORM)  # run only the C pre
 bv.type_container.parse_type_string(SRC)  # parse a type using all types known to the view  <https://api.binary.ninja/binaryninja.typecontainer-module.html#binaryninja.typecontainer.TypeContainer.parse_type_string>
 
 ## structures and unions
+; Make and change structs and unions: a list of fields at offsets.
+; Use them to describe the data a program works with.
 Type.structure([(Type.int(4), "a"), (Type.char(), "b")])  # make an anonymous struct from (type, name) pairs  @create  <https://api.binary.ninja/binaryninja.types-module.html#binaryninja.types.Type.structure>
 Type.union([(Type.int(4), "i"), (Type.float(4), "f")])  # make an anonymous union  <https://api.binary.ninja/binaryninja.types-module.html#binaryninja.types.Type.union>
 s = StructureBuilder.create()        # start building a struct step by step  @builder  <https://api.binary.ninja/binaryninja.types-module.html#binaryninja.types.StructureBuilder.create>
@@ -874,6 +964,8 @@ bv.create_structure_from_offset_access("Foo")  # build a struct from field acces
 bv.get_all_fields_referenced("Foo")  # list offsets of Foo that code touches  @infer  <https://api.binary.ninja/binaryninja.binaryview-module.html#binaryninja.binaryview.BinaryView.get_all_fields_referenced>
 
 ## enumerations
+; Make and change enums: names for constant values.
+; Use them to make magic numbers easy to read.
 Type.enumeration(members=[("A", 1), ("B", 2)], width=4)  # make an anonymous enum  @create  <https://api.binary.ninja/binaryninja.types-module.html#binaryninja.types.Type.enumeration>
 e = EnumerationBuilder.create(width=4)  # start building an enum step by step  @builder  <https://api.binary.ninja/binaryninja.types-module.html#binaryninja.types.EnumerationBuilder.create>
 e.append("NAME", VALUE)  # add an enum member (value None = next)  <https://api.binary.ninja/binaryninja.types-module.html#binaryninja.types.EnumerationBuilder.append>
@@ -882,6 +974,8 @@ t.members                # list EnumerationMember (name, value) of an enum type 
 f.set_int_display_type(ADDR, VAL, OP, EnumerationDisplayType, enum_display_typeid=ID)  # show an immediate as an enum name  <https://api.binary.ninja/binaryninja.function-module.html#binaryninja.function.Function.set_int_display_type>
 
 ## named types in the view
+; The types saved in this file under a name, like struct Foo.
+; Add, find, rename or remove them.
 bv.types                          # get a mapping name -> Type of all types in the view  @list  <https://api.binary.ninja/binaryninja.binaryview-module.html#binaryninja.binaryview.BinaryView.types>
 bv.types["Foo"]                   # get a defined type by name  @lookup  <https://api.binary.ninja/binaryninja.binaryview-module.html#binaryninja.binaryview.BinaryView.types>
 bv.get_type_by_name("Foo")        # get a defined type by name, None if missing  @lookup  <https://api.binary.ninja/binaryninja.binaryview-module.html#binaryninja.binaryview.BinaryView.get_type_by_name>
@@ -900,6 +994,7 @@ bv.get_code_refs_for_type("Foo")  # find code that uses a type  @xrefs  <https:/
 QualifiedName(["std", "string"])  # make a namespaced name (std::string)  @namespace @cpp  <https://api.binary.ninja/binaryninja.types-module.html#binaryninja.types.QualifiedName>
 
 ## inspect a type
+; Look inside a type: what kind it is, its size, its fields, its C text.
 t.type_class                   # get the TypeClass (StructureTypeClass, PointerTypeClass...)  @kind  <https://api.binary.ninja/binaryninja.types-module.html#binaryninja.types.Type.type_class>
 t.width / t.alignment          # get the size and alignment in bytes  @sizeof  <https://api.binary.ninja/binaryninja.types-module.html#binaryninja.types.Type.width>
 str(t) / t.get_string()        # get the type as C text  @print @render  <https://api.binary.ninja/binaryninja.types-module.html#binaryninja.types.Type.get_string>
@@ -917,6 +1012,8 @@ TypePrinter.default.print_all_types(bv.types.items(), bv)  # export all types as
 TypePrinter.default.get_type_lines(T, bv, NAME)  # get multi-line C for one type  @print  <https://api.binary.ninja/binaryninja.typeprinter-module.html#binaryninja.typeprinter.TypePrinter.get_type_lines>
 
 ## apply types
+; Put a type on something: a function, a variable or an address.
+; This makes the decompiled code clear.
 f.type = Type.function(Type.void(), [])  # set a function's prototype  <https://api.binary.ninja/binaryninja.function-module.html#binaryninja.function.Function.type>
 f.parameter_vars[0].type = Type.pointer(bv.arch, Type.char())  # retype a parameter  @arg @variable  <https://api.binary.ninja/binaryninja.variable-module.html#binaryninja.variable.Variable.type>
 bv.get_data_var_at(ADDR).type = Type.char()  # retype an existing global  <https://api.binary.ninja/binaryninja.binaryview-module.html#binaryninja.binaryview.DataVariable.type>
@@ -924,6 +1021,7 @@ bv.define_user_data_var(ADDR, Type.named_type_from_registered_type(bv, "Foo"))  
 bv.typed_data_accessor(ADDR, bv.types["Foo"])["field"].value  # read a struct field from memory  @parse  <https://api.binary.ninja/binaryninja.binaryview-module.html#binaryninja.binaryview.TypedDataAccessor>
 
 ## symbols
+; Make symbols: names for functions, data and imports at an address.
 Symbol(SymbolType.FunctionSymbol, ADDR, "name")  # make a function symbol  @label  <https://api.binary.ninja/binaryninja.types-module.html#binaryninja.types.Symbol>
 Symbol(SymbolType.DataSymbol, ADDR, "name")  # make a data symbol  @global  <https://api.binary.ninja/binaryninja.types-module.html#binaryninja.types.Symbol>
 Symbol(SymbolType.ImportedFunctionSymbol, ADDR, "name")  # make an imported function symbol (also ImportAddressSymbol)  @import  <https://api.binary.ninja/binaryninja.types-module.html#binaryninja.types.Symbol>
@@ -931,6 +1029,7 @@ Symbol(TYPE, ADDR, SHORT, FULL, RAW, binding=SymbolBinding.GlobalBinding)  # mak
 bv.define_user_symbol(SYM)  # add a symbol to the view as a user action  @rename  <https://api.binary.ninja/binaryninja.binaryview-module.html#binaryninja.binaryview.BinaryView.define_user_symbol>
 
 ## demangle
+; Turn mangled C++ (or Rust, Swift) names back into readable names.
 demangle_any("_ZN3foo3barEv")        # demangle any known scheme, returns (Type, QualifiedName)  @c++ @mangled  <https://api.binary.ninja/binaryninja.demangle-module.html#binaryninja.demangle.demangle_any>
 demangle_gnu3(bv.arch, "_ZN3foo3barEv")  # demangle an Itanium/GNU C++ name, returns (Type, QualifiedName)  @gcc @clang  <https://api.binary.ninja/binaryninja.demangle-module.html#binaryninja.demangle.demangle_gnu3>
 demangle_ms(bv.arch, "?foo@@YAHXZ")  # demangle an MSVC C++ name  @windows  <https://api.binary.ninja/binaryninja.demangle-module.html#binaryninja.demangle.demangle_ms>
@@ -939,6 +1038,8 @@ simplify_demangled_template_name(NAME)  # shorten std:: template spellings like 
 Demangler.register()                 # add your own demangler class  @custom @plugin  <https://api.binary.ninja/binaryninja.demangle-module.html#binaryninja.demangle.Demangler.register>
 
 ## type libraries (.bntl)
+; A type library holds the types and prototypes of one system library, like libc.
+; Binary Ninja uses it to type imported functions for you.
 bv.type_libraries                    # list type libraries loaded in this view  @typelib @bntl  <https://api.binary.ninja/binaryninja.binaryview-module.html#binaryninja.binaryview.BinaryView.type_libraries>
 TypeLibrary.load_from_file(PATH)     # open a .bntl file  @typelib  <https://api.binary.ninja/binaryninja.typelibrary-module.html#binaryninja.typelibrary.TypeLibrary.load_from_file>
 bv.add_type_library(LIB)             # make a type library's types usable in this view  @typelib @import  <https://api.binary.ninja/binaryninja.binaryview-module.html#binaryninja.binaryview.BinaryView.add_type_library>
@@ -955,6 +1056,8 @@ lib.named_types / lib.named_objects  # list types and prototypes in a type libra
 Platform["windows-x86_64"].get_type_libraries_by_name("kernel32.dll")  # find type libraries for a DLL/so name  @typelib  <https://api.binary.ninja/binaryninja.platform-module.html#binaryninja.platform.Platform.get_type_libraries_by_name>
 
 ## type archives (.bnta) and containers
+; A type archive is a file that shares your types between many binaries.
+; Change a type once and use it everywhere.
 TypeArchive.create(PATH, bv.platform)  # make a new type archive file to share types across files  @bnta  <https://api.binary.ninja/binaryninja.typearchive-module.html#binaryninja.typearchive.TypeArchive.create>
 TypeArchive.open(PATH)            # open a type archive file  @bnta  <https://api.binary.ninja/binaryninja.typearchive-module.html#binaryninja.typearchive.TypeArchive.open>
 bv.attach_type_archive(ARCHIVE)   # connect a type archive to this view  @link  <https://api.binary.ninja/binaryninja.binaryview-module.html#binaryninja.binaryview.BinaryView.attach_type_archive>
@@ -967,6 +1070,8 @@ container.add_types([(NAME, T)])  # add or update types in any container (view, 
 bv.platform.type_container        # get the types that come with a platform  @builtin  <https://api.binary.ninja/binaryninja.platform-module.html#binaryninja.platform.Platform.type_container>
 
 ## debug info (dwarf, pdb)
+; Debug info (DWARF, PDB) has the real names and types from the compiler.
+; Load it to get much better analysis for free.
 bv.debug_info            # get the DebugInfo parsed for this view  @dwarf @pdb @symbols  <https://api.binary.ninja/binaryninja.binaryview-module.html#binaryninja.binaryview.BinaryView.debug_info>
 DebugInfoParser.get_parsers_for_view(bv)  # list debug info parsers that accept this file  @dwarf @pdb  <https://api.binary.ninja/binaryninja.debuginfo-module.html#binaryninja.debuginfo.DebugInfoParser>
 DebugInfoParser["DWARF"].parse_debug_info(bv, DEBUG_BV)  # parse debug info from a separate debug file view  @split-debug  <https://api.binary.ninja/binaryninja.debuginfo-module.html#binaryninja.debuginfo.DebugInfoParser.parse_debug_info>
@@ -982,6 +1087,8 @@ load(PATH, options={"analysis.debugInfo.external": DBG_PATH})  # load a binary w
 ; arch = Architecture, plat = Platform, cc = CallingConvention. UPPERCASE words are placeholders.
 
 ## find architectures and platforms
+; An architecture is a CPU, like x86_64 or ARM. A platform is a CPU plus an OS,
+; like linux-x86_64. Get them by name here.
 Architecture["x86_64"]           # get an architecture by name (x86, x86_64, armv7, thumb2, aarch64, mips32, ppc...)  @cpu  <https://api.binary.ninja/binaryninja.architecture-module.html#binaryninja.architecture.Architecture>
 list(Architecture)               # list all registered architectures  @cpu  <https://api.binary.ninja/binaryninja.architecture-module.html#binaryninja.architecture.Architecture>
 "aarch64" in Architecture        # check whether an architecture is available  @exists  <https://api.binary.ninja/binaryninja.architecture-module.html#binaryninja.architecture.Architecture>
@@ -995,6 +1102,7 @@ plat.get_related_platform(Architecture["thumb2"])  # get the matching platform f
 bv.create_user_function(ADDR, plat=Platform["linux-thumb2"])  # make a function using a specific platform (e.g. Thumb)  @mixed  <https://api.binary.ninja/binaryninja.binaryview-module.html#binaryninja.binaryview.BinaryView.create_user_function>
 
 ## architecture facts
+; Facts about a CPU: its registers, pointer size, byte order and flags.
 arch.name                           # get the architecture name  @id  <https://api.binary.ninja/binaryninja.architecture-module.html#binaryninja.architecture.Architecture>
 arch.address_size / arch.default_int_size  # get pointer size and default int size in bytes  @bits @width  <https://api.binary.ninja/binaryninja.architecture-module.html#binaryninja.architecture.Architecture>
 arch.endianness                     # get the byte order  @endian  <https://api.binary.ninja/binaryninja.architecture-module.html#binaryninja.architecture.Architecture>
@@ -1012,6 +1120,8 @@ arch.can_assemble                   # check whether the arch can assemble text  
 arch.type_libraries                 # list type libraries for the architecture  @typelib  <https://api.binary.ninja/binaryninja.architecture-module.html#binaryninja.architecture.Architecture.type_libraries>
 
 ## disassemble and assemble bytes
+; Turn raw bytes into assembly text, or assembly text into bytes,
+; without opening a file.
 arch.get_instruction_text(DATA, ADDR)  # disassemble bytes, returns (tokens, length)  @decode @asm  <https://api.binary.ninja/binaryninja.architecture-module.html#binaryninja.architecture.Architecture.get_instruction_text>
 "".join(str(t) for t in arch.get_instruction_text(DATA, ADDR)[0])  # turn decoded tokens into one text line  @disassemble  <https://api.binary.ninja/binaryninja.architecture-module.html#binaryninja.architecture.InstructionTextToken>
 arch.get_instruction_info(DATA, ADDR)  # get an InstructionInfo with .length and .branches  @decode @branch  <https://api.binary.ninja/binaryninja.architecture-module.html#binaryninja.architecture.Architecture.get_instruction_info>
@@ -1026,6 +1136,8 @@ InstructionTextToken(InstructionTextTokenType.RegisterToken, "eax")  # make one 
 tok.type / tok.text / tok.value  # read a token's kind (RegisterToken, IntegerToken...), text and value  <https://api.binary.ninja/binaryninja.architecture-module.html#binaryninja.architecture.InstructionTextToken>
 
 ## platform
+; A platform is a CPU plus an OS. It knows the calling conventions
+; and the system types of that OS.
 plat.name / plat.arch                # get the platform name and architecture  @os  <https://api.binary.ninja/binaryninja.platform-module.html#binaryninja.platform.Platform.name>
 plat.default_calling_convention      # get the default calling convention  @cc @abi  <https://api.binary.ninja/binaryninja.platform-module.html#binaryninja.platform.Platform.default_calling_convention>
 plat.cdecl_calling_convention (also stdcall_, fastcall_)  # get a named calling convention  @cc  <https://api.binary.ninja/binaryninja.platform-module.html#binaryninja.platform.Platform.cdecl_calling_convention>
@@ -1042,6 +1154,8 @@ plat.parse_types_from_source(C_SRC)  # parse C for this platform (sizes, ABI)  @
 plat.os_list                         # list OS names the platform is registered for  <https://api.binary.ninja/binaryninja.platform-module.html#binaryninja.platform.Platform.os_list>
 
 ## calling conventions
+; A calling convention says how a function gets its arguments and gives back
+; its result: which registers, which stack slots.
 cc.name                               # get the calling convention name  <https://api.binary.ninja/binaryninja.callingconvention-module.html#binaryninja.callingconvention.CallingConvention>
 cc.int_arg_regs / cc.float_arg_regs   # list registers used for integer / float arguments  @args @abi  <https://api.binary.ninja/binaryninja.callingconvention-module.html#binaryninja.callingconvention.CallingConvention>
 cc.int_return_reg / cc.float_return_reg  # get the register holding the return value  @abi  <https://api.binary.ninja/binaryninja.callingconvention-module.html#binaryninja.callingconvention.CallingConvention>
@@ -1051,6 +1165,8 @@ f.calling_convention = bv.platform.calling_conventions[N]  # change a function's
 arch.register_calling_convention(cc)  # add your own calling convention to an architecture  @custom  <https://api.binary.ninja/binaryninja.architecture-module.html#binaryninja.architecture.Architecture.register_calling_convention>
 
 ## write a new architecture
+; Teach Binary Ninja a new CPU. You tell it how to read, show and lift
+; each instruction.
 class MyArch(Architecture):        # start a CPU plugin; set name, address_size, regs, stack_pointer, flags...  @custom  <https://api.binary.ninja/binaryninja.architecture-module.html#binaryninja.architecture.Architecture>
     class MyArch(Architecture):
         name = "myarch"; address_size = 4; default_int_size = 4; max_instr_length = 4
@@ -1077,6 +1193,8 @@ MyArch.register()                  # make the architecture available  <https://a
 arch.standalone_platform.default_calling_convention = cc  # set the default cc used for bare files  <https://api.binary.ninja/binaryninja.platform-module.html#binaryninja.platform.Platform.default_calling_convention>
 
 ## hook an existing architecture
+; Change how a built-in CPU works without writing a new one,
+; for example to fix or add a few instructions.
 class Hook(ArchitectureHook):         # wrap a built-in architecture to change some instructions  @patch @override  <https://api.binary.ninja/binaryninja.architecture-module.html#binaryninja.architecture.ArchitectureHook>
     class RetHook(ArchitectureHook):
         def get_instruction_text(self, data, addr):
@@ -1087,6 +1205,8 @@ class Hook(ArchitectureHook):         # wrap a built-in architecture to change s
 Hook(Architecture["x86"]).register()  # install an architecture hook  <https://api.binary.ninja/binaryninja.architecture-module.html#binaryninja.architecture.ArchitectureHook.register>
 
 ## custom platform and calling convention
+; Add your own OS platform or calling convention, for odd firmware or
+; custom compilers.
 class MyCC(CallingConvention):  # define a calling convention (name, int_arg_regs, int_return_reg...)  @cc @abi @custom  <https://api.binary.ninja/binaryninja.callingconvention-module.html#binaryninja.callingconvention.CallingConvention>
     class MyCC(CallingConvention):
         name = "mycc"; int_arg_regs = ["r0", "r1", "r2"]; int_return_reg = "r0"
@@ -1107,6 +1227,8 @@ BinaryViewType["Mapped"].register_default_platform(arch, plat)  # choose the pla
 ; Builders return an ExpressionIndex; nothing is in the function until you il.append() it.
 
 ## llil building basics
+; Lifting means turning one CPU instruction into IL.
+; Use these to build low level IL step by step, for example in your own architecture.
 il.append(EXPR)                # add an expression as the next LLIL instruction  @emit  <https://api.binary.ninja/binaryninja.lowlevelil-module.html#binaryninja.lowlevelil.LowLevelILFunction.append>
 il.append(il.set_reg(4, "eax", il.const(4, 0)))  # write "eax = 0"  @mov @assign @register  <https://api.binary.ninja/binaryninja.lowlevelil-module.html#binaryninja.lowlevelil.LowLevelILFunction.set_reg>
 il.reg(4, "eax")               # read a register  <https://api.binary.ninja/binaryninja.lowlevelil-module.html#binaryninja.lowlevelil.LowLevelILFunction.reg>
@@ -1137,6 +1259,7 @@ il.float_add / il.float_const_double / il.int_to_float  # build floating point e
 il.set_reg_split(4, "edx", "eax", EXPR)  # write a value split across two registers (edx:eax)  @pair @64bit  <https://api.binary.ninja/binaryninja.lowlevelil-module.html#binaryninja.lowlevelil.LowLevelILFunction.set_reg_split>
 
 ## llil branches and labels
+; Build jumps and if/else in low level IL with labels.
 LowLevelILLabel()                     # make a label to jump to inside the IL  @goto @branch  <https://api.binary.ninja/binaryninja.lowlevelil-module.html#binaryninja.lowlevelil.LowLevelILLabel>
 il.append(il.if_expr(COND, T_LABEL, F_LABEL))  # branch on a condition to two labels  @jcc  <https://api.binary.ninja/binaryninja.lowlevelil-module.html#binaryninja.lowlevelil.LowLevelILFunction.if_expr>
     t, f = LowLevelILLabel(), LowLevelILLabel()
@@ -1151,6 +1274,8 @@ il.current_address = ADDR             # set the address the next emitted instruc
 il.operand(N, EXPR)                   # tag an expression as operand N for UI highlighting  <https://api.binary.ninja/binaryninja.lowlevelil-module.html#binaryninja.lowlevelil.LowLevelILFunction.operand>
 
 ## mlil and hlil building
+; Build medium and high level IL yourself, for example to rewrite code
+; in a workflow.
 mlil.set_var(SIZE, VAR, EXPR)     # build an MLIL assignment to a Variable  @assign  <https://api.binary.ninja/binaryninja.mediumlevelil-module.html#binaryninja.mediumlevelil.MediumLevelILFunction.set_var>
 mlil.var(SIZE, VAR)               # build an MLIL variable read  <https://api.binary.ninja/binaryninja.mediumlevelil-module.html#binaryninja.mediumlevelil.MediumLevelILFunction.var>
 mlil.const(SIZE, VAL) / mlil.const_pointer(SIZE, ADDR)  # build MLIL constants  <https://api.binary.ninja/binaryninja.mediumlevelil-module.html#binaryninja.mediumlevelil.MediumLevelILFunction.const>
@@ -1164,6 +1289,8 @@ hlil.block([EXPRS])               # build an HLIL block of statements  @ast  <ht
 il.expr(OPERATION, A, B, size=N)  # build any expression from a raw operation and operands  @generic  <https://api.binary.ninja/binaryninja.mediumlevelil-module.html#binaryninja.mediumlevelil.MediumLevelILFunction.expr>
 
 ## changing existing il
+; Change IL that already exists: replace, copy or rewrite instructions.
+; Use it to clean up obfuscated code.
 il.replace_expr(OLD, NEW)             # swap one expression for another in place (keeps instruction count)  @patch  <https://api.binary.ninja/binaryninja.mediumlevelil-module.html#binaryninja.mediumlevelil.MediumLevelILFunction.replace_expr>
 il.copy_expr(INSTR)                   # copy an expression inside the same IL function, returns its index  @clone  <https://api.binary.ninja/binaryninja.mediumlevelil-module.html#binaryninja.mediumlevelil.MediumLevelILFunction.copy_expr>
 INSTR.copy_to(NEW_IL)                 # deep copy an expression into another IL function  @clone  <https://api.binary.ninja/binaryninja.mediumlevelil-module.html#binaryninja.mediumlevelil.MediumLevelILInstruction.copy_to>
@@ -1189,6 +1316,8 @@ new.append(EXPR, ILSourceLocation.from_instruction(OLD_INSTR))  # add an instruc
 il.set_expr_attributes(EXPR, {ILInstructionAttribute.ATTR})  # put attributes on an expression while lifting  <https://api.binary.ninja/binaryninja.lowlevelil-module.html#binaryninja.lowlevelil.LowLevelILFunction.set_expr_attributes>
 
 ## workflows and activities
+; A workflow is the list of steps analysis runs on each function.
+; An activity is one step. Add your own step to change how code is analyzed.
 Workflow("core.function.metaAnalysis")  # get a registered workflow by name  @pipeline  <https://api.binary.ninja/binaryninja.workflow-module.html#binaryninja.workflow.Workflow>
 list(Workflow)                    # list all registered workflows  <https://api.binary.ninja/binaryninja.workflow-module.html#binaryninja.workflow.Workflow>
 wf = Workflow("core.function.metaAnalysis").clone("my.workflow")  # copy a workflow so you can change it  @custom  <https://api.binary.ninja/binaryninja.workflow-module.html#binaryninja.workflow.Workflow.clone>
@@ -1215,6 +1344,8 @@ bv.workflow.machine.status()      # show the workflow machine state for a view  
 f.workflow.machine.cli()          # open an interactive shell to step and inspect a workflow  @debug  <https://api.binary.ninja/binaryninja.workflow-module.html#binaryninja.workflow.WorkflowMachine.cli>
 
 ## analysis context (inside an activity)
+; The analysis context is what your activity gets: the function and its IL
+; right now. Read it, change it and give it back.
 ctx.function                  # get the Function being analyzed  @activity  <https://api.binary.ninja/binaryninja.workflow-module.html#binaryninja.workflow.AnalysisContext.function>
 ctx.view                      # get the BinaryView being analyzed  @activity  <https://api.binary.ninja/binaryninja.workflow-module.html#binaryninja.workflow.AnalysisContext.view>
 ctx.lifted_il / ctx.llil / ctx.mlil / ctx.hlil  # read the current IL of this step (use these, not f.llil)  @activity  <https://api.binary.ninja/binaryninja.workflow-module.html#binaryninja.workflow.AnalysisContext.mlil>
@@ -1233,6 +1364,8 @@ ctx.get_sections_at(ADDR)     # get sections from the cached section map  @activ
 ; UPPERCASE words are placeholders. Plugins live in user_plugin_path(); restart to load new ones.
 
 ## plugin layout
+; A plugin is a folder with Python code that Binary Ninja loads at start.
+; This is what goes in that folder.
 MYPLUGIN/__init__.py                # entry file run when Binary Ninja loads the plugin folder  @layout  <https://docs.binary.ninja/dev/plugins.html#creating-the-plugin>
 MYPLUGIN/plugin.json                # metadata for the extension manager (name, version, minimumbinaryninjaversion...)  @manifest  <https://docs.binary.ninja/dev/plugins.html#plugin-description-display>
 MYPLUGIN/requirements.txt           # Python packages the extension manager installs for the plugin  @pip @dependencies  <https://docs.binary.ninja/dev/plugins.html#creating-the-plugin>
@@ -1242,6 +1375,8 @@ https://github.com/Vector35/sample_plugin  # template plugin to start from  @exa
 https://github.com/Vector35/binaryninja-api/tree/dev/python/examples  # official Python plugin examples  <https://github.com/Vector35/binaryninja-api/tree/dev/python/examples>
 
 ## plugin commands (menu entries)
+; Add your own command to the menus and the command palette.
+; It runs your function on the file, an address, a range or a function.
 PluginCommand.register("Menu\\Name", "DESC", FN)  # add a menu command; FN(bv)  @action  <https://api.binary.ninja/binaryninja.plugin-module.html#binaryninja.plugin.PluginCommand.register>
 PluginCommand.register_for_address("NAME", "DESC", FN)  # add a command run on the cursor address; FN(bv, addr)  @menu  <https://api.binary.ninja/binaryninja.plugin-module.html#binaryninja.plugin.PluginCommand.register_for_address>
 PluginCommand.register_for_range("NAME", "DESC", FN)  # add a command run on the selection; FN(bv, addr, length)  @menu  <https://api.binary.ninja/binaryninja.plugin-module.html#binaryninja.plugin.PluginCommand.register_for_range>
@@ -1260,6 +1395,8 @@ UIActionHandler.globalActions().bindAction("NAME", UIAction(FN))  # bind code to
 Menu.mainMenu("Plugins").addAction("NAME", "GROUP")  # put a UI action into a menu  <https://docs.binary.ninja/dev/cookbook.html#apply-a-hotkey-to-a-register_-plugin>
 
 ## background work
+; Run long work in the background so the UI does not freeze.
+; It shows progress in the status bar and can be cancelled.
 class Task(BackgroundTaskThread):    # run long work off the UI thread with a status bar entry  @async @progress  <https://api.binary.ninja/binaryninja.plugin-module.html#binaryninja.plugin.BackgroundTaskThread>
     class Task(BackgroundTaskThread):
         def __init__(self, bv):
@@ -1279,6 +1416,8 @@ execute_on_main_thread_and_wait(FN)  # run UI code safely from a worker thread  
 with bv.undoable_transaction():      # group a plugin's changes into one undo step  <https://api.binary.ninja/binaryninja.binaryview-module.html#binaryninja.binaryview.BinaryView.undoable_transaction>
 
 ## custom file format (binaryview type)
+; Teach Binary Ninja to load a new file format.
+; You tell it where code and data go in memory.
 class MyView(BinaryView):     # start a loader for a new file format; set name and long_name  @parser  <https://api.binary.ninja/binaryninja.binaryview-module.html#binaryninja.binaryview.BinaryView>
     class MyView(BinaryView):
         name = "MyFmt"; long_name = "My Format"
@@ -1309,6 +1448,8 @@ get_load_settings_for_data(cls, data)  # offer load options (image base, arch) f
 bv.record_imported_object_library(LIB, NAME, ADDR)  # record which type library an import came from (in loaders)  @imports  <https://api.binary.ninja/binaryninja.binaryview-module.html#binaryninja.binaryview.BinaryView.record_imported_object_library>
 
 ## render layers (change how code looks)
+; A render layer changes the lines of code just before they are shown.
+; Use it to hide, add or color lines without changing the analysis.
 class Layer(RenderLayer):           # change rendered lines of disassembly/IL; set name, override apply_to_*  @render  <https://api.binary.ninja/binaryninja.renderlayer-module.html#binaryninja.renderlayer.RenderLayer>
     class HighlightRet(RenderLayer):
         name = "Highlight Returns"
@@ -1324,6 +1465,7 @@ apply_to_flow_graph(self, graph)    # change nodes and edges of a graph view  @r
 Layer.register()                    # make a render layer available (users enable it per view)  <https://api.binary.ninja/binaryninja.renderlayer-module.html#binaryninja.renderlayer.RenderLayer.register>
 
 ## data renderers (custom data display)
+; Show data of a certain type your own way in the linear view.
 class R(DataRenderer):        # render data of a type your own way in linear view  @struct @display  <https://api.binary.ninja/binaryninja.datarender-module.html#binaryninja.datarender.DataRenderer>
     class BarRenderer(DataRenderer):
         def perform_is_valid_for_data(self, ctxt, view, addr, type, context):
@@ -1336,6 +1478,8 @@ R().register_type_specific()  # use the renderer before the generic ones  <https
 R().register_generic()        # use the renderer as a fallback for any type  <https://api.binary.ninja/binaryninja.datarender-module.html#binaryninja.datarender.DataRenderer.register_generic>
 
 ## flow graphs
+; Draw your own graph of boxes and arrows and show it in a tab.
+; Good for call graphs, state machines or any diagram.
 g = FlowGraph()                # make an empty custom graph  @diagram  <https://api.binary.ninja/binaryninja.flowgraph-module.html#binaryninja.flowgraph.FlowGraph>
 n = FlowGraphNode(g); n.lines = ["TEXT"]; g.append(n)  # add a node with text lines  <https://api.binary.ninja/binaryninja.flowgraph-module.html#binaryninja.flowgraph.FlowGraphNode>
 a.add_outgoing_edge(BranchType.UnconditionalBranch, b)  # connect two nodes (TrueBranch, FalseBranch... set the color)  @arrow  <https://api.binary.ninja/binaryninja.flowgraph-module.html#binaryninja.flowgraph.FlowGraphNode.add_outgoing_edge>
@@ -1346,6 +1490,16 @@ g.layout_and_wait()            # compute node positions without the UI (e.g. to 
 f.create_graph()               # get the built-in graph of a function to inspect or show  @cfg  <https://api.binary.ninja/binaryninja.function-module.html#binaryninja.function.Function.create_graph>
 
 ## transforms (encode, decode, hash, unpack)
+; A transform changes bytes from one form to another.
+; Binary Ninja has many built in: Base64, Zlib, XOR, AES, SHA256...
+; Use them to decode, decompress, decrypt or hash data you find in a binary.
+; You can also write your own.
+;
+; TransformSession: opens a file that is packed inside other files
+;   (zip, tar, gzip, base64...) and unpacks it layer by layer,
+;   until it finds a file you can load and analyze.
+; TransformContext: one step of that unpacking. The steps make a tree,
+;   because one archive can hold many files.
 list(Transform)                      # list transforms (Base64, Zlib, XOR, AES, SHA256, RawHex...)  @encode @decode  <https://api.binary.ninja/binaryninja.transform-module.html#binaryninja.transform.Transform>
 Transform["Base64"].decode(DATA)     # decode bytes with a transform  <https://api.binary.ninja/binaryninja.transform-module.html#binaryninja.transform.Transform.decode>
 Transform["Zlib"].decode(DATA)       # decompress zlib data  @inflate  <https://api.binary.ninja/binaryninja.transform-module.html#binaryninja.transform.Transform.decode>
@@ -1365,6 +1519,8 @@ DataBuffer(DATA).base64_decode()     # decode base64 with a DataBuffer  <https:/
 DataBuffer(DATA).zlib_decompress()   # inflate zlib data with a DataBuffer  <https://api.binary.ninja/binaryninja.databuffer-module.html#binaryninja.databuffer.DataBuffer.zlib_decompress>
 
 ## extension manager
+; The extension manager finds, installs and updates plugins from online lists.
+; Use it from Python to manage plugins by script.
 RepositoryManager()  # get the plugin repositories manager  @extensions @install  <https://api.binary.ninja/binaryninja.extensionmanager-module.html#binaryninja.extensionmanager.RepositoryManager>
 RepositoryManager().default_repository.plugins  # list plugins in the official repository  @extensions  <https://api.binary.ninja/binaryninja.extensionmanager-module.html#binaryninja.extensionmanager.Repository.plugins>
 RepositoryManager().default_repository["PLUGIN_PATH"].install()  # install a plugin from a repository  <https://api.binary.ninja/binaryninja.extensionmanager-module.html#binaryninja.extensionmanager.Extension.install>
@@ -1379,6 +1535,8 @@ RepositoryManager().check_for_updates()  # check repositories for plugin updates
 ; UPPERCASE words are placeholders.
 
 ## projects (.bnpr)
+; A project is a folder that holds many related files, like a program and its
+; libraries, so you can work on them together.
 Project.open_project(PATH)            # open a project folder  @bnpr  <https://api.binary.ninja/binaryninja.project-module.html#binaryninja.project.Project.open_project>
 Project.create_project(PATH, "NAME")  # make a new project  @bnpr  <https://api.binary.ninja/binaryninja.project-module.html#binaryninja.project.Project.create_project>
 proj.files                            # list ProjectFile objects in a project  <https://api.binary.ninja/binaryninja.project-module.html#binaryninja.project.Project.files>
@@ -1400,6 +1558,8 @@ bv.project / bv.project_file          # get the Project and ProjectFile a view c
 current_project                       # the open project in the Python console  <https://api.binary.ninja/binaryninja.project-module.html#binaryninja.project.Project>
 
 ## database and snapshots (.bndb internals)
+; A .bndb keeps a history of snapshots, one for each save.
+; Use these to look at old versions or the raw data inside.
 bv.file.database                     # get the Database behind an opened .bndb  <https://api.binary.ninja/binaryninja.filemetadata-module.html#binaryninja.filemetadata.FileMetadata.database>
 Database.open_existing(PATH)         # open a .bndb as a raw Database without loading analysis  <https://api.binary.ninja/binaryninja.database-module.html#binaryninja.database.Database.open_existing>
 db.snapshots                         # list Snapshots (one per save)  @history @versions  <https://api.binary.ninja/binaryninja.database-module.html#binaryninja.database.Database.snapshots>
@@ -1414,6 +1574,8 @@ db.write_global_data("key", DataBuffer(DATA))  # store raw bytes in the database
 bv.file.reopen_moved_database(PATH)  # point a view at its .bndb after moving the file  @move  <https://api.binary.ninja/binaryninja.filemetadata-module.html#binaryninja.filemetadata.FileMetadata.reopen_moved_database>
 
 ## metadata values
+; Metadata is your own data saved inside the .bndb, like numbers, text,
+; lists and dicts.
 bv.store_metadata("key", {"a": [1, 2], "b": b"\x00"})  # save nested dict/list/int/str/bytes values into the .bndb  @persist  <https://api.binary.ninja/binaryninja.binaryview-module.html#binaryninja.binaryview.BinaryView.store_metadata>
 bv.query_metadata("key")          # read stored metadata back as Python values  @persist  <https://api.binary.ninja/binaryninja.binaryview-module.html#binaryninja.binaryview.BinaryView.query_metadata>
 bv.store_metadata("key", VALUE, isAuto=True)  # store metadata as auto (owned by analysis, not the user)  <https://api.binary.ninja/binaryninja.binaryview-module.html#binaryninja.binaryview.BinaryView.store_metadata>
@@ -1423,6 +1585,8 @@ f.store_metadata("key", VALUE)    # save metadata on one function  @persist  <ht
 lib.store_metadata("key", VALUE)  # save metadata into a type library  @persist @typelib  <https://api.binary.ninja/binaryninja.typelibrary-module.html#binaryninja.typelibrary.TypeLibrary.store_metadata>
 
 ## external links between files
+; Link an import in one file to the real function in another file of the project,
+; so you can follow calls across files.
 bv.add_external_library("libc.so.6", PF)  # say which project file backs an imported library  @imports @link  <https://api.binary.ninja/binaryninja.binaryview-module.html#binaryninja.binaryview.BinaryView.add_external_library>
 bv.add_external_location(IMPORT_SYM, LIB, "printf", None)  # link an import to a symbol in another file  @imports  <https://api.binary.ninja/binaryninja.binaryview-module.html#binaryninja.binaryview.BinaryView.add_external_location>
 loc.library / loc.target_symbol / loc.target_address  # read where an ExternalLocation points  @imports  <https://api.binary.ninja/binaryninja.externallibrary-module.html#binaryninja.externallibrary.ExternalLocation>
@@ -1436,6 +1600,8 @@ loc.library / loc.target_symbol / loc.target_address  # read where an ExternalLo
 ; ctx = UIActionContext, frame = ViewFrame, view = View. UPPERCASE words are placeholders.
 
 ## setup and rules
+; The UI API (binaryninjaui) lets Python change the Binary Ninja window, using Qt.
+; It only works in the UI, not in headless scripts. Follow these rules to avoid crashes.
 import binaryninjaui                # import before PySide6 so the right Qt loads and the plugin skips headless runs  @pyside @crash  <https://docs.binary.ninja/dev/plugins.html#ui-plugins>
 from binaryninjaui import UIContext, UIAction, UIActionHandler, Menu  # common imports for a UI plugin  @import
 execute_on_main_thread(FN)          # touch Qt widgets only from the main thread; plugin code runs on a worker  @thread @crash  <https://api.binary.ninja/binaryninja.mainthread-module.html#binaryninja.mainthread.execute_on_main_thread>
@@ -1449,6 +1615,8 @@ python/examples/triage/             # sample full custom ViewType (Triage Summar
 python/examples/ui_notifications.py  # sample of every UIContextNotification callback  @example @events  <file:/src/binaryninja-api/python/examples/ui_notifications.py>
 
 ## console ui variables
+; Ready-made names in the Python console for the UI parts you see now:
+; the window, the tab and the view.
 current_ui_context                  # the UIContext of the window the console belongs to  @console @window
 current_ui_view_frame               # the ViewFrame (tab or pane) that has focus  @console @frame
 current_ui_view                     # the View widget (linear, graph, hex...) that has focus  @console
@@ -1458,6 +1626,8 @@ current_ui_action_context           # the UIActionContext the view would pass to
 current_ui_token_state              # the HighlightTokenState of the clicked token  @console @token
 
 ## ui context (window)
+; A UIContext is one main Binary Ninja window.
+; Start here to reach the tabs, views and the open files.
 UIContext.activeContext()           # get the UIContext of the active main window  @window @current  <https://api.binary.ninja/cpp/group__uicontext.html#class_u_i_context>
 UIContext.allContexts()             # get every open main window  @windows  <https://api.binary.ninja/cpp/group__uicontext.html#class_u_i_context>
 UIContext.contextForWidget(W)       # get the UIContext that owns a widget  <https://api.binary.ninja/cpp/group__uicontext.html#class_u_i_context>
@@ -1480,6 +1650,8 @@ uic.mainWindow()                    # get the QMainWindow, e.g. as a dialog pare
 uic.sidebar() / uic.globalArea()    # get the sidebar or the bottom global area of a window  <https://api.binary.ninja/cpp/group__uicontext.html#class_u_i_context>
 
 ## view frame and view (the current tab)
+; A ViewFrame is one tab. A View is what the tab shows: linear, graph, hex...
+; Use them to get the cursor, the selection, or to move around.
 frame.getCurrentBinaryView()        # get the BinaryView shown in this frame  @bv  <https://api.binary.ninja/cpp/group__viewframe.html#class_view_frame>
 frame.getCurrentOffset()            # get the cursor address in this frame  @here @address  <https://api.binary.ninja/cpp/group__viewframe.html#class_view_frame>
 frame.getSelectionOffsets()         # get the selected range (start, end)  @range  <https://api.binary.ninja/cpp/group__viewframe.html#class_view_frame>
@@ -1504,6 +1676,8 @@ View.getViewFromWidget(W)           # get the View interface of a view widget  <
 loc.getOffset() / loc.getFunction() / loc.getViewType()  # read a ViewLocation  @cursor  <https://api.binary.ninja/cpp/group__viewframe.html#class_view_location>
 
 ## actions and hotkeys
+; An action is a named command that can have a hotkey.
+; Register it once, then put it in menus or bind it to keys.
 UIAction.registerAction("NAME", QKeySequence("Ctrl+Shift+H"))  # create a named action with a default hotkey  @shortcut @keybinding  <https://api.binary.ninja/cpp/group__action.html#struct_u_i_action>
 UIActionHandler.globalActions().bindAction("NAME", UIAction(FN))  # run FN(ctx) when the action fires anywhere  @bind  <https://api.binary.ninja/cpp/group__action.html#class_u_i_action_handler>
 UIAction(FN, IS_VALID)              # action that is greyed out unless IS_VALID(ctx) is True  @enable @disable  <https://api.binary.ninja/cpp/group__action.html#struct_u_i_action>
@@ -1523,6 +1697,7 @@ self.actionHandler = UIActionHandler(); self.actionHandler.setupActionHandler(se
 python/examples/list_keybindings.py  # print or export every action and its hotkey  @shortcut @keys  <file:/src/binaryninja-api/python/examples/list_keybindings.py>
 
 ## menus
+; Put your actions into the main menu or the right-click menu.
 Menu.mainMenu("Plugins").addAction("NAME", "GROUP")  # put a registered action in a top menu  @menubar  <https://api.binary.ninja/cpp/group__action.html#class_menu>
 Menu.mainMenu("Plugins").removeAction("NAME")  # take an action out of a top menu  @delete  <https://api.binary.ninja/cpp/group__action.html#class_menu>
 Menu.getMainMenus()                 # list the top menu names  <https://api.binary.ninja/cpp/group__action.html#class_menu>
@@ -1530,6 +1705,8 @@ self.m_contextMenuManager.show(self.m_menu, self.actionHandler)  # show the righ
 OnContextMenuCreated(self, context, view, menu)  # notification to add items to a view's right-click menu  @contextmenu  <https://api.binary.ninja/cpp/group__uicontext.html#class_u_i_context_notification>
 
 ## events (UIContextNotification)
+; Get a call when something happens in the UI: a file opens,
+; the tab changes, the cursor moves.
 class N(UIContextNotification)      # get called on UI events: file open, view change, cursor move  @hook @callback @listen  <https://api.binary.ninja/cpp/group__uicontext.html#class_u_i_context_notification>
     class N(UIContextNotification):
         def __init__(self):
@@ -1551,6 +1728,8 @@ OnActionExecutedImmutable(self, context, handler, name, ctx)  # called after any
 widget.destroyed.connect(lambda: UIContext.unregisterNotification(n))  # stop events when the widget dies; __del__ is not called  @cleanup @leak  <file:/src/binaryninja-api/python/examples/hellopane.py>
 
 ## sidebar widgets
+; Add your own panel to the sidebar, next to Symbols and Types.
+; Good for tools that follow the cursor.
 Sidebar.addSidebarWidgetType(MyType())  # register a new sidebar panel with an icon  @panel @dock  <https://api.binary.ninja/cpp/group__sidebar.html>
 class MyType(SidebarWidgetType)     # sidebar panel type: icon, name, createWidget  <https://api.binary.ninja/cpp/group__sidebar.html>
     class MyType(SidebarWidgetType):
@@ -1574,6 +1753,8 @@ sidebar.toggle("NAME") / sidebar.deactivate("NAME")  # toggle or close a sidebar
 sidebar.widget("NAME")              # get the live widget of a sidebar panel  @find  <https://api.binary.ninja/cpp/group__sidebar.html>
 
 ## panes, global area, custom views
+; Other places for your own widgets: split panes, the bottom area (next to Log),
+; or a whole new kind of view.
 WidgetPane(W, "TITLE")              # wrap a QWidget as a pane for uic.openPane  @split  <https://api.binary.ninja/cpp/group__pane.html>
     ctx.context.openPane(WidgetPane(MyWidget(ctx.binaryView), "Hello"))
 GlobalArea.addWidget(lambda ctx: MyArea("NAME"))  # add a tab to the bottom area (next to Log, Console)  @bottom @panel  <https://api.binary.ninja/cpp/group__globalarea.html>
@@ -1589,6 +1770,7 @@ getData / getCurrentOffset / navigate / getFont  # methods every custom View mus
 ViewType.getTypes() / ViewType.getTypeByName("NAME")  # list or find view types  <https://api.binary.ninja/cpp/group__viewtype.html>
 
 ## look and feel
+; Match the user's fonts, theme colors and screen size so your widgets look native.
 binaryninjaui.getMonospaceFont(W)   # get the user's code font for a widget  @font  <file:/src/binaryninja-api/ui/fontsettings.h#L42>
 binaryninjaui.getApplicationFont(W)  # get the user's normal UI font  @font  <file:/src/binaryninja-api/ui/fontsettings.h#L29>
 binaryninjaui.getThemeColor(ThemeColor.AddressColor)  # get a QColor from the current theme  @color @dark  <file:/src/binaryninja-api/ui/theme.h#L69>

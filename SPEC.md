@@ -3,6 +3,24 @@
 Goal: find any fact in seconds, without leaving nvim, and read it cleanly.
 Every rule below serves one of two things: **search finds it** or **eyes read it fast**.
 
+## 0. My notes: `; SMA:` lines (never touch them)
+
+A line that starts with `; SMA:` is my own personal note. It can be in any sheet or in this SPEC.
+
+```
+; SMA: I always forget this one, check it again in v5
+```
+
+Rules for AI tools (Claude or any other):
+
+- **Never change an `; SMA:` line.** Do not edit, reword, fix spelling, reformat, re-indent,
+  re-wrap, move or delete it. This is true even if the note is wrong, old, or breaks a rule here.
+- Keep it in the same place, next to the same lines.
+- Never write new `; SMA:` lines. Only I write them.
+- If you think a note is wrong, tell me in the chat. Do not fix it in the file.
+- A note with many lines: every line starts with `; SMA:`.
+- For the search tool it is a normal comment: it is never indexed.
+
 ## 1. Where files live: shelves and sheets
 
 ```
@@ -50,6 +68,32 @@ git reset --soft HEAD~1     # undo last commit, keep the changes staged
 4. A line starting with `;` is a comment. It is never indexed.
 5. **Topic separator**: `; ===============  xyz` (`;`, 15 `=`, two spaces, topic name).
    It starts a new topic part. Topic parts hold sections, and sections hold entries.
+6. **Section intro**: comment lines right under `## name`, before the first entry
+   (see 2.1).
+7. **My notes**: `; SMA:` lines can be anywhere. Never touched by AI (see 0).
+
+### 2.1 Section intro
+
+A short, high level description to "what is this thing and why would I use it?".
+It is for reading, not for search, so it is a comment and is never indexed.
+
+```
+## transforms (encode, decode, hash, unpack)
+; A transform is a ready-made tool that changes data from one form to another.
+; Binary Ninja has many built in. They decode, decompress, decrypt or hash bytes.
+;
+; TransformSession: opens a zip (or tar, gz...) and makes a tree of what is inside.
+;   Each file inside becomes one node of the tree, called a TransformContext.
+list(Transform)                      # list transforms ...
+```
+
+- Simple B1 English: short sentences, common words, one idea per sentence.
+- Say **what** it is and **why or when** you use it. Not **how**: no arguments, options or details.
+  The details are in the entries and the links.
+- 1 to 3 lines is normal, 10 at most. Keep lines under ~80 characters.
+- To explain a main class or idea, start the line with `Name:`. Indent its next lines with `;   `.
+- `;` alone is an empty line between two parts of the intro.
+- The intro does not replace the entries. Every entry must still make sense alone (see 3).
 
 ## 3. The entry line (the core rule)
 
@@ -127,3 +171,4 @@ These are guarantees for the nvim tool, built in a later section:
 2. Does the line make sense alone?
 3. Does it contain the words I will search for? If not, add `@tags`.
 4. Is there a link to the full docs for when I need more?
+5. New section? Give it a short intro.
