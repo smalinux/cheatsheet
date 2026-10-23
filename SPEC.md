@@ -8,29 +8,20 @@ Every rule below serves one of two things: **search finds it** or **eyes read it
 ```
 /src/cheatsheet/
   SPEC.md
-  shell/            <- shelf (a big list)
-    git.sheet       <- sheet (a sub list, one topic)
-    tar.sheet
-  c/
-    libc.sheet
-  cpp/
-    stl.sheet
-  python/
-    requests.sheet
-  kernel/
-    modules.sheet
-  yocto/
-    variables.sheet
+  binaryninja/      <- shelf (one subject area)
+    binaryninja.sheet   <- its one sheet, named after the shelf
+  gdb/
+    gdb.sheet
 ```
 
 - **Shelf** = a directory = one subject area. Search can be limited to one shelf,
   so Python and C++ results never mix.
-- **Sheet** = one file = one topic. Search can be limited to one sheet.
-- At most 2 levels: `shelf/sheet.sheet`. No deeper folders.
-- Names: lowercase, `-` between words, the word you would type to find it
-  (`python/requests.sheet`, not `python/http_lib_notes.sheet`).
+- **Sheet** = one file. Each shelf has **one big sheet**, `shelf/shelf.sheet`. No splitting.
+- Topics inside the sheet are parts, separated by a comment line (never indexed):
+  `; ===============  TOPIC`
+- Section names (`## name`) must be unique in the whole sheet: prefix with the topic if needed.
+- Names: lowercase, `-` between words, the word you would type to find it.
 - Extension `.sheet`, plain UTF-8 text. Not markdown: it must look clean as raw text in nvim.
-- Split a sheet when it passes ~300 entries.
 
 ## 2. File layout
 
@@ -39,6 +30,7 @@ title: git
 url:   https://git-scm.com/docs
 tags:  vcs version-control
 
+; ===============  branches
 ## branches
 git switch -c NAME          # create a branch and switch to it  @new <https://git-scm.com/docs/git-switch>
 git branch -d NAME          # delete a merged branch  @remove
@@ -56,6 +48,8 @@ git reset --soft HEAD~1     # undo last commit, keep the changes staged
 2. **Sections**: `## name`. They group entries, show up in results, and can be jumped to.
 3. **Entries**: everything else (see 3).
 4. A line starting with `;` is a comment. It is never indexed.
+5. **Topic separator**: `; ===============  xyz` (`;`, 15 `=`, two spaces, topic name).
+   It starts a new topic part. Topic parts hold sections, and sections hold entries.
 
 ## 3. The entry line (the core rule)
 
@@ -129,7 +123,7 @@ These are guarantees for the nvim tool, built in a later section:
 
 ## 7. Checklist for a new entry
 
-1. Is it in the right shelf and sheet?
+1. Is it in the right shelf, under the right topic part?
 2. Does the line make sense alone?
 3. Does it contain the words I will search for? If not, add `@tags`.
 4. Is there a link to the full docs for when I need more?

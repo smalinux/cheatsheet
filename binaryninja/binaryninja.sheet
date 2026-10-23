@@ -616,7 +616,7 @@ f.store_metadata("key", VALUE)        # save plugin data on this function in the
 f.query_metadata("key")               # read plugin data stored on this function  @persist  <https://api.binary.ninja/binaryninja.function-module.html#binaryninja.function.Function.query_metadata>
 f.session_data                        # get a dict for plugin data on this function for this session  @cache  <https://api.binary.ninja/binaryninja.function-module.html#binaryninja.function.Function.session_data>
 
-## analysis control
+## function analysis control
 f.reanalyze()                         # mark the function for reanalysis and start it  @refresh @update  <https://api.binary.ninja/binaryninja.function-module.html#binaryninja.function.Function.reanalyze>
 f.analyze()                           # analyze the function now if it is out of date  @update  <https://api.binary.ninja/binaryninja.function-module.html#binaryninja.function.Function.analyze>
 f.mark_updates_required()             # queue the function for the next analysis update  @refresh  <https://api.binary.ninja/binaryninja.function-module.html#binaryninja.function.Function.mark_updates_required>
@@ -787,7 +787,7 @@ mlil.get_low_level_il_instruction_index(N)  # map an MLIL instruction index to L
 mlil.get_high_level_il_instruction_index(N)  # map an MLIL instruction index to HLIL  <https://api.binary.ninja/binaryninja.mediumlevelil-module.html#binaryninja.mediumlevelil.MediumLevelILFunction.get_high_level_il_instruction_index>
 ref.hlil                        # get the HLIL at a cross reference (ReferenceSource)  @xrefs  <https://api.binary.ninja/binaryninja.binaryview-module.html#binaryninja.binaryview.ReferenceSource.hlil>
 
-## values and dataflow
+## il values and dataflow
 i.value                             # get the RegisterValue analysis found for an expression  @constant @dataflow  <https://api.binary.ninja/binaryninja.mediumlevelil-module.html#binaryninja.mediumlevelil.MediumLevelILInstruction.value>
 i.value.type == RegisterValueType.ConstantValue  # check whether an expression is a known constant  <https://api.binary.ninja/binaryninja.variable-module.html#binaryninja.variable.RegisterValue>
 i.possible_values                   # get the PossibleValueSet (ranges, sets, tables) of an expression  @range @dataflow  <https://api.binary.ninja/binaryninja.mediumlevelil-module.html#binaryninja.mediumlevelil.MediumLevelILInstruction.possible_values>
