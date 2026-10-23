@@ -1,0 +1,16 @@
+title: pwn.college
+url:   https://pwn.college/
+tags:  pwn pwncollege ctf linux shell bash rtfm docs manual
+
+; ===============  linux
+## rtfm man pages
+; RTFM means "read the manual". Every Linux command and function has a man page.
+; Read it first: it is the real answer, written by the people who made the tool.
+man PAGE                           # read the manual page of a command or function  @rtfm @help @docs  <man:man(1)>
+https://man7.org/linux/man-pages/  # read Linux man pages online (commands, syscalls, libc)  @rtfm @manpages @docs  <https://man7.org/linux/man-pages/>
+
+## bash
+; Bash is the shell: the program that reads and runs the commands you type.
+; Read these to learn its rules and to write your own scripts.
+https://www.gnu.org/software/bash/manual/html_node/index.html  # read the official GNU Bash manual  @shell @rtfm @docs  <https://www.gnu.org/software/bash/manual/html_node/index.html>
+https://bash.cyberciti.biz/guide/Main_Page  # learn bash scripting step by step with examples  @shell @tutorial @guide  <https://bash.cyberciti.biz/guide/Main_Page>

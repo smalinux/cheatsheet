@@ -1,0 +1,144 @@
+title: vmware
+url:   https://techdocs.broadcom.com/us/en/vmware-cis/desktop-hypervisors/workstation-pro/17-0.html
+tags:  vmware workstation vm virtual-machine hypervisor vmrun vmcli vmware-vdiskmanager linux-host
+
+; VMware Workstation 17.6 on a Linux host.
+; CLIs: vmrun, vmcli, vmware-vdiskmanager. VMs live in ~/vmware/.
+; @fav = the commands I use most.
+
+; ===============  basics
+## setup
+; Set $VMX once per shell. Every vmrun command below uses it.
+VMX="$HOME/vmware/Windows 10 x64/Windows 10 x64.vmx"   # point $VMX at the VM's .vmx file  @fav @variable @path
+
+## keyboard
+; Shortcuts inside the VM window.
+Ctrl+Alt          # release the mouse and keyboard from the VM  @ungrab @escape @shortcut
+Ctrl+Alt+Insert   # send Ctrl+Alt+Del to the guest  @cad @login @shortcut
+Ctrl+Alt+Enter    # toggle fullscreen  @shortcut
+Ctrl+G            # grab mouse and keyboard into the VM  @capture @shortcut
+
+; ===============  vm lifecycle
+## power
+; Start, stop, suspend and pause VMs from the shell. -T ws = Workstation.
+vmrun list                            # list running VMs  @fav @running @ps
+vmrun -T ws start "$VMX"              # start the VM with the GUI window  @boot @power-on
+vmrun -T ws start "$VMX" nogui        # start the VM headless, no window  @boot @headless @background
+vmrun -T ws stop "$VMX" soft          # clean shutdown of the guest (needs VMware Tools)  @shutdown @power-off
+vmrun -T ws stop "$VMX" hard          # power off now, like pulling the plug  @shutdown @kill @force
+vmrun -T ws reset "$VMX" soft         # restart the guest cleanly  @reboot @restart
+vmrun -T ws suspend "$VMX"            # suspend the VM, save its RAM to a .vmss file  @hibernate @sleep
+vmrun -T ws pause "$VMX"              # pause the VM (freeze it in place)  @freeze
+vmrun -T ws unpause "$VMX"            # resume a paused VM  @resume
+
+## snapshots
+; A snapshot saves the VM state so you can go back to it later.
+; Snapshots are deltas (*-00000N.vmdk), not backups.
+; GUI: VM -> Snapshot -> Take Snapshot / Snapshot Manager -> Go To
+vmrun -T ws snapshot "$VMX" clean-base                    # take a snapshot named clean-base  @fav @create @save
+vmrun -T ws listSnapshots "$VMX" showTree                 # list snapshots as a tree  @fav @show
+vmrun -T ws revertToSnapshot "$VMX" clean-base            # go back to snapshot clean-base  @fav @restore @rollback @revert
+vmrun -T ws deleteSnapshot "$VMX" clean-base              # delete a snapshot, merge it into its child, free space  @fav @remove
+vmrun -T ws deleteSnapshot "$VMX" old andDeleteChildren   # delete a snapshot and all snapshots under it  @remove @children
+power off before snapshot     # power off first: no RAM image, so the snapshot is smaller and cleaner  @tip @memory
+backup a VM                   # snapshots are not backups; copy the whole VM folder while the VM is off  @backup @copy
+grow disk with snapshots      # a disk cannot be expanded while snapshots exist; delete them first  @expand @error
+
+## clone
+; Make a new VM from a snapshot of an existing one.
+vmrun -T ws clone "$VMX" ~/vmware/W10-dyn/W10-dyn.vmx full -snapshot=clean-base -cloneName=W10-dyn   # make a full clone: independent copy  @copy @duplicate
+vmrun -T ws clone "$VMX" ~/vmware/W10-ln/W10-ln.vmx linked -snapshot=clean-base -cloneName=W10-ln    # make a linked clone: tiny, needs the parent snapshot  @copy @duplicate
+linked clone parent          # do not delete the parent snapshot of a linked clone, the clone breaks  @warning @linked
+
+; ===============  storage
+## disk
+; vmware-vdiskmanager changes .vmdk files. Run it with the VM off.
+DISK="$HOME/vmware/Windows 10 x64/Windows 10 x64.vmdk"   # point $DISK at the VM's .vmdk file  @variable @path
+vmware-vdiskmanager -x 100GB "$DISK"   # grow the disk to 100GB (VM off, no snapshots)  @expand @resize @extend
+vmware-vdiskmanager -d "$DISK"         # defragment the disk  @defrag
+vmware-vdiskmanager -k "$DISK"         # shrink/compact the disk (zero free space in the guest first)  @compact @reclaim
+vmware-vdiskmanager -R "$DISK"         # repair a broken sparse disk  @fix @corrupt
+vmware-vdiskmanager -e "$DISK"         # check the snapshot chain of the disk  @verify @consistency
+
+## disk-guest
+; After you grow the .vmdk, the guest must also grow its partition.
+Resize-Partition -DriveLetter C -Size (Get-PartitionSupportedSize -DriveLetter C).SizeMax   # extend C: to fill the disk (elevated PowerShell)  @expand @grow @windows
+recovery partition after C:   # Resize-Partition fails: delete it with diskpart or use a GParted live ISO  @error @extend
+
+; ===============  network
+## network-modes
+; Each adapter connects to one vmnet. Pick one by how much the VM may reach.
+; Switch: VM -> Settings -> Network Adapter (Custom -> vmnet1 = no internet).
+vmnet0   # bridged: the VM is on your real LAN  @bridge
+vmnet1   # host-only: 172.16.165.0/24, host IP 172.16.165.1, no internet  @isolated @hostonly
+vmnet8   # NAT: 192.168.231.0/24, host IP 192.168.231.1, gateway .2  @nat @internet
+
+## network-cli
+vmrun -T ws disconnectNamedDevice "$VMX" ethernet0   # unplug the VM network adapter now  @offline @isolate @cable
+vmrun -T ws connectNamedDevice "$VMX" ethernet0      # plug the VM network adapter back in  @online @cable
+vmrun -T ws getGuestIPAddress "$VMX" -wait           # print the guest IP, wait until it has one  @ip @address
+uncheck Connected             # GUI way to disconnect: uncheck Connected on the network adapter  @offline @isolate
+
+## network-files
+; Host config for the virtual networks. Restart vmware after changes.
+/etc/vmware/networking                    # vmnet definitions  @config
+/etc/vmware/vmnet8/nat/nat.conf           # NAT settings and port forwards ([incomingtcp])  @port-forward @config
+/etc/vmware/vmnet8/dhcpd/dhcpd.conf       # DHCP settings and fixed IPs  @static-ip @config
+/etc/vmware/vmnet8/dhcpd/dhcpd.leases     # see which guest got which IP  @ip @lease
+sudo vmware-netcfg                        # open the GUI virtual network editor  @editor
+sudo systemctl restart vmware             # restart vmware to apply network changes  @reload @apply
+
+## fixed-ip
+; Give a guest the same IP every time with a DHCP reservation.
+host w10 { hardware ethernet 00:0C:29:XX:XX:XX; fixed-address 192.168.231.129; }   # add to dhcpd.conf for a fixed guest IP, then restart vmware  @static-ip @reservation
+ethernet0.generatedAddress   # the guest MAC address, found in the .vmx file  @mac
+
+; ===============  guest
+## guest-ops
+; Run commands and move files inside the guest from the host.
+; Needs VMware Tools and the guest user and password.
+G=(-T ws -gu Sohaib -gp 'PASSWORD')   # store guest login flags; they go BEFORE the command  @auth @credentials @login
+vmrun "${G[@]}" CopyFileFromHostToGuest "$VMX" ./x.ps1 'C:\Users\Sohaib\x.ps1'          # copy a file from host into the guest  @upload @copy
+vmrun "${G[@]}" CopyFileFromGuestToHost "$VMX" 'C:\Tools\logs\x.log' ./x.log            # copy a file from the guest to the host  @download @copy
+vmrun "${G[@]}" runProgramInGuest "$VMX" -activeWindow -interactive 'C:\Windows\System32\cmd.exe' '/c whoami'   # run a program in the guest  @exec @execute
+vmrun "${G[@]}" listProcessesInGuest "$VMX"         # list processes in the guest  @ps
+vmrun "${G[@]}" killProcessInGuest "$VMX" PID       # kill a guest process by PID  @kill @terminate
+vmrun "${G[@]}" listDirectoryInGuest "$VMX" 'C:\Tools'   # list files in a guest folder  @ls @dir
+vmrun "${G[@]}" captureScreen "$VMX" shot.png       # save a screenshot of the guest  @screenshot
+vmrun -T ws checkToolsState "$VMX"                  # check if VMware Tools is running in the guest  @tools @status
+
+## shared-folders
+; Share a host folder with the guest. Turn this off on a malware VM.
+vmrun -T ws enableSharedFolders "$VMX"                               # turn shared folders on  @share @hgfs
+vmrun -T ws addSharedFolder "$VMX" share /tmp/share                  # share /tmp/share; guest sees \\vmware-host\Shared Folders\share  @share @hgfs @add
+vmrun -T ws setSharedFolderState "$VMX" share /tmp/share readonly    # make a shared folder read-only  @share @readonly
+vmrun -T ws removeSharedFolder "$VMX" share                          # stop sharing a folder  @share @remove
+Guest Isolation               # GUI: VM -> Settings -> Options -> Guest Isolation; turn off drag & drop and clipboard  @malware @clipboard @dnd
+
+; ===============  isolation
+## vmx-tweaks
+; Settings in the .vmx file. Edit them with the VM off.
+isolation.tools.copy.disable = "TRUE"    # block clipboard copy guest -> host  @clipboard @malware
+isolation.tools.paste.disable = "TRUE"   # block clipboard paste host -> guest  @clipboard @malware
+isolation.tools.dnd.disable = "TRUE"     # block drag and drop  @dnd @malware
+isolation.tools.hgfs.disable = "TRUE"    # block shared folders  @share @malware
+mainMem.useNamedFile = "FALSE"           # do not write a .vmem RAM file to disk  @memory @vmem
+memsize = "8192"                         # set guest RAM in MB  @memory @ram
+numvcpus = "4"                           # set number of guest CPUs  @cpu @cores
+
+## analysis-vm
+; Steps to build a clean malware analysis VM, then reuse it for every sample.
+1 install tools               # run install-static-tools.ps1 and install-visual-studio.ps1 in the guest  @setup @malware
+2 windows update              # run Windows Update, then reboot  @setup @patch
+3 enable-ssh.ps1 -Disable     # turn SSH off again if it was on  @setup @ssh
+4 lock down                   # set network to host-only or disconnected, turn guest isolation on  @setup @isolate
+5 snapshot clean-base         # power off, then take the snapshot clean-base  @setup @snapshot
+6 revert after each sample    # run revertToSnapshot clean-base after every sample  @malware @snapshot @rollback
+
+; ===============  host
+## troubleshooting
+; Fixes for the Linux host side.
+sudo vmware-modconfig --console --install-all   # rebuild vmmon/vmnet modules after a kernel update  @kernel @modules @fix
+sudo systemctl restart vmware                   # restart the vmware services  @service @restart
+tail -f "$HOME/vmware/Windows 10 x64/vmware.log"   # follow the VM log  @log @debug
+rm -r "$HOME/vmware/Windows 10 x64/"*.lck       # remove stale locks after a crash (VM must be off)  @lock @crash @locked
