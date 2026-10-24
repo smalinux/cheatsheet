@@ -632,7 +632,7 @@ v.dead_store_elimination = DeadStoreElimination.PreventDeadStoreElimination  # k
 ## values and dataflow
 ; Ask what value a register, stack slot or argument has at one point in the code.
 ; Binary Ninja works this out for you.
-f.get_reg_value_at(ADDR, "rdi")       # get what analysis knows about a register before ADDR  @dataflow @constant  <https://api.binary.ninja/binaryninja.function-module.html#binaryninja.function.Function.get_reg_value_at>
+f.get_reg_value_at(ADDR, "rdi")       # get what analysis knows about a register before ADDR  @fav @dataflow @constant  <https://api.binary.ninja/binaryninja.function-module.html#binaryninja.function.Function.get_reg_value_at>
 f.get_reg_value_after(ADDR, "eax")    # get a register value after the instruction at ADDR  @dataflow  <https://api.binary.ninja/binaryninja.function-module.html#binaryninja.function.Function.get_reg_value_after>
 f.get_stack_contents_at(ADDR, OFFSET, SIZE)  # get a stack slot value before ADDR  @dataflow  <https://api.binary.ninja/binaryninja.function-module.html#binaryninja.function.Function.get_stack_contents_at>
 f.get_parameter_at(ADDR, None, N)     # get the value of argument N at the call at ADDR  @args @dataflow  <https://api.binary.ninja/binaryninja.function-module.html#binaryninja.function.Function.get_parameter_at>
