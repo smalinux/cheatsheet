@@ -1,5 +1,6 @@
 title: binary ninja
 url:   https://api.binary.ninja/
+local: /opt/binaryninja/python/binaryninja/ ; SMA: direct lsp (gd) to move search in this location
 tags:  binaryninja binja bn python api headless script console reverse-engineering disassembler decompiler bv binaryview memory bytes symbols xrefs strings sections segments function basicblock variables callers callees decompile il bnil llil mlil hlil ssa intermediate-language dataflow types struct structure enum typedef pointer typelibrary typearchive demangle debuginfo arch architecture cpu isa platform os abi calling-convention disassemble assemble registers lift lifter il-builder workflow activity analysiscontext deobfuscate rewrite plugin extension command menu background-task binaryview-type loader render-layer flowgraph transform project bndb database snapshot metadata kvs binaryninjaui ui gui qt pyside6 widget sidebar pane action hotkey view
 
 ; ===============  basics.sheet

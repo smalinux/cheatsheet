@@ -1,7 +1,12 @@
 
-APIs:
-/opt/binaryninja/python/binaryninja
+```python
+
+>>> print(bv.__doc__)
+
+>>> bv.functions[3]
+<func: x86_64@0x401040>
+
+>>> bv.functions[3].name
 
 
-
-
+```
