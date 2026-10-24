@@ -11,5 +11,26 @@
 >>> type(current_function)
 <class 'binaryninja.function.Function'>
 
+# Just empty dir() in Binja console give you the whole list
+>>> dir()
+
+>>> for block in current_function:
+... 	for inst in block:
+... 		print(inst)
+
+
+>>> ll = current_function.low_level_il[11]
+>>> ll
+<LowLevelILCall: call(0x401050)>
+>>> ll.operation
+<LowLevelILOperation.LLIL_CALL: 56>
+>>> dir(ll)
+['ILOperations', '__annotations__', '__class__', '__dataclass_fields__', '__dataclass_params__', '__delattr__', '__dict__', '__dir__', '__doc__', '__eq__', '__firstlineno__', '__format__', '__ge__', '__getattribute__', '__getstate__', '__gt__', '__hash__', '__init__', '__init_subclass__', '__le__', '__lt__', '__match_args__', '__module__', '__ne__', '__new__', '__reduce__', '__reduce_ex__', '__replace__', '__repr__', '__setattr__', '__sizeof__', '__static_attributes__', '__str__', '__subclasshook__', '__weakref__', '_get_cond', '_get_constraint', '_get_expr', '_get_expr_list', '_get_flag', '_get_flag_ssa', '_get_flag_ssa_list', '_get_float', '_get_int', '_get_int_list', '_get_intrinsic', '_get_reg', '_get_reg_or_flag_list', '_get_reg_or_flag_ssa_list', '_get_reg_ssa', '_get_reg_ssa_list', '_get_reg_stack', '_get_reg_stack_adjust', '_get_reg_stack_ssa', '_get_reg_stack_ssa_list', '_get_sem_class', '_get_sem_group', '_get_target_map', '_make_options_array', 'add_subgraph', 'address', 'attributes', 'copy_to', 'create', 'dest', 'detailed_operands', 'expr_index', 'flags', 'function', 'get_flag_value', 'get_flag_value_after', 'get_possible_flag_values', 'get_possible_flag_values_after', 'get_possible_reg_values', 'get_possible_reg_values_after', 'get_possible_stack_contents', 'get_possible_stack_contents_after', 'get_possible_values', 'get_reg_value', 'get_reg_value_after', 'get_stack_contents', 'get_stack_contents_after', 'high_level_il', 'hlil', 'hlils', 'il_basic_block', 'instr', 'instr_index', 'mapped_medium_level_il', 'medium_level_il', 'mlil', 'mlils', 'mmlil', 'non_ssa_form', 'operands', 'operation', 'possible_values', 'postfix_operands', 'prefix_operands', 'prepend_parent', 'raw_flags', 'raw_operands', 'show_hierarchy_graph', 'show_llil_hierarchy', 'size', 'source_location', 'source_operand', 'ssa_form', 'tokens', 'traverse', 'value', 'visit', 'visit_all', 'visit_operands']
+>>> ll.address
+4198874
+>>> hex(ll.address)
+'0x4011da'
+
+
 
 ```
