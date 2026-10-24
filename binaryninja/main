@@ -8,5 +8,8 @@
 
 >>> bv.functions[3].name
 
+>>> type(current_function)
+<class 'binaryninja.function.Function'>
+
 
 ```
