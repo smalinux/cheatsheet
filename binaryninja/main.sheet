@@ -1,0 +1,327 @@
+
+
+>>> print(bv.__doc__)
+
+>>> bv.functions[3]
+<func: x86_64@0x401040>
+
+>>> bv.functions[3].name
+
+>>> type(current_function)
+<class 'binaryninja.function.Function'>
+
+# Just empty dir() in Binja console give you the whole list
+>>> dir()
+
+>>> for block in current_function:
+... 	for inst in block:
+... 		print(inst)
+
+
+>>> ll = current_function.low_level_il[11]
+>>> ll
+<LowLevelILCall: call(0x401050)>
+>>> ll.operation
+<LowLevelILOperation.LLIL_CALL: 56>
+>>> dir(ll)
+['ILOperations', '__annotations__', '__class__', '__dataclass_fields__', '__dataclass_params__', '__delattr__', '__dict__', '__dir__', '__doc__', '__eq__', '__firstlineno__', '__format__', '__ge__', '__getattribute__', '__getstate__', '__gt__', '__hash__', '__init__', '__init_subclass__', '__le__', '__lt__', '__match_args__', '__module__', '__ne__', '__new__', '__reduce__', '__reduce_ex__', '__replace__', '__repr__', '__setattr__', '__sizeof__', '__static_attributes__', '__str__', '__subclasshook__', '__weakref__', '_get_cond', '_get_constraint', '_get_expr', '_get_expr_list', '_get_flag', '_get_flag_ssa', '_get_flag_ssa_list', '_get_float', '_get_int', '_get_int_list', '_get_intrinsic', '_get_reg', '_get_reg_or_flag_list', '_get_reg_or_flag_ssa_list', '_get_reg_ssa', '_get_reg_ssa_list', '_get_reg_stack', '_get_reg_stack_adjust', '_get_reg_stack_ssa', '_get_reg_stack_ssa_list', '_get_sem_class', '_get_sem_group', '_get_target_map', '_make_options_array', 'add_subgraph', 'address', 'attributes', 'copy_to', 'create', 'dest', 'detailed_operands', 'expr_index', 'flags', 'function', 'get_flag_value', 'get_flag_value_after', 'get_possible_flag_values', 'get_possible_flag_values_after', 'get_possible_reg_values', 'get_possible_reg_values_after', 'get_possible_stack_contents', 'get_possible_stack_contents_after', 'get_possible_values', 'get_reg_value', 'get_reg_value_after', 'get_stack_contents', 'get_stack_contents_after', 'high_level_il', 'hlil', 'hlils', 'il_basic_block', 'instr', 'instr_index', 'mapped_medium_level_il', 'medium_level_il', 'mlil', 'mlils', 'mmlil', 'non_ssa_form', 'operands', 'operation', 'possible_values', 'postfix_operands', 'prefix_operands', 'prepend_parent', 'raw_flags', 'raw_operands', 'show_hierarchy_graph', 'show_llil_hierarchy', 'size', 'source_location', 'source_operand', 'ssa_form', 'tokens', 'traverse', 'value', 'visit', 'visit_all', 'visit_operands']
+>>> ll.address
+4198874
+>>> hex(ll.address)
+'0x4011da'
+
+; ##################################################################
+; #  BINARY NINJA API
+; ##################################################################
+
+
+## BasicBlock.source_block
+; ------------------------------------------------------------------
+; A basic block is a list of instructions with one way in and one way out (no jumps in the middle).
+; Binja has blocks at many levels: assembly, LLIL, MLIL, HLIL. Each IL level has its own blocks.
+;
+; source_block gives you the ASSEMBLY block that a block came from. It is read-only.
+;   - On an assembly block (like `for bb in func`), it gives back the same block.
+;     So in that loop it is not useful.
+;   - On an IL block (LLIL / MLIL / HLIL), it gives the assembly block it was made from.
+;     This is the useful case.
+;
+; Why you need it: IL blocks use instruction INDEXES for start/end, not addresses.
+; source_block lets you go back to real addresses in the binary.
+
+bb.source_block                     # the assembly block this block came from (None if none)  @binja @api @basicblock  <file:/opt/binaryninja/python/binaryninja/basicblock.py:363>
+
+; Example: for every HLIL block, print its index range and the real address range
+;
+;     for func in bv.functions:
+;         for hb in func.hlil.basic_blocks:
+;             src = hb.source_block
+;             print(hb.start, hb.end, "->", hex(src.start), hex(src.end))
+;
+; Note: hb.start and hb.end are indexes (0, 1, 2 ...). src.start and src.end are addresses.
+; Note: after optimization, one IL block can come from many asm blocks.
+;       source_block gives only one of them.
+
+
+## callingconvention module
+; ------------------------------------------------------------------
+; A calling convention is a set of rules for a function call:
+;   - Where do the arguments go? (which registers, or the stack)
+;   - Where does the return value go?
+;   - Who cleans the stack after the call: the caller or the called function?
+;   - Which registers can the called function destroy, and which must it keep safe?
+;
+; Examples: cdecl, stdcall, fastcall (x86), sysv (Linux x86_64), win64 (Windows x86_64).
+;
+; Binja must know the calling convention to show correct arguments in HLIL.
+; If the convention is wrong, the arguments in the decompiler are wrong too.
+
+; --- Where to get a convention
+cc = current_function.calling_convention
+func.calling_convention                  # the convention of one function. You can also set it  @binja @api @cc  <file:/opt/binaryninja/python/binaryninja/function.py:1428>
+bv.platform.calling_conventions          # list of all conventions for this platform             @binja @api @cc  <file:/opt/binaryninja/python/binaryninja/platform.py:479>
+bv.platform.default_calling_convention   # the normal convention for this platform               @binja @api @cc  <file:/opt/binaryninja/python/binaryninja/platform.py:393>
+bv.arch.calling_conventions              # dict: name -> convention, for this CPU                @binja @api @cc  <file:/opt/binaryninja/python/binaryninja/architecture.py:1109>
+
+; --- What is inside a convention (cc)
+cc = current_function.calling_convention
+cc.name                                  # name, like "sysv"                                     @binja @api @cc  <file:/opt/binaryninja/python/binaryninja/callingconvention.py:88>
+cc.int_arg_regs                          # registers for integer and pointer arguments, in order @binja @api @cc
+cc.float_arg_regs                        # registers for float arguments, in order               @binja @api @cc
+cc.int_return_reg                        # register for the integer return value                 @binja @api @cc
+cc.float_return_reg                      # register for the float return value                   @binja @api @cc
+cc.caller_saved_regs                     # registers the called function can destroy             @binja @api @cc
+cc.callee_saved_regs                     # registers the called function must keep safe          @binja @api @cc
+cc.stack_adjusted_on_return              # True = called function cleans the stack (like stdcall) @binja @api @cc
+
+
+; --- Example 1: see the convention of the current function
+;
+;     cc = current_function.calling_convention
+;     print(cc)                       # sysv
+;     print(repr(cc))                 # <calling convention: x86_64 sysv>
+;     print("args in: ", cc.int_arg_regs)
+;     print("return in:", cc.int_return_reg)
+;
+; On Linux x86_64 you will see rdi, rsi, rdx, rcx, r8, r9 for the arguments and rax for the return value.
+
+
+; --- Example 2: list all conventions you can use
+;
+;     print("default:", bv.platform.default_calling_convention)
+;     for cc in bv.platform.calling_conventions:
+;         print(cc.name)
+
+
+; --- Example 3: which register holds argument number N?
+;
+;     cc = current_function.calling_convention
+;     n = 2                            # third argument (we count from 0)
+;     print(cc.int_arg_regs[n])        # rdx on sysv
+;
+; This is useful when you read assembly: before a `call`, look at this register to see the argument.
+
+
+; --- Example 4: count functions by convention
+;
+;     from collections import Counter
+;     c = Counter(str(f.calling_convention) for f in bv.functions)
+;     print(c)                         # Counter({'sysv': 120, 'None': 2})
+;
+; If a function has a different convention from the rest, look at it.
+; It can be hand-written assembly or obfuscated code.
+
+
+; --- Example 5: change the convention of a function
+; Use this when Binja guessed wrong and the arguments in HLIL look bad.
+;
+;     cc = bv.arch.calling_conventions["fastcall"]   # x86 32-bit example
+;     current_function.calling_convention = cc
+;
+; After this, Binja analyzes the function again and the HLIL changes.
+
+
+; --- Example 6: compare two conventions
+;
+;     for name, cc in bv.arch.calling_conventions.items():
+;         print(name, "| args:", cc.int_arg_regs, "| cleans stack:", cc.stack_adjusted_on_return)
+;
+; On x86 (32-bit) you will see that stdcall cleans the stack and cdecl does not.
+
+
+; --- Example 7: make your own convention (advanced)
+; Use this for strange code, for example a function that gets its arguments in eax and ebx.
+; You write a class with the rules, then register it.
+;
+;     from binaryninja import CallingConvention
+;
+;     class MyConv(CallingConvention):
+;         name = "my_eax_ebx"
+;         int_arg_regs = ["eax", "ebx"]
+;         int_return_reg = "eax"
+;         caller_saved_regs = ["eax", "ecx", "edx"]
+;         callee_saved_regs = ["ebx", "esi", "edi", "ebp"]
+;
+;     cc = MyConv(bv.arch, "my_eax_ebx")
+;     bv.platform.register_calling_convention(cc)
+;     current_function.calling_convention = cc
+
+
+; --- Notes
+; - current_function exists only in the Binja GUI Python console. In a script, use a function from bv.functions.
+; - func.calling_convention can be None if Binja does not know it.
+; - bv.arch.calling_conventions is a dict (use a name). bv.platform.calling_conventions is a list.
+
+
+
+
+
+
+
+
+## commonil module
+; ------------------------------------------------------------------
+; Binja has 3 IL levels: LLIL, MLIL, HLIL. Each level has its own instruction classes:
+;     LowLevelILCall, MediumLevelILCall, HighLevelILCall ...
+; This is a problem when you want to ask a simple question like "is this a call?".
+; You must check 3 different classes.
+;
+; commonil solves this. It has small "label" classes that are shared by all 3 levels.
+; Every IL instruction class also inherits one or more of these labels. Example from the source:
+;     class HighLevelILCall(HighLevelILInstruction, Localcall)
+;     class MediumLevelILCall(MediumLevelILCallBase, Localcall)
+;     class LowLevelILCall(LowLevelILInstruction, Localcall)
+; So isinstance(inst, Localcall) works on LLIL, MLIL and HLIL.
+;
+; The label classes are empty (only "pass"). They have no data. They only tell you the KIND of instruction.
+
+from binaryninja.commonil import *    # import all the label classes  @binja @api @il  <file:/opt/binaryninja/python/binaryninja/commonil.py>
+
+; --- The label classes (a child is also its parent: Tailcall is a Localcall, and also a Call)
+;
+;   Constant              a number or address: HLIL_CONST, HLIL_CONST_PTR, HLIL_FLOAT_CONST ...
+;   BinaryOperation       2 inputs (a + b)
+;     Comparison          a == b, a < b ...
+;   UnaryOperation        1 input (-a, ~a)
+;   Arithmetic            math
+;     Carry               math with carry flag (adc, sbb)
+;     DoublePrecision     math with a double-size result
+;   Signed                signed version of an operation
+;   FloatingPoint         float operation
+;   ControlFlow           changes where the code goes (if, jump, goto ...)
+;     Terminal            ends the path
+;       Return            return
+;     Loop                while, do-while, for (HLIL)
+;     Call                any call
+;       Syscall           system call
+;       Localcall         normal call to a function
+;         Tailcall        jump to a function at the end (call + return together)
+;   Memory, Load, Store   memory read / write
+;   SetVar                writes to a variable
+;   SetReg                writes to a register
+;   StackOperation        push / pop
+;   RegisterStack         x87 float register stack
+;   Intrinsic             special CPU instruction with no simple IL (like cpuid, rdtsc)
+;   VariableInstruction   uses a variable
+;     SSAVariableInstruction      SSA version
+;     AliasedVariableInstruction  variable that memory can also change
+;   SSA
+;     Phi                 SSA phi node (picks a value from one of the paths)
+
+
+; --- Example 1: find all calls in a function, at any IL level
+;
+from binaryninja.commonil import Call
+f = bv.get_functions_by_name("main")[0]     # pick a function by name
+for il in [f.llil, f.mlil, f.hlil]:
+    for inst in il.instructions:
+        if isinstance(inst, Call):
+            print(hex(inst.address), inst)
+;
+; Note: in HLIL a call is often INSIDE another instruction (x = foo()).
+; il.instructions gives only the top level. Use traverse (Example 3) to find all of them.
+
+
+; --- Example 2: Call vs Localcall vs Syscall
+;
+;     from binaryninja.commonil import Syscall, Localcall
+;     f = bv.get_functions_by_name("main")[0]     # pick a function by name
+;     for inst in f.mlil.instructions:
+;         if isinstance(inst, Syscall):
+;             print("syscall  ", hex(inst.address), inst)
+;         elif isinstance(inst, Localcall):
+;             print("call     ", hex(inst.address), inst)
+
+
+; --- Example 3: traverse + labels -> find all constants in HLIL
+; traverse calls your function on every instruction and every sub-instruction.
+;
+;     from binaryninja.commonil import Constant
+;     f = bv.get_functions_by_name("main")[0]     # pick a function by name
+;     def get_const(inst):
+;         if isinstance(inst, Constant):
+;             return inst.constant
+;     for c in f.hlil.traverse(get_const):
+;         if c is not None:
+;             print(hex(c))
+;
+; HLIL traverse source: <file:/opt/binaryninja/python/binaryninja/highlevelil.py:2858>
+
+
+; --- Example 4: label + Python match (from the Binja docs)
+; Find calls to memcpy where the size (3rd param) is NOT a constant. This can be a bug.
+;
+;     from binaryninja.commonil import Localcall, Constant
+;     f = bv.get_functions_by_name("main")[0]     # pick a function by name
+;     target = bv.get_symbol_by_raw_name('memcpy').address
+;     def bad_memcpy(i):
+;         match i:
+;             case Localcall(dest=Constant(constant=c), params=[_, _, p]) if c == target and not isinstance(p, Constant):
+;                 return i
+;     for r in f.hlil.traverse(bad_memcpy):
+;         if r is not None:
+;             print(hex(r.address), r)
+;
+; Note: the symbol name can be '_memcpy' (macOS) or 'memcpy' (Linux). Check it in your binary.
+
+
+; --- Example 5: functions that use loops (HLIL)
+;
+;     from binaryninja.commonil import Loop
+;     for func in bv.functions:
+;         if any(isinstance(i, Loop) for i in func.hlil.instructions):
+;             print(func.name)
+
+
+; --- Example 6: see the label tree of a class (GUI only)
+;
+;     from binaryninja.highlevelil import HighLevelILCall
+;     HighLevelILCall.show_hierarchy_graph()
+;
+; It opens a graph that shows all parents: HighLevelILCall -> Localcall -> Call -> ControlFlow -> BaseILInstruction.
+
+
+; --- ILSourceLocation (also in commonil)
+; It remembers where an IL expression came from: the address and the operand number.
+; Binja uses it when it lifts code, so HLIL can show the right address and number format.
+
+inst.source_location                               # ILSourceLocation of an instruction       @binja @api @il  <file:/opt/binaryninja/python/binaryninja/highlevelil.py:496>
+ILSourceLocation.from_instruction(inst)            # same thing, works for LLIL/MLIL/HLIL     @binja @api @il  <file:/opt/binaryninja/python/binaryninja/commonil.py:253>
+loc.address, loc.source_operand                    # the address and the operand number       @binja @api @il
+
+; Example: print where an HLIL instruction came from
+;
+;     f = bv.get_functions_by_name("main")[0]     # pick a function by name
+;     for inst in f.hlil.instructions:
+;         print(inst.source_location)      # <ILSourceLocation: 401136, 0 (from HLIL ...)>
+;
+; You need it mostly when you WRITE IL yourself (a lifter or a workflow).
+; Many IL builder functions take loc=..., for example: il.nop(loc=...)
+; So the new expression keeps the address of the old one.
+
+
+; --- Notes
+; - isinstance with commonil classes is the easy way to write ONE script for all IL levels.
+; - The labels say the kind, not the details. For details use inst.operation (like HighLevelILOperation.HLIL_CALL).
+; - SetReg is not a child of BaseILInstruction (see the source). It is still a label you can use with isinstance.
+; - I did not run these examples.
