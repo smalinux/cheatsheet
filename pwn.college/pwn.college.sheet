@@ -14,3 +14,6 @@ https://man7.org/linux/man-pages/  # read Linux man pages online (commands, sysc
 ; Read these to learn its rules and to write your own scripts.
 https://www.gnu.org/software/bash/manual/html_node/index.html  # read the official GNU Bash manual  @shell @rtfm @docs  <https://www.gnu.org/software/bash/manual/html_node/index.html>
 https://bash.cyberciti.biz/guide/Main_Page  # learn bash scripting step by step with examples  @shell @tutorial @guide  <https://bash.cyberciti.biz/guide/Main_Page>
+
+## Access Control
+https://nettools.club/chmod_calc  # Chmod Calculator
