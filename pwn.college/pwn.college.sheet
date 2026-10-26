@@ -8,6 +8,10 @@ tags:  pwn pwncollege ctf linux shell bash rtfm docs manual
 ; Read it first: it is the real answer, written by the people who made the tool.
 man PAGE                           # read the manual page of a command or function  @rtfm @help @docs  <man:man(1)>
 https://man7.org/linux/man-pages/  # read Linux man pages online (commands, syscalls, libc)  @rtfm @manpages @docs  <https://man7.org/linux/man-pages/>
+; Search in man:
+apropos -s 2 .            # every syscall page
+apropos -s 7 . | less     # browse all overview pages
+apropos -a access control # pages whose description contains both words
 
 ## bash
 ; Bash is the shell: the program that reads and runs the commands you type.
@@ -17,3 +21,11 @@ https://bash.cyberciti.biz/guide/Main_Page  # learn bash scripting step by step 
 
 ## Access Control
 https://nettools.club/chmod_calc  # Chmod Calculator
+;
+; Claude: "list all man pages related to Linux Access Control"
+;
+;
+;
+
+
+# END
