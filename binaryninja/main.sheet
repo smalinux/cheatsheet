@@ -1137,30 +1137,11 @@ fi.address  fi.short_name  fi.full_name  fi.raw_name  fi.function_type  fi.platf
 
 
 
-## decorators module
-; ------------------------------------------------------------------
-; A very small INTERNAL module. You will not use it in your scripts.
-; It has 2 decorators. They only ADD A NOTE to the documentation (docstring) of a class:
-;
-;   @passive      -> note: "this object is a copy. If you change it, Binja's core does NOT change."
-;   @enterprise   -> note: "this object is only in the Ultimate edition."
-;
-; Why it matters for YOU: when you read the docs and see the "passive" note on a class,
-; remember: changing that object does nothing in Binja. You must call the right API to save the change.
-
-passive(cls)                              # adds the "passive object" note to cls.__doc__                 @binja @api @internal  <file:/opt/binaryninja/python/binaryninja/decorators.py:1>
-enterprise(cls)                           # adds the "Ultimate edition only" note to cls.__doc__          @binja @api @internal  <file:/opt/binaryninja/python/binaryninja/decorators.py:15>
-
-; --- Example 1: find which classes are "passive"
-; This runs in the Binja GUI Python console.
-;
-;     import inspect, binaryninja
-;     for name, obj in inspect.getmembers(binaryninja, inspect.isclass):
-;         if obj.__doc__ and "passive" in obj.__doc__:
-;             print(name)
 
 
 ## demangle module
+SMA: DONE
+SMA: Search: Is there more relaiable open source project for demangling?
 ; ------------------------------------------------------------------
 ; C++ (and Rust, D ...) compilers change function names into strange strings. This is called "mangling".
 ;   _ZN3foo3barEi          (GCC / Clang, called "GNU3" or "Itanium")   -> foo::bar(int)
@@ -1196,32 +1177,31 @@ demangle_generic(...)                          # OLD (deprecated in 5.4). Use de
 
 ; --- Example 1: demangle one name
 ;
-;     from binaryninja.demangle import demangle_any
-;     r = demangle_any("?testf@Foobar@@SA?AW4foo@1@W421@@Z")
-;     print(r.name)       # Foobar::testf
-;     print(r.type)       # enum Foobar::foo __cdecl(enum Foobar::foo)      (from the docs)
+from binaryninja.demangle import demangle_any
+r = demangle_any("?testf@Foobar@@SA?AW4foo@1@W421@@Z")
+print(r.name)       # Foobar::testf
+print(r.type)       # enum Foobar::foo __cdecl(enum Foobar::foo)      (from the docs)
 
 
 ; --- Example 2: unpack, and check for failure
 ;
-;     from binaryninja.demangle import demangle_any
-;     r = demangle_any("_ZN3foo3barEi")
-;     if r is None:
-;         print("not a mangled name")
-;     else:
-;         t, n = r
-;         print("name:", n, "| parts:", list(n), "| type:", t)
+from binaryninja.demangle import demangle_any
+r = demangle_any("_ZN3foo3barEi")
+if r is None:
+    print("not a mangled name")
+else:
+    t, n = r
+    print("name:", n, "| parts:", list(n), "| type:", t)
 
 
 ; --- Example 3: use the options of your open binary (fast in a loop)
 ; Make the config ONE time, then reuse it. (The docs warn: making it for every call is slow.)
 ;
-;     from binaryninja.demangle import demangle_any, DemanglerConfig
-;     # bv = the binary you have open (the console gives you this variable)
-;     cfg = DemanglerConfig.for_binary_view(bv)
-;     for name in ["_ZN3foo3barEi", "_ZNSt6vectorIiSaIiEE9push_backEOi"]:
-;         r = demangle_any(name, cfg)
-;         print(name, "->", r.name if r else None)
+from binaryninja.demangle import demangle_any, DemanglerConfig
+cfg = DemanglerConfig.for_binary_view(bv)
+for name in ["_ZN3foo3barEi", "_ZNSt6vectorIiSaIiEE9push_backEOi"]:
+    r = demangle_any(name, cfg)
+    print(name, "->", r.name if r else None)
 
 
 ; --- Example 4: find mangled strings in the binary's DATA and demangle them
@@ -1273,14 +1253,6 @@ demangle_generic(...)                          # OLD (deprecated in 5.4). Use de
 ;
 ;     from binaryninja.demangle import demangle_any
 ;     print(demangle_any("OBF$main$int(int)").name)      # main
-
-
-; --- Notes
-; - demangle_any returns None if no demangler accepts the name. Always check for None.
-; - A DemangleResult can have type = None: only the name was found. This is OK.
-; - The newest registered demangler is tried FIRST.
-; - Your demangle() must NOT create types in the view. Only return the type.
-; - I did not run these examples (they need a license).
 
 
 ## deprecation module
