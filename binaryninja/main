@@ -31,6 +31,11 @@
 >>> hex(ll.address)
 '0x4011da'
 
+===============================================================================
 
+# Playing with APIs
+
+## calling_convention
+>>> current_function.calling_convention.name
 
 ```
