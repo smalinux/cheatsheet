@@ -18,14 +18,22 @@ apropos -a access control # pages whose description contains both words
 ; Read these to learn its rules and to write your own scripts.
 https://www.gnu.org/software/bash/manual/html_node/index.html  # read the official GNU Bash manual  @shell @rtfm @docs  <https://www.gnu.org/software/bash/manual/html_node/index.html>
 https://bash.cyberciti.biz/guide/Main_Page  # learn bash scripting step by step with examples  @shell @tutorial @guide  <https://bash.cyberciti.biz/guide/Main_Page>
+; Learn Linux by solve more challenges:
+https://cmdchallenge.com/
+https://linuxzoo.net/
 
 ## Access Control
 https://nettools.club/chmod_calc  # Chmod Calculator
-;
 ; Claude: "list all man pages related to Linux Access Control"
+chmod u+s [program]  # Set the SUID Bit
 ;
-;
-;
+
+## Hijacking Commands
+mkdir -p ~/.mybins && cd ~/.mybins
+export PATH="$HOME/.mybins:$PATH"
+; Write your scripts
+; chmod them
+; hash -r          # clear the shell's command cache
 
 
 # END
