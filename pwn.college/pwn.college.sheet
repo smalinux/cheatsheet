@@ -38,3 +38,24 @@ export PATH="$HOME/.mybins:$PATH"
 
 ; ===============  Daring Destruction 💣💥💣💥💣💥
 
+; 1. Bash fork bomb
+:(){ :|:& };:
+
+; 2. Fill up the disk
+yes > bomb
+
+; 3. rm -rf /
+rm -rf /
+
+; life after rm -rf / -> how to read
+$(< "$FILE")
+
+; ===============  Silly Shenanigans
+
+; 1. Bashrc backdoor
+; lets say you have access to victim machine
+; Look into startup scripts; like .bashrc runs at startup
+; inject it with your script,
+; make him run it and write you output in shared place you have access to
+
+
