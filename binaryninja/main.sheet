@@ -1255,61 +1255,6 @@ for name in ["_ZN3foo3barEi", "_ZNSt6vectorIiSaIiEE9push_backEOi"]:
 ;     print(demangle_any("OBF$main$int(int)").name)      # main
 
 
-## deprecation module
-; ------------------------------------------------------------------
-; Another INTERNAL helper. Binja uses it to mark OLD API functions: "do not use this, it will be removed".
-; When you call an old function, Python shows a DeprecatedWarning.
-;
-; Why it matters for YOU: if you see a warning like
-;     DeprecatedWarning: demangle_generic is deprecated as of 5.4. Use `demangle_any` ...
-; your script still works today, but you should change it to the new function.
-
-@deprecated(deprecated_in="5.4", removed_in=None, details="Use X")  # decorator that marks a function as old      @binja @api @internal  <file:/opt/binaryninja/python/binaryninja/deprecation.py:115>
-DeprecatedWarning                         # the warning you see when you call an old function               @binja @api @internal  <file:/opt/binaryninja/python/binaryninja/deprecation.py:43>
-UnsupportedWarning                        # stronger: the function is already past its "removed_in" version @binja @api @internal  <file:/opt/binaryninja/python/binaryninja/deprecation.py:93>
-
-; --- Example 1: show every deprecation warning ONE time (good when you update old scripts)
-;
-;     import warnings
-;     from binaryninja.deprecation import DeprecatedWarning
-;     warnings.simplefilter("always", DeprecatedWarning)
-
-
-; --- Example 2: make deprecation warnings an ERROR (find all old calls fast)
-;
-;     import warnings
-;     from binaryninja.deprecation import DeprecatedWarning
-;     warnings.simplefilter("error", DeprecatedWarning)
-;     # now every call to an old API raises an exception with the line number
-
-
-; --- Example 3: find all deprecated functions in Binja's Python API
-; This reads the source files. It does not need a license. Runs in normal Python.
-;
-;     import glob, re
-;     for path in glob.glob("/opt/binaryninja/python/binaryninja/*.py"):
-;         src = open(path).read()
-;         for m in re.finditer(r"@deprecation\.deprecated\(([^)]*)\)\s*\n\s*def (\w+)", src):
-;             print(path.split("/")[-1], m.group(2), "|", m.group(1))
-
-
-; --- Example 4: use it in your OWN plugin
-;
-;     from binaryninja.deprecation import deprecated
-;
-;     @deprecated(deprecated_in="1.1", details="Use new_func instead.")
-;     def old_func():
-;         return 1
-;
-;     old_func()     # works, but shows a DeprecatedWarning
-;     # real output:  DeprecatedWarning: old_func is deprecated as of 1.1. Use new_func instead.
-
-; --- Notes
-; - Example 3 and 4 were RUN (they need no license). Example 3 found 30 deprecated functions, for example:
-;     demangle.py demangle_generic | deprecated_in="5.4", details="Use `demangle_any` with a `DemanglerConfig` instead."
-; - Python hides DeprecationWarning by default in some places. Use Example 1 to always see them.
-
-
 ## downloadprovider module (DownloadProvider, DownloadInstance)
 ; ------------------------------------------------------------------
 ; Binja needs the internet for some things: updates, plugin manager, symbol servers (PDB), type libraries.
@@ -1339,46 +1284,39 @@ resp.status_code / resp.headers / resp.content    # the answer                  
 
 ; --- Example 1: list providers
 ;
-;     from binaryninja.downloadprovider import DownloadProvider
-;     for p in DownloadProvider:
-;         print(p.name)
+from binaryninja.downloadprovider import DownloadProvider
+for p in DownloadProvider:
+    print(p.name)
 
 
 ; --- Example 2: simple GET
 ;
-;     from binaryninja.downloadprovider import DownloadProvider
-;     inst = DownloadProvider["PythonDownloadProvider"].create_instance()
-;     r = inst.get("https://example.com/")
-;     if r is None:
-;         print("request failed")
-;     else:
-;         print(r.status_code, len(r.content), "bytes")
-;         print(r.content[:80])
+from binaryninja.downloadprovider import DownloadProvider
+inst = DownloadProvider["PythonDownloadProvider"].create_instance()
+r = inst.get("https://example.com/")
+if r is None:
+    print("request failed")
+else:
+    print(r.status_code, len(r.content), "bytes")
+    print(r.content[:80])
 
 
 ; --- Example 3: POST JSON (for example, send a hash to your own server)
 ;
-;     from binaryninja.downloadprovider import DownloadProvider
-;     inst = DownloadProvider["PythonDownloadProvider"].create_instance()
-;     r = inst.post("https://httpbin.org/post", json={"sha256": "abcd..."})
-;     if r:
-;         print(r.status_code, r.content.decode()[:200])
+from binaryninja.downloadprovider import DownloadProvider
+inst = DownloadProvider["PythonDownloadProvider"].create_instance()
+r = inst.post("https://httpbin.org/post", json={"sha256": "abcd..."})
+if r:
+    print(r.status_code, r.content.decode()[:200])
 
 
 ; --- Example 4: real PUT (because put() has a bug)
 ;
-;     from binaryninja.downloadprovider import DownloadProvider
-;     inst = DownloadProvider["PythonDownloadProvider"].create_instance()
-;     r = inst.request("PUT", "https://httpbin.org/put", headers={}, data=b"hello")
-;     if r:
-;         print(r.status_code)
-
-
-; --- Notes
-; - Always check for None. No exception is raised when the network fails.
-; - If you give data AND json both, it fails (assert). Give only one.
-; - data as dict is sent as a form (x-www-form-urlencoded). data as bytes is sent raw.
-; - I did not run these examples.
+from binaryninja.downloadprovider import DownloadProvider
+inst = DownloadProvider["PythonDownloadProvider"].create_instance()
+r = inst.request("PUT", "https://httpbin.org/put", headers={}, data=b"hello")
+if r:
+    print(r.status_code)
 
 
 ## enums module
@@ -1413,30 +1351,30 @@ list(SymbolType)                          # all values of an enum               
 
 ; --- Example 1: name <-> number  (REAL output)
 ;
-;     from binaryninja.enums import HighLevelILOperation
-;     op = HighLevelILOperation.HLIL_CALL
-;     print(op.name, op.value)                       # HLIL_CALL 66
-;     print(HighLevelILOperation(66).name)           # HLIL_CALL
-;     print("HLIL_CALL" in HighLevelILOperation.__members__)   # True
+from binaryninja.enums import HighLevelILOperation
+op = HighLevelILOperation.HLIL_CALL
+print(op.name, op.value)                       # HLIL_CALL 66
+print(HighLevelILOperation(66).name)           # HLIL_CALL
+print("HLIL_CALL" in HighLevelILOperation.__members__)   # True
 
 
 ; --- Example 2: careful with print()  (REAL output)
 ; In new Python versions, print(IntEnum) shows the NUMBER, not the name.
 ;
-;     from binaryninja.enums import SymbolType, Endianness
-;     print(SymbolType.FunctionSymbol)               # 0          <- not "FunctionSymbol"!
-;     print(SymbolType.FunctionSymbol.name)          # FunctionSymbol
-;     print(repr(Endianness.LittleEndian))           # shows name and number
+from binaryninja.enums import SymbolType, Endianness
+print(SymbolType.FunctionSymbol)               # 0          <- not "FunctionSymbol"!
+print(SymbolType.FunctionSymbol.name)          # FunctionSymbol
+print(repr(Endianness.LittleEndian))           # shows name and number
 ;
 ; Rule: use .name when you print.
 
 
 ; --- Example 3: flags  (REAL output)
 ;
-;     from binaryninja.enums import SegmentFlag
-;     rx = SegmentFlag.SegmentReadable | SegmentFlag.SegmentExecutable
-;     print(int(rx))                                 # 5
-;     print(bool(rx & SegmentFlag.SegmentExecutable))   # True
+from binaryninja.enums import SegmentFlag
+rx = SegmentFlag.SegmentReadable | SegmentFlag.SegmentExecutable
+print(int(rx))                                 # 5
+print(bool(rx & SegmentFlag.SegmentExecutable))   # True
 
 
 ; --- Example 4: list all values  (REAL output)
@@ -1606,31 +1544,25 @@ loc.target_address / loc.has_target_address              # address in the librar
 
 ; --- Example 1: which libraries does my binary use?
 ;
-;     for lib in bv.get_external_libraries():
-;         print(lib.name, "| file:", lib.backing_file)
+for lib in bv.get_external_libraries():
+    print(lib.name, "| file:", lib.backing_file)
 
 
 ; --- Example 2: list all import links
 ;
-;     for loc in bv.get_external_locations():
-;         lib = loc.library.name if loc.library else "?"
-;         target = loc.target_symbol if loc.has_target_symbol else hex(loc.target_address) if loc.has_target_address else "?"
-;         print(loc.source_symbol.name, "->", lib, target)
+for loc in bv.get_external_locations():
+    lib = loc.library.name if loc.library else "?"
+    target = loc.target_symbol if loc.has_target_symbol else hex(loc.target_address) if loc.has_target_address else "?"
+    print(loc.source_symbol.name, "->", lib, target)
 
 
 ; --- Example 3: link an import to a library by hand
 ; For example: the import "my_decrypt" really lives in "libsecret.so", at symbol "decrypt_v2".
 ;
-;     lib = bv.get_external_library("libsecret.so") or bv.add_external_library("libsecret.so")
-;     sym = bv.get_symbols_by_name("my_decrypt")[0]
-;     loc = bv.add_external_location(sym, lib, "decrypt_v2", None)
-;     print(loc.library.name, loc.target_symbol)
-
-
-; --- Notes
-; - backing_file is only useful inside a Binja project (the library file must be in the project).
-; - Errors here raise ExternalLinkException (see exceptions module).
-; - I did not run these examples.
+lib = bv.get_external_library("libsecret.so") or bv.add_external_library("libsecret.so")
+sym = bv.get_symbols_by_name("my_decrypt")[0]
+loc = bv.add_external_location(sym, lib, "decrypt_v2", None)
+print(loc.library.name, loc.target_symbol)
 
 
 ## fileaccessor module (FileAccessor)
@@ -1983,84 +1915,85 @@ EdgeStyle(EdgePenStyle.X, width, ThemeColor.Y)   # arrow look                   
 
 ; --- Example 1: build a small graph  (REAL output, no license needed)
 ;
-;     from binaryninja.flowgraph import FlowGraph, FlowGraphNode
-;     from binaryninja.enums import BranchType
-;     g = FlowGraph()
-;     a = FlowGraphNode(g); a.lines = ["start"]
-;     b = FlowGraphNode(g); b.lines = ["left"]
-;     c = FlowGraphNode(g); c.lines = ["right"]
-;     print(g.append(a), g.append(b), g.append(c))   # 0 1 2
-;     a.add_outgoing_edge(BranchType.TrueBranch, b)  # green arrow in the GUI
-;     a.add_outgoing_edge(BranchType.FalseBranch, c) # red arrow in the GUI
-;     print(g.node_count)                            # 3
-;     print([(e.type.name, e.target.lines[0].tokens[0].text) for e in a.outgoing_edges])
-;     # [('TrueBranch', 'left'), ('FalseBranch', 'right')]
+from binaryninja.flowgraph import FlowGraph, FlowGraphNode
+from binaryninja.enums import BranchType
+g = FlowGraph()
+a = FlowGraphNode(g); a.lines = ["start"]
+b = FlowGraphNode(g); b.lines = ["left"]
+c = FlowGraphNode(g); c.lines = ["right"]
+print(g.append(a), g.append(b), g.append(c))   # 0 1 2
+a.add_outgoing_edge(BranchType.TrueBranch, b)  # green arrow in the GUI
+a.add_outgoing_edge(BranchType.FalseBranch, c) # red arrow in the GUI
+print(g.node_count)                            # 3
+print([(e.type.name, e.target.lines[0].tokens[0].text) for e in a.outgoing_edges])
+# [('TrueBranch', 'left'), ('FalseBranch', 'right')]
+show_graph_report("My graph", g)
 ;
 ; To SHOW it (in the GUI):  from binaryninja.interaction import show_graph_report; show_graph_report("My graph", g)
 
 
 ; --- Example 2: careful with multi-line text  (REAL output)
-;     node.lines = "line1\nline2"          -> 2 lines   (a str is split on \n)
-;     node.lines = ["line1\nline2"]        -> 1 line with a \n inside (NOT split)
+node.lines = "line1\nline2"          -> 2 lines   (a str is split on \n)
+node.lines = ["line1\nline2"]        -> 1 line with a \n inside (NOT split)
 ; Rule: give a list, one item per line:  node.lines = ["line1", "line2"]
 
 
 ; --- Example 3: draw the CALL GRAPH of a function (who does main call?)
 ; Runs in the Binja GUI Python console. bv = the binary you have open.
 ;
-;     from binaryninja.flowgraph import FlowGraph, FlowGraphNode
-;     from binaryninja.enums import BranchType
-;     from binaryninja.interaction import show_graph_report
-;
-;     root_func = bv.get_functions_by_name("main")[0]          # pick a function by name
-;     g = FlowGraph()
-;     nodes = {}
-;     def node_for(f):
-;         if f.start not in nodes:
-;             n = FlowGraphNode(g)
-;             n.lines = [f"{f.name}  @ {f.start:#x}"]
-;             g.append(n)
-;             nodes[f.start] = n
-;         return nodes[f.start]
-;
-;     def walk(f, depth):
-;         if depth == 0:
-;             return
-;         for callee in f.callees:
-;             new = callee.start not in nodes
-;             node_for(f).add_outgoing_edge(BranchType.UnconditionalBranch, node_for(callee))
-;             if new:
-;                 walk(callee, depth - 1)
-;
-;     node_for(root_func)
-;     walk(root_func, 3)                                   # 3 levels deep
-;     show_graph_report("Call graph of main", g)
+from binaryninja.flowgraph import FlowGraph, FlowGraphNode
+from binaryninja.enums import BranchType
+from binaryninja.interaction import show_graph_report
+
+root_func = bv.get_functions_by_name("main")[0]          # pick a function by name
+g = FlowGraph()
+nodes = {}
+def node_for(f):
+    if f.start not in nodes:
+        n = FlowGraphNode(g)
+        n.lines = [f"{f.name}  @ {f.start:#x}"]
+        g.append(n)
+        nodes[f.start] = n
+    return nodes[f.start]
+
+def walk(f, depth):
+    if depth == 0:
+        return
+    for callee in f.callees:
+        new = callee.start not in nodes
+        node_for(f).add_outgoing_edge(BranchType.UnconditionalBranch, node_for(callee))
+        if new:
+            walk(callee, depth - 1)
+
+node_for(root_func)
+walk(root_func, 3)                                   # 3 levels deep
+show_graph_report("Call graph of main", g)
 
 
 ; --- Example 4: read the HLIL graph of a function
 ;
-;     from binaryninja.enums import FunctionGraphType
-;     f = bv.get_functions_by_name("main")[0]              # pick a function by name
-;     g = f.create_graph(FunctionGraphType.HighLevelILFunctionGraph)
-;     g.layout_and_wait()
-;     for i, node in enumerate(g.nodes):
-;         print(f"--- node {i}  ({node.x},{node.y})  edges -> {len(node.outgoing_edges)}")
-;         for line in node.lines:
-;             print("   ", line)
+from binaryninja.enums import FunctionGraphType
+f = bv.get_functions_by_name("main")[0]              # pick a function by name
+g = f.create_graph(FunctionGraphType.HighLevelILFunctionGraph)
+g.layout_and_wait()
+for i, node in enumerate(g.nodes):
+    print(f"--- node {i}  ({node.x},{node.y})  edges -> {len(node.outgoing_edges)}")
+    for line in node.lines:
+        print("   ", line)
 
 
 ; --- Example 5: color boxes and use a dashed arrow
 ;
-;     from binaryninja.flowgraph import FlowGraph, FlowGraphNode, EdgeStyle
-;     from binaryninja.enums import BranchType, EdgePenStyle, ThemeColor, HighlightStandardColor
-;     from binaryninja.interaction import show_graph_report
-;     g = FlowGraph()
-;     a = FlowGraphNode(g); a.lines = ["check_password()"]; a.highlight = HighlightStandardColor.BlueHighlightColor
-;     b = FlowGraphNode(g); b.lines = ["win()"];            b.highlight = HighlightStandardColor.GreenHighlightColor
-;     g.append(a); g.append(b)
-;     style = EdgeStyle(EdgePenStyle.DashLine, 2, ThemeColor.AddressColor)
-;     a.add_outgoing_edge(BranchType.UserDefinedBranch, b, style)
-;     show_graph_report("styled", g)
+from binaryninja.flowgraph import FlowGraph, FlowGraphNode, EdgeStyle
+from binaryninja.enums import BranchType, EdgePenStyle, ThemeColor, HighlightStandardColor
+from binaryninja.interaction import show_graph_report
+g = FlowGraph()
+a = FlowGraphNode(g); a.lines = ["check_password()"]; a.highlight = HighlightStandardColor.BlueHighlightColor
+b = FlowGraphNode(g); b.lines = ["win()"];            b.highlight = HighlightStandardColor.GreenHighlightColor
+g.append(a); g.append(b)
+style = EdgeStyle(EdgePenStyle.DashLine, 2, ThemeColor.AddressColor)
+a.add_outgoing_edge(BranchType.UserDefinedBranch, b, style)
+show_graph_report("styled", g)
 
 
 ; --- Notes
@@ -2559,38 +2492,38 @@ node.highlight = color                                        # color a flow gra
 
 ; --- Example 1: make colors  (REAL output)
 ;
-;     from binaryninja.highlight import HighlightColor
-;     from binaryninja.enums import HighlightStandardColor as C
-;     print(HighlightColor(C.RedHighlightColor))                  # <color: red>
-;     print(HighlightColor(C.RedHighlightColor, alpha=128))       # <color: red, alpha 128>
-;     print(HighlightColor(red=0xff, green=0x80, blue=0))         # <color: #ff8000>
-;     print(HighlightColor(color=C.BlueHighlightColor, mix_color=C.GreenHighlightColor, mix=128))
-;                                                                 # <color: mix blue to green factor 128>
+from binaryninja.highlight import HighlightColor
+from binaryninja.enums import HighlightStandardColor as C
+print(HighlightColor(C.RedHighlightColor))                  # <color: red>
+print(HighlightColor(C.RedHighlightColor, alpha=128))       # <color: red, alpha 128>
+print(HighlightColor(red=0xff, green=0x80, blue=0))         # <color: #ff8000>
+print(HighlightColor(color=C.BlueHighlightColor, mix_color=C.GreenHighlightColor, mix=128))
+                                                            # <color: mix blue to green factor 128>
 
 
 ; --- Example 2: color every block of a function that calls a dangerous function
 ; Runs in the GUI. bv = the binary you have open.
 ;
-;     from binaryninja.highlight import HighlightColor
-;     from binaryninja.enums import HighlightStandardColor as C
-;     danger = {"strcpy", "gets", "sprintf", "system"}
-;     red = HighlightColor(C.RedHighlightColor, alpha=96)
-;     for f in bv.functions:
-;         for bb in f.basic_blocks:
-;             for tokens, addr in [(t, a) for t, a in f.instructions if bb.start <= a < bb.end]:
-;                 text = "".join(t.text for t in tokens)
-;                 if any(name in text for name in danger):
-;                     bb.set_user_highlight(red)
-;                     break
+from binaryninja.highlight import HighlightColor
+from binaryninja.enums import HighlightStandardColor as C
+danger = {"strcpy", "gets", "sprintf", "system"}
+red = HighlightColor(C.RedHighlightColor, alpha=96)
+for f in bv.functions:
+    for bb in f.basic_blocks:
+        for tokens, addr in [(t, a) for t, a in f.instructions if bb.start <= a < bb.end]:
+            text = "".join(t.text for t in tokens)
+            if any(name in text for name in danger):
+                bb.set_user_highlight(red)
+                break
 
 
 ; --- Example 3: color the path of a trace (addresses from a debugger log)
 ;
-;     from binaryninja.enums import HighlightStandardColor as C
-;     trace = [0x401136, 0x40113a, 0x401140]           # your executed addresses
-;     for addr in trace:
-;         for f in bv.get_functions_containing(addr):
-;             f.set_user_instr_highlight(addr, C.GreenHighlightColor)
+from binaryninja.enums import HighlightStandardColor as C
+trace = [0x401136, 0x40113a, 0x401140]           # your executed addresses
+for addr in trace:
+    for f in bv.get_functions_containing(addr):
+        f.set_user_instr_highlight(addr, C.GreenHighlightColor)
 
 
 ; --- Notes
@@ -3820,60 +3753,53 @@ graph.add_render_layer(layer) / cursor.add_render_layer(layer)   # apply a layer
 
 ; --- Example 1: color every line that contains a call (all IL levels + assembly)
 ;
-;     from binaryninja import RenderLayer, HighlightColor, InstructionTextTokenType
-;     from binaryninja.enums import HighlightStandardColor, RenderLayerDefaultEnableState
-;
-;     class CallColorLayer(RenderLayer):
-;         name = "Color calls"
-;         default_enable_state = RenderLayerDefaultEnableState.EnabledByDefaultRenderLayerDefaultEnableState
-;         color = HighlightColor(HighlightStandardColor.OrangeHighlightColor, alpha=80)
-;
-;         def apply_to_block(self, block, lines):
-;             for line in lines:
-;                 text = "".join(t.text for t in line.tokens)
-;                 if "call" in text:
-;                     line.highlight = self.color
-;             return lines
-;
-;         def apply_to_high_level_il_body(self, function, lines):
-;             for line in lines:
-;                 if any(t.type == InstructionTextTokenType.CodeSymbolToken for t in line.contents.tokens) and "(" in str(line):
-;                     line.contents.highlight = self.color
-;             return lines
-;
-;     CallColorLayer.register()
+from binaryninja import RenderLayer, HighlightColor, InstructionTextTokenType
+from binaryninja.enums import HighlightStandardColor, RenderLayerDefaultEnableState
+
+class CallColorLayer(RenderLayer):
+    name = "Color calls"
+    default_enable_state = RenderLayerDefaultEnableState.EnabledByDefaultRenderLayerDefaultEnableState
+    color = HighlightColor(HighlightStandardColor.OrangeHighlightColor, alpha=80)
+
+    def apply_to_block(self, block, lines):
+        for line in lines:
+            text = "".join(t.text for t in line.tokens)
+            if "call" in text:
+                line.highlight = self.color
+        return lines
+
+    def apply_to_high_level_il_body(self, function, lines):
+        for line in lines:
+            if any(t.type == InstructionTextTokenType.CodeSymbolToken for t in line.contents.tokens) and "(" in str(line):
+                line.contents.highlight = self.color
+        return lines
+
+CallColorLayer.register()
 
 
 ; --- Example 2: add a comment line with the address after each assembly line that writes memory
 ;
-;     from binaryninja import RenderLayer, DisassemblyTextLine, InstructionTextToken, InstructionTextTokenType
-;
-;     class StoreNoteLayer(RenderLayer):
-;         name = "Note memory writes"
-;         def apply_to_disassembly_block(self, block, lines):
-;             out = []
-;             for line in lines:
-;                 out.append(line)
-;                 text = "".join(t.text for t in line.tokens)
-;                 if text.lstrip().startswith("mov") and ", " in text and "[" in text.split(",")[0]:
-;                     tok = InstructionTextToken(InstructionTextTokenType.CommentToken, "    ; ^ writes memory")
-;                     out.append(DisassemblyTextLine([tok], line.address))
-;             return out
-;
-;     StoreNoteLayer.register()
+from binaryninja import RenderLayer, DisassemblyTextLine, InstructionTextToken, InstructionTextTokenType
+
+class StoreNoteLayer(RenderLayer):
+    name = "Note memory writes"
+    def apply_to_disassembly_block(self, block, lines):
+        out = []
+        for line in lines:
+            out.append(line)
+            text = "".join(t.text for t in line.tokens)
+            if text.lstrip().startswith("mov") and ", " in text and "[" in text.split(",")[0]:
+                tok = InstructionTextToken(InstructionTextTokenType.CommentToken, "    ; ^ writes memory")
+                out.append(DisassemblyTextLine([tok], line.address))
+        return out
+
+StoreNoteLayer.register()
 
 
 ; --- Example 3: list layers
 ;
-;     from binaryninja import RenderLayer
-;     print([l.name for l in RenderLayer])
-
-
-; --- Notes
-; - Your methods run EVERY time the view redraws. Keep them FAST.
-; - Change and return the list. If you return a different list, keep DisassemblyTextLine objects (not strings).
-; - In apply_to_high_level_il_body the items are LinearDisassemblyLine: change line.contents, not line.
-; - I did not run these examples.
+from binaryninja import RenderLayer
+print([l.name for l in RenderLayer])
 
 
 ## requirementcheck module (pip dependencies of plugins)
