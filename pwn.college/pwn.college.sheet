@@ -59,3 +59,29 @@ $(< "$FILE")
 ; make him run it and write you output in shared place you have access to
 
 
+; Sniffing Process Arguments
+;
+; ps aux
+; Users forget one or more of command arguments with sensitive args
+; I'm not sure if this important, but this is misconfiguration
+
+
+; Snooping on Configurations
+;
+; Again, misconfiguration.
+; Even without making mistakes, users might inadvertently leave themselves at
+; risk. For example, many files in a typical user's home directory are
+; world-readable by default, despite frequently being used to store sensitive
+; information. Believe it or not, your .bashrc is world-readable unless you
+; explicitly change it!
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;                                                                             ;
+; Intro to Cybersecurity                                                      ;
+;                                                                             ;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+
+; ===============  Web Security
+
+
