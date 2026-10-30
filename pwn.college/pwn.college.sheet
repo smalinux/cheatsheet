@@ -113,6 +113,34 @@ print(urlenc("../../../flag"))     # %2e%2e%2f%2e%2e%2f%2e%2e%2f%66%6c%61%67
 ; ===    OS command injection (CWE-78)
 ; SMA.: simple if you know scape sequance this will be easy.
 ;
+; CMDi 6 challenge:
+; Master level when you try EVERYTHING (almost) and you forget one simple escape
+; Q: How I can make my own comperhinsive list of payloads?
+;   Maybe I could try things the developer never thought about handling them
+;
+; The developer used "Blocklists" and This is why this technique fails.
 ;
 ; Claude ❯ how I can go from this payload to shell
+; SMA.: Here I'm trying more interesting stuff than just cat /flag
+; "reverse shell"
+;
+;
+; Reverse sheel : CMDi 6 challenge
+; ⚠️ spoiler ⚠️
+; TODO
+;
+; ❯ how I can level up beyound this challenge, for leveling up my skills?
+    1. **Finish [pwn.college](https://pwn.college/).** Complete the rest of this module.
+    2. **Do the [PortSwigger Academy labs](https://portswigger.net/web-security/os-command-injection)**, especially the blind command injection ones. You won't see output there, so you have to detect it from timing or from requests the server makes to you.
+    3. **Read real source code.** Search [GitHub](https://github.com/search?type=code) for `shell=True`, `os.system(` and `exec(` alongside request input, and ask yourself whether each one is exploitable. That's how real bugs get found.
+    4. **Learn the shell properly.** Read the ["Shell Command Language" chapter of the POSIX spec](https://pubs.opengroup.org/onlinepubs/9699919799/utilities/V3_chap02.html) on quoting, expansion and word splitting. Most filter bypasses follow from it.
+    5. **Study the fixes too.** Use argument lists instead of a shell string, use [`shlex.quote`](https://docs.python.org/3/library/shlex.html#shlex.quote) when you can't avoid the shell, and run with least privilege. Knowing why a fix works shows you where incomplete fixes break.
+    6. **Play real CTFs on [ctftime.org](https://ctftime.org/)**, then read the writeups for challenges you didn't solve.
+    7. **Look at CVEs.** Search ["command injection CVE"](https://cve.mitre.org/cgi-bin/cvekey.cgi?keyword=command+injection) and read the patch diffs, since IoT and router firmware is full of these bugs.
 
+; Read-made payload cuted lists
+    - [**PayloadsAllTheThings**](https://github.com/swisskyrepo/PayloadsAllTheThings): organized by bug class, with explanations. Best for learning.
+    - [**SecLists**](https://github.com/danielmiessler/SecLists) (danielmiessler, GitHub): large raw wordlists for fuzzing, including a command injection set under `Fuzzing/`.
+    - [**HackTricks**](https://book.hacktricks.wiki/): technique notes with payloads, including filter bypasses.
+    - **PortSwigger cheat sheets:** [XSS](https://portswigger.net/web-security/cross-site-scripting/cheat-sheet) and [SQLi](https://portswigger.net/web-security/sql-injection/cheat-sheet) especially, kept up to date.
+    - [**GTFOBins**](https://gtfobins.github.io/) / [**LOLBAS**](https://lolbas-project.github.io/): abusing Linux and Windows binaries after you get in.
