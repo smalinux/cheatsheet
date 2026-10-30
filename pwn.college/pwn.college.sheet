@@ -144,3 +144,5 @@ print(urlenc("../../../flag"))     # %2e%2e%2f%2e%2e%2f%2e%2e%2f%66%6c%61%67
     - [**HackTricks**](https://book.hacktricks.wiki/): technique notes with payloads, including filter bypasses.
     - **PortSwigger cheat sheets:** [XSS](https://portswigger.net/web-security/cross-site-scripting/cheat-sheet) and [SQLi](https://portswigger.net/web-security/sql-injection/cheat-sheet) especially, kept up to date.
     - [**GTFOBins**](https://gtfobins.github.io/) / [**LOLBAS**](https://lolbas-project.github.io/): abusing Linux and Windows binaries after you get in.
+    - ctftime.org : CTF writeups on ctftime.org: search "command injection" and read how people beat filters.
+

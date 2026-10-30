@@ -1,0 +1,51 @@
+title: sql
+url:   https://www.sqlite.org/lang.html
+tags:  sql sqlite database db query web-security
+
+; ===============  basics
+; From "Web Security: Structured Query Language", Connor Nelson, Arizona State University.
+; https://docs.google.com/presentation/d/1KpvjoFnlC9HcUJbkg-_VASf2JETMwEZjpzO0uGSoCo4/edit
+
+## create-table
+; A table holds the data in rows and columns. You make it before you store anything.
+CREATE TABLE TABLE (COLUMNS)                    # create a new table with these columns  @new @make  <https://www.sqlite.org/lang_createtable.html>
+CREATE TABLE users (username, password)         # create a users table with username and password columns  @new  <https://www.sqlite.org/lang_createtable.html>
+
+## insert-into
+; INSERT adds a new row to a table.
+INSERT INTO TABLE VALUES (VALUES)               # add a new row to a table  @add @row  <https://www.sqlite.org/lang_insert.html>
+INSERT INTO users VALUES ("admin", "password123")     # add user admin with password password123  @add @row  <https://www.sqlite.org/lang_insert.html>
+
+## select
+; SELECT reads data from a table. WHERE keeps only the rows that match.
+; It does not change the table. It returns a new result table.
+SELECT COLUMNS FROM TABLE WHERE CONDITIONS                              # read columns from the rows that match  @query @read @get  <https://www.sqlite.org/lang_select.html>
+SELECT username, password FROM users                                    # read the username and password of every user  @query @read  <https://www.sqlite.org/lang_select.html>
+SELECT username FROM users                                              # read only the username column of every user  @query @read  <https://www.sqlite.org/lang_select.html>
+SELECT * FROM users                                                     # read all columns of every row  @query @star @all  <https://www.sqlite.org/lang_select.html>
+SELECT * FROM users WHERE username = "admin"                            # read only the rows where username is admin  @query @filter @where  <https://www.sqlite.org/lang_select.html>
+SELECT * FROM users WHERE username = "admin" and password = "admin"     # check a login: right password gives the admin row  @login @and @where  <https://www.sqlite.org/lang_select.html>
+
+## delete
+; DELETE removes rows from a table. Without WHERE it removes every row.
+DELETE FROM TABLE WHERE CONDITIONS              # remove the rows that match  @remove @row  <https://www.sqlite.org/lang_delete.html>
+DELETE FROM users WHERE username = "kanak"      # remove the user kanak  @remove @row  <https://www.sqlite.org/lang_delete.html>
+
+## update
+; UPDATE changes values in rows that already exist.
+UPDATE TABLE SET ASSIGNMENTS WHERE CONDITIONS                        # change values in the rows that match  @change @edit @modify  <https://www.sqlite.org/lang_update.html>
+UPDATE users SET password = "password456" WHERE username = "connor"  # change the password of user connor  @change @edit  <https://www.sqlite.org/lang_update.html>
+
+## union
+; UNION joins the results of two SELECTs into one result, one under the other.
+SELECT1 UNION SELECT2                                        # join the rows of two SELECT results into one  @combine @merge @sqli  <https://www.sqlite.org/lang_select.html#compound_select_statements>
+SELECT username FROM users UNION SELECT password FROM users  # list all usernames and all passwords in one column  @combine @sqli  <https://www.sqlite.org/lang_select.html#compound_select_statements>
+
+## schema-table
+; sqlite_master is the schema table. SQLite keeps the list of all tables in it.
+SELECT tbl_name FROM sqlite_master              # list the names of all tables in a SQLite database  @schema @tables @sqli  <https://www.sqlite.org/schematab.html>
+
+## drop-table
+; DROP TABLE deletes the whole table and all its data.
+DROP TABLE TABLE                                # delete a whole table and all its rows  @delete @remove  <https://www.sqlite.org/lang_droptable.html>
+DROP TABLE users                                # delete the users table  @delete @remove  <https://www.sqlite.org/lang_droptable.html>
