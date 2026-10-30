@@ -146,3 +146,18 @@ print(urlenc("../../../flag"))     # %2e%2e%2f%2e%2e%2f%2e%2e%2f%66%6c%61%67
     - [**GTFOBins**](https://gtfobins.github.io/) / [**LOLBAS**](https://lolbas-project.github.io/): abusing Linux and Windows binaries after you get in.
     - ctftime.org : CTF writeups on ctftime.org: search "command injection" and read how people beat filters.
 
+
+; Shellcode DB
+    ## Polyglots and file-format tricks
+    - **Ange Albertini ([corkami](https://github.com/corkami))**: files that are valid as several formats at once, with gorgeous diagrams.
+    - **[PoC||GTFO](https://pocorgtfo.hacke.rs/)**: the journal is literally a polyglot (the PDF is also a ZIP, an image, and so on). The whole thing is payload art.
+    - **[Phrack](https://phrack.org/)** for classic exploitation craft.
+
+    ## Binary / shellcode
+    - **[shell-storm.org shellcode database](https://shell-storm.org/shellcode/)** and [Exploit-DB's shellcode section](https://www.exploit-db.com/shellcodes).
+    - **["A Whirlwind Tutorial on Creating Really Teensy ELF Executables"](https://www.muppetlabs.com/~breadbox/software/tiny/teensy.html)** (muppetlabs): a classic of minimalism.
+    - **Demoscene 256-byte and 4K intros** ([pouet.net](https://www.pouet.net/)): the same mindset, just not offensive.
+
+    ## Ongoing feed
+    - Writeups on **[CTFtime.org](https://ctftime.org/writeups)**: filter by the web or pwn category and read the top-rated ones.
+    - Follow the researchers above on X, Mastodon or Bluesky. A lot of the best payloads are first posted there as one-line puzzles.
