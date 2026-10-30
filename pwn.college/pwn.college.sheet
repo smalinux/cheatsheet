@@ -161,3 +161,7 @@ print(urlenc("../../../flag"))     # %2e%2e%2f%2e%2e%2f%2e%2e%2f%66%6c%61%67
     ## Ongoing feed
     - Writeups on **[CTFtime.org](https://ctftime.org/writeups)**: filter by the web or pwn category and read the top-rated ones.
     - Follow the researchers above on X, Mastodon or Bluesky. A lot of the best payloads are first posted there as one-line puzzles.
+
+
+; ===    Broken Authentication (CWE-287) (CWE-639)
+    SMA.: It isn't SQL injection. It was crafting to HTTP GET URL
