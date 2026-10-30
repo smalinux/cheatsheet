@@ -110,4 +110,9 @@ def urlenc(s: str) -> str:
 
 print(urlenc("../../../flag"))     # %2e%2e%2f%2e%2e%2f%2e%2e%2f%66%6c%61%67
 
+; ===    OS command injection (CWE-78)
+; SMA.: simple if you know scape sequance this will be easy.
+;
+;
+; Claude ❯ how I can go from this payload to shell
 
