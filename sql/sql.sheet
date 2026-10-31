@@ -70,12 +70,17 @@ SELECT * FROM users WHERE substr(username, -3) = "min"                          
 SELECT * FROM users WHERE substr(username, 4, 2) = "in"                              # read users whose characters 4-5 are in  @substr @middle @filter  <https://www.sqlite.org/lang_corefunc.html#substr>
 SELECT * FROM users WHERE "adm" IN (substr(username, 1, 3), substr(password, 1, 3))  # read rows where either column starts with adm  @substr @any @in  <https://www.sqlite.org/lang_corefunc.html#substr>
 SELECT * FROM users WHERE instr(username, "dm") > 0                                  # read users whose name contains dm  @instr @contains @filter  <https://www.sqlite.org/lang_corefunc.html#instr>
+SELECT payload FROM VLhAlxRy WHERE substr(payload, 1, 3) = "pwn";
 
 
 
 ; =============================================================================
+; pwned:
+;
 ; Sample of how I solved: https://pwn.college/fundamentals/sql-playground
 ; Syntax is cheap!
 echo "SELECT content FROM storage WHERE flag_tag = 1337 AND content LIKE '%pwn%';" | /challenge/sql
 echo "SELECT * FROM storage WHERE substr(payload, 1, 3) = 'pwn' LIMIT 1;" | /challenge/sql
+
+; Google search about how to list all tables in sqlite master table (just a table for metadata), and get the table name for there
 ; =============================================================================
