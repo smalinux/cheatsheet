@@ -164,4 +164,4 @@ print(urlenc("../../../flag"))     # %2e%2e%2f%2e%2e%2f%2e%2e%2f%66%6c%61%67
 
 
 ; ===    Broken Authentication (CWE-287) (CWE-639)
-    SMA.: It isn't SQL injection. It was crafting to HTTP GET URL
+;SMA.: It isn't SQL injection. It was crafting to HTTP GET URL
