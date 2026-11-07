@@ -228,8 +228,8 @@ print("FLAG:", flag)
 ; ===    XSS in attributes (CWE-83) -> (CWE-79) -> (CWE-74)
 ; ===    XSS alternate syntax (CWE-87) -> (CWE-79) -> (CWE-74)
 ; ===    Improper output encoding (CWE-116) -> (CWE-707)
-python -m http.server: https://docs.python.org/3/library/http.server.html
-JavaScript Fetch API: https://developer.mozilla.org/en-US/docs/Web/API/Fetch_API/Using_Fetch
+python -m http.server PORT  # serve the current directory over HTTP, to receive requests from an XSS payload  @webserver @listener  <https://docs.python.org/3/library/http.server.html>
+fetch(URL)                  # send an HTTP request from JavaScript, to send stolen data out from an XSS payload  @js @exfiltrate  <https://developer.mozilla.org/en-US/docs/Web/API/Fetch_API/Using_Fetch>
 
 
 
